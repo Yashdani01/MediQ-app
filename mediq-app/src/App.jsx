@@ -1,77 +1,45 @@
-import { useState } from 'react'
-import { i18n } from './i18n.js'
-import { supabase } from './supabaseClient.js'
-import TopBar from './components/TopBar.jsx'
-import TabBar from './components/TabBar.jsx'
-import Home from './components/Home.jsx'
-import Book from './components/Book.jsx'
-import Ticket from './components/Ticket.jsx'
-import Reports from './components/Reports.jsx'
-import Profile from './components/Profile.jsx'
+import { useState, useEffect } from 'react';
+import { supabase } from './supabaseClient';
+import Login from './components/Login';
+import Home from './components/Home';
+import Book from './components/Book';
+import Reports from './components/Reports';
+import Profile from './components/Profile';
+import Ticket from './components/Ticket';
+import TopBar from './components/TopBar';
+import TabBar from './components/TabBar';
 
 export default function App() {
-  const [lang, setLang] = useState('en')
-  const [screen, setScreen] = useState('home')
-  const [selectedDoctor, setSelectedDoctor] = useState(null)
-  const [booking, setBooking] = useState(null)
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const t = i18n[lang]
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
+    });
 
-  function handleSelectDoctor(doctor) {
-    setSelectedDoctor(doctor)
-    setScreen('book')
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (loading) {
+    return <div style={{ textAlign: 'center', padding: '50px' }}>Loading MediQ...</div>;
   }
 
-  async function handleConfirmBooking(doctor, time) {
-    const tokenNumber = 'B-' + (10 + Math.floor(Math.random() * 20))
-
-    const { data: patient } = await supabase
-      .from('patients')
-      .select('id')
-      .eq('patient_code', 'MDQ-2291')
-      .single()
-
-    const { error } = await supabase.from('appointments').insert({
-      doctor_id: doctor.id,
-      patient_id: patient?.id ?? null,
-      token_number: tokenNumber,
-      appointment_time: time,
-      status: 'booked'
-    })
-
-    if (error) {
-      console.error('Booking failed to save:', error.message)
-      // Still show the ticket locally so the demo flow isn't blocked —
-      // once Supabase is fully wired up you may want to show an error instead.
-    }
-
-    setBooking({
-      doctor,
-      time,
-      tokenNumber,
-      waitMinutes: doctor.wait_minutes ?? 15,
-      ahead: doctor.patients_ahead ?? 0
-    })
-    setScreen('ticket')
+  if (!session) {
+    return <Login onLoginSuccess={() => {}} />;
   }
 
   return (
-    <div className="device">
-      <TopBar lang={lang} setLang={setLang} />
-
-      <main>
-        {screen === 'home' && <Home t={t} onSelectDoctor={handleSelectDoctor} />}
-        {screen === 'book' && (
-          <Book t={t} selectedDoctor={selectedDoctor} onConfirm={handleConfirmBooking} />
-        )}
-        {screen === 'ticket' && (
-          <Ticket t={t} booking={booking} onDone={() => setScreen('home')} />
-        )}
-        {screen === 'reports' && <Reports t={t} />}
-        {screen === 'profile' && <Profile t={t} />}
-      </main>
-
-      <TabBar screen={screen} setScreen={setScreen} t={t} />
+    <div className="app-container">
+      <TopBar session={session} />
+      <Home />
+      <TabBar />
     </div>
-  )
+  );
 }
