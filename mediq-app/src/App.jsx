@@ -1,13 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 import Login from './components/Login';
-import Home from './components/Home';
-import Book from './components/Book';
-import Reports from './components/Reports';
-import Profile from './components/Profile';
-import Ticket from './components/Ticket';
-import TopBar from './components/TopBar';
-import TabBar from './components/TabBar';
+import HospitalFlow from './components/HospitalFlow';
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -32,14 +26,8 @@ export default function App() {
   }
 
   if (!session) {
-    return <Login onLoginSuccess={() => {}} />;
+    return <Login />;
   }
 
-  return (
-    <div className="app-container">
-      <TopBar session={session} />
-      <Home />
-      <TabBar />
-    </div>
-  );
+  return <HospitalFlow user={session.user} onLogout={() => supabase.auth.signOut()} />;
 }
