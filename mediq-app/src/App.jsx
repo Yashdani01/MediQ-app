@@ -5,6 +5,7 @@ import HospitalFlow from './components/HospitalFlow';
 
 export default function App() {
   const [session, setSession] = useState(null);
+  const [isGuest, setIsGuest] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -12,22 +13,24 @@ export default function App() {
       setSession(session);
       setLoading(false);
     });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       setSession(session);
       setLoading(false);
     });
-
     return () => subscription.unsubscribe();
   }, []);
 
-  if (loading) {
-    return <div style={{ textAlign: 'center', padding: '50px', fontFamily: 'sans-serif' }}>Loading MediQ...</div>;
+  if (loading) return <div style={{ textAlign: 'center', padding: 50 }}>Loading MediQ...</div>;
+
+  if (!session && !isGuest) {
+    return <Login onGuestContinue={() => setIsGuest(true)} />;
   }
 
-  if (!session) {
-    return <Login />;
-  }
-
-  return <HospitalFlow user={session.user} onLogout={() => supabase.auth.signOut()} />;
+  return (
+    <HospitalFlow
+      user={session?.user || null}
+      isGuest={isGuest}
+      onLogout={() => { supabase.auth.signOut(); setIsGuest(false); }}
+    />
+  );
 }
