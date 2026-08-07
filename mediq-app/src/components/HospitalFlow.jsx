@@ -1,23 +1,24 @@
 import { useState } from 'react';
+import BookingTicket from './BookingTicket';
 
 const CITY_DATA = {
   'Kolkata': [
     { id: 'h1', name: 'City Care Hospital', location: 'Bidhannagar', doctors: [
-      { id: 'd1', name: 'Dr. A. K. Roy', spec: 'Cardiologist', timing: '10:00 AM - 02:00 PM', status: 'In Chamber', liveQueue: 4 },
-      { id: 'd2', name: 'Dr. S. Banerjee', spec: 'General Physician', timing: '05:00 PM - 08:00 PM', status: 'On The Way', liveQueue: 12 }
+      { id: 'd1', name: 'Dr. A. K. Roy', spec: 'Cardiologist', timing: '10:00 AM - 02:00 PM', status: 'In Chamber', liveQueue: 4, avgMinutes: 20 },
+      { id: 'd2', name: 'Dr. S. Banerjee', spec: 'General Physician', timing: '05:00 PM - 08:00 PM', status: 'On The Way', liveQueue: 12, avgMinutes: 10 }
     ]},
     { id: 'h2', name: 'Apollo Clinic', location: 'Park Circus', doctors: [
-      { id: 'd3', name: 'Dr. M. Das', spec: 'Dermatologist', timing: '11:00 AM - 03:00 PM', status: 'In Chamber', liveQueue: 2 }
+      { id: 'd3', name: 'Dr. M. Das', spec: 'Dermatologist', timing: '11:00 AM - 03:00 PM', status: 'In Chamber', liveQueue: 2, avgMinutes: 15 }
     ]}
   ],
   'Darjeeling': [
     { id: 'h3', name: 'Darjeeling Heights Healthcare', location: 'Mall Road', doctors: [
-      { id: 'd4', name: 'Dr. P. Sharma', spec: 'Pediatrician', timing: '09:00 AM - 01:00 PM', status: 'Not Visited Yet', liveQueue: 0 }
+      { id: 'd4', name: 'Dr. P. Sharma', spec: 'Pediatrician', timing: '09:00 AM - 01:00 PM', status: 'Not Visited Yet', liveQueue: 0, avgMinutes: 20 }
     ]}
   ],
   'Shantiniketan': [
     { id: 'h4', name: 'Green View Medical Centre', location: 'Bolpur', doctors: [
-      { id: 'd5', name: 'Dr. R. Chatterjee', spec: 'Orthopedic', timing: '04:00 PM - 07:00 PM', status: 'In Chamber', liveQueue: 7 }
+      { id: 'd5', name: 'Dr. R. Chatterjee', spec: 'Orthopedic', timing: '04:00 PM - 07:00 PM', status: 'In Chamber', liveQueue: 7, avgMinutes: 25 }
     ]}
   ]
 };
@@ -25,6 +26,20 @@ const CITY_DATA = {
 export default function HospitalFlow({ user, onLogout }) {
   const [selectedCity, setSelectedCity] = useState('');
   const [selectedHospital, setSelectedHospital] = useState(null);
+  const [ticketData, setTicketData] = useState(null);
+
+  const handleBookToken = (doc) => {
+    const queueNumber = doc.liveQueue + 1;
+    setTicketData({
+      appointment: { queue_number: queueNumber },
+      doctor: {
+        name: doc.name,
+        specialty: doc.spec,
+        avg_minutes_per_patient: doc.avgMinutes,
+      },
+      patientsAheadOverride: doc.liveQueue,
+    });
+  };
 
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px', fontFamily: 'sans-serif' }}>
@@ -104,13 +119,25 @@ export default function HospitalFlow({ user, onLogout }) {
                   <div>🎟️ Queue: <strong>{doc.liveQueue} Patients</strong></div>
                 </div>
 
-                <button style={{ width: '100%', marginTop: '16px', padding: '10px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
+                <button
+                  onClick={() => handleBookToken(doc)}
+                  style={{ width: '100%', marginTop: '16px', padding: '10px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+                >
                   Book Token / Join Queue
                 </button>
               </div>
             ))}
           </div>
         </div>
+      )}
+
+      {ticketData && (
+        <BookingTicket
+          appointment={ticketData.appointment}
+          doctor={ticketData.doctor}
+          patientsAheadOverride={ticketData.patientsAheadOverride}
+          onClose={() => setTicketData(null)}
+        />
       )}
     </div>
   );
