@@ -4,28 +4,21 @@ import './Login.css';
 
 export default function Login({ onGuestContinue }) {
   const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState('');
-  const [step, setStep] = useState('email');
+  const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const sendOtp = async (e) => {
+  const sendMagicLink = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: true },
+    });
     setLoading(false);
     if (error) setError(error.message);
-    else setStep('otp');
-  };
-
-  const verifyOtp = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    const { error } = await supabase.auth.verifyOtp({ email, token: otp, type: 'email' });
-    setLoading(false);
-    if (error) setError(error.message);
+    else setSent(true);
   };
 
   return (
@@ -36,15 +29,14 @@ export default function Login({ onGuestContinue }) {
       <div className="login-card">
         <div className="login-logo"><span className="login-logo-icon">✛</span></div>
         <h1 className="login-title">MediQ</h1>
-        <p className="login-subtitle">
-          {step === 'email'
-            ? 'Sign in to book queues and track live doctor timings'
-            : `Enter the code sent to ${email}`}
-        </p>
 
-        {step === 'email' && (
+        {!sent ? (
           <>
-            <form onSubmit={sendOtp} className="login-form">
+            <p className="login-subtitle">
+              Sign in to book queues and track live doctor timings
+            </p>
+
+            <form onSubmit={sendMagicLink} className="login-form">
               <div className="input-group">
                 <input
                   id="email" type="email" className="login-input" placeholder=" "
@@ -61,26 +53,15 @@ export default function Login({ onGuestContinue }) {
               Continue as Guest →
             </button>
           </>
-        )}
-
-        {step === 'otp' && (
-          <form onSubmit={verifyOtp} className="login-form">
-            <div className="input-group">
-              <input
-                id="otp" type="text" inputMode="numeric" maxLength={6}
-                className="login-input otp-input" placeholder=" "
-                value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                required autoFocus
-              />
-              <label htmlFor="otp" className="input-label">6-digit code</label>
-            </div>
-            <button type="submit" className="login-btn" disabled={loading || otp.length < 6}>
-              {loading ? <span className="spinner" /> : 'Verify & Continue'}
-            </button>
-            <button type="button" className="login-link-btn" onClick={() => { setStep('email'); setOtp(''); setError(''); }}>
+        ) : (
+          <>
+            <p className="login-subtitle">
+              We sent a sign-in link to <strong>{email}</strong>. Open your inbox and tap the link to continue.
+            </p>
+            <button className="login-link-btn" onClick={() => setSent(false)}>
               ← Use a different email
             </button>
-          </form>
+          </>
         )}
 
         {error && <p className="login-error">{error}</p>}
