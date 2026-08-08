@@ -24,6 +24,8 @@ export default function Login({ onGuestContinue }) {
     e.preventDefault();
     setLoading(true);
     setError('');
+    localStorage.setItem('mediq_pending_name', name);
+    localStorage.setItem('mediq_pending_city', city);
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
