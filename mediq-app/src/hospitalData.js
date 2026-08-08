@@ -35,6 +35,7 @@ export async function getWaitingCount(doctorId) {
   if (error) { console.error('Error counting queue:', error); return 0; }
   return data || 0;
 }
+
 export async function bookAppointment(patientUserId, doctorId, hospitalId) {
   const { data: patient, error: patientError } = await supabase
     .from('patients')
@@ -125,4 +126,51 @@ export async function getMyCurrentBooking(patientUserId) {
     hospital,
     patientsAhead: patientsAhead || 0,
   };
+}
+
+export async function getPatientProfileDetails(patientUserId) {
+  const { data, error } = await supabase
+    .from('patients')
+    .select('patient_code, created_at')
+    .eq('user_id', patientUserId)
+    .single();
+  if (error) { console.error('Error fetching profile details:', error); return null; }
+  return data;
+}
+
+export async function getBookingHistory(patientUserId) {
+  const { data: patient, error: patientError } = await supabase
+    .from('patients')
+    .select('id')
+    .eq('user_id', patientUserId)
+    .single();
+
+  if (patientError || !patient) return [];
+
+  const { data: appointments, error } = await supabase
+    .from('appointments')
+    .select('id, queue_number, status, booked_at, doctor_id, hospital_id')
+    .eq('patient_id', patient.id)
+    .order('booked_at', { ascending: false })
+    .limit(20);
+
+  if (error || !appointments) return [];
+
+  const enriched = await Promise.all(
+    appointments.map(async (appt) => {
+      const { data: doctor } = await supabase
+        .from('doctors')
+        .select('name, specialty')
+        .eq('id', appt.doctor_id)
+        .single();
+      const { data: hospital } = await supabase
+        .from('hospitals')
+        .select('name')
+        .eq('id', appt.hospital_id)
+        .single();
+      return { ...appt, doctor, hospital };
+    })
+  );
+
+  return enriched;
 }

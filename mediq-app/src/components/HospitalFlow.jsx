@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import BookingTicket from './BookingTicket';
+import Profile from './Profile';
 import { getHospitals, getAllCities, getDoctorsForHospital, getWaitingCount, bookAppointment } from '../hospitalData';
 import './HospitalFlow.css';
 
@@ -7,6 +8,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
   const [currentCity, setCurrentCity] = useState(initialCity || '');
   const [allCities, setAllCities] = useState([]);
   const [showCityPicker, setShowCityPicker] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const [hospitals, setHospitals] = useState([]);
   const [selectedHospital, setSelectedHospital] = useState(null);
   const [doctors, setDoctors] = useState([]);
@@ -74,16 +76,22 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
     <div className="flow-page">
       <div className="flow-topbar">
         <div className="flow-topbar-inner">
-          <div className="flow-user-badge">
+          <button
+            className="flow-user-badge"
+            onClick={() => !isGuest && setShowProfile(true)}
+            style={{ background: 'none', border: 'none', cursor: isGuest ? 'default' : 'pointer', padding: 0 }}
+          >
             <div className="flow-avatar">{avatarInitial}</div>
-            <div>
+            <div style={{ textAlign: 'left' }}>
               <p className="flow-greeting">
                 {isGuest ? 'Browsing as Guest' : `Hello, ${nameForAvatar} 👋`}
               </p>
               {!isGuest && <p className="flow-subtitle">{user?.email}</p>}
             </div>
-          </div>
-          <button className="flow-logout-btn" onClick={onLogout}>Logout</button>
+          </button>
+          {isGuest && (
+            <button className="flow-logout-btn" onClick={onLogout}>Logout</button>
+          )}
         </div>
 
         <div className="city-switcher-row">
@@ -183,6 +191,15 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
           doctor={ticketData.doctor}
           patientsAheadOverride={ticketData.patientsAheadOverride}
           onClose={() => setTicketData(null)}
+        />
+      )}
+
+      {showProfile && (
+        <Profile
+          user={user}
+          displayName={displayName}
+          onClose={() => setShowProfile(false)}
+          onLogout={onLogout}
         />
       )}
     </div>
