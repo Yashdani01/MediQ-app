@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import BookingTicket from './BookingTicket';
 import { getHospitals, getDoctorsForHospital, getWaitingCount, bookAppointment } from '../hospitalData';
+import './HospitalFlow.css';
 
 export default function HospitalFlow({ user, isGuest, onLogout }) {
   const [hospitals, setHospitals] = useState([]);
@@ -11,7 +12,6 @@ export default function HospitalFlow({ user, isGuest, onLogout }) {
   const [ticketData, setTicketData] = useState(null);
   const [bookingError, setBookingError] = useState('');
 
-  // Load hospitals on first render
   useEffect(() => {
     getHospitals().then((data) => {
       setHospitals(data);
@@ -19,12 +19,10 @@ export default function HospitalFlow({ user, isGuest, onLogout }) {
     });
   }, []);
 
-  // Load doctors whenever a hospital is selected
   useEffect(() => {
     if (!selectedHospital) return;
     setLoadingDoctors(true);
     getDoctorsForHospital(selectedHospital.id).then(async (docs) => {
-      // attach live queue count to each doctor
       const withQueue = await Promise.all(
         docs.map(async (doc) => ({
           ...doc,
@@ -62,75 +60,82 @@ export default function HospitalFlow({ user, isGuest, onLogout }) {
   };
 
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px', fontFamily: 'sans-serif' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', paddingBottom: '12px', borderBottom: '1px solid #e2e8f0' }}>
-        <div>
-          <h3 style={{ margin: 0, color: '#0f172a' }}>MediQ Dashboard</h3>
-          <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>
-            {isGuest ? 'Browsing as Guest' : `Logged in as: ${user?.email}`}
-          </p>
+    <div className="flow-page">
+      <div className="flow-topbar">
+        <div className="flow-topbar-inner">
+          <div>
+            <h3 className="flow-title">MediQ</h3>
+            <p className="flow-subtitle">
+              {isGuest ? 'Browsing as Guest' : `Logged in as ${user?.email}`}
+            </p>
+          </div>
+          <button className="flow-logout-btn" onClick={onLogout}>Logout</button>
         </div>
-        <button onClick={onLogout} style={{ padding: '6px 12px', backgroundColor: '#f1f5f9', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>Logout</button>
       </div>
 
-      {!selectedHospital && (
-        <div>
-          <h3>🏥 Available Hospitals</h3>
-          {loadingHospitals ? (
-            <p style={{ color: '#64748b' }}>Loading hospitals...</p>
-          ) : hospitals.length === 0 ? (
-            <p style={{ color: '#64748b' }}>No hospitals available yet.</p>
-          ) : (
-            <div style={{ display: 'grid', gap: '12px', marginTop: '16px' }}>
-              {hospitals.map((hosp) => (
-                <div
-                  key={hosp.id}
-                  onClick={() => setSelectedHospital(hosp)}
-                  style={{ padding: '16px', border: '1px solid #cbd5e1', borderRadius: '12px', cursor: 'pointer', backgroundColor: '#fff', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}
-                >
-                  <h4 style={{ margin: '0 0 4px', color: '#1e293b' }}>{hosp.name}</h4>
-                  {hosp.location && <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>📍 {hosp.location}</p>}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {selectedHospital && (
-        <div>
-          <button onClick={() => { setSelectedHospital(null); setDoctors([]); }} style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', padding: 0, marginBottom: '12px' }}>← Back to Hospitals</button>
-          <h3>🩺 Doctors at {selectedHospital.name}</h3>
-
-          {loadingDoctors ? (
-            <p style={{ color: '#64748b' }}>Loading doctors...</p>
-          ) : doctors.length === 0 ? (
-            <p style={{ color: '#64748b' }}>No doctors listed for this hospital yet.</p>
-          ) : (
-            <div style={{ display: 'grid', gap: '16px', marginTop: '16px' }}>
-              {doctors.map((doc) => (
-                <div key={doc.id} style={{ padding: '20px', border: '1px solid #e2e8f0', borderRadius: '14px', backgroundColor: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
-                  <h4 style={{ margin: '0 0 4px', fontSize: '18px', color: '#0f172a' }}>{doc.name}</h4>
-                  <p style={{ margin: 0, fontSize: '13px', color: '#2563eb', fontWeight: '600' }}>{doc.specialty}</p>
-
-                  <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid #f1f5f9', fontSize: '13px', color: '#475569' }}>
-                    🎟️ Currently waiting: <strong>{doc.liveQueue} Patients</strong>
+      <div className="flow-content">
+        {!selectedHospital && (
+          <div>
+            <h3 className="flow-section-title">🏥 Available Hospitals</h3>
+            {loadingHospitals ? (
+              <p className="flow-empty">Loading hospitals...</p>
+            ) : hospitals.length === 0 ? (
+              <p className="flow-empty">No hospitals available yet.</p>
+            ) : (
+              <div className="hospital-list">
+                {hospitals.map((hosp) => (
+                  <div key={hosp.id} className="hospital-card" onClick={() => setSelectedHospital(hosp)}>
+                    <div className="hospital-icon">🏢</div>
+                    <div className="hospital-info">
+                      <h4>{hosp.name}</h4>
+                      {hosp.location && <p>📍 {hosp.location}</p>}
+                    </div>
                   </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
-                  <button
-                    onClick={() => handleBookToken(doc)}
-                    style={{ width: '100%', marginTop: '16px', padding: '10px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
-                  >
-                    Book Token / Join Queue
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+        {selectedHospital && (
+          <div>
+            <button className="flow-back-btn" onClick={() => { setSelectedHospital(null); setDoctors([]); }}>
+              ← Back to Hospitals
+            </button>
+            <h3 className="flow-section-title">🩺 Doctors at {selectedHospital.name}</h3>
 
-          {bookingError && <p style={{ color: '#dc2626', marginTop: '12px' }}>{bookingError}</p>}
-        </div>
-      )}
+            {loadingDoctors ? (
+              <p className="flow-empty">Loading doctors...</p>
+            ) : doctors.length === 0 ? (
+              <p className="flow-empty">No doctors listed for this hospital yet.</p>
+            ) : (
+              <div className="doctor-list">
+                {doctors.map((doc) => (
+                  <div key={doc.id} className="doctor-card">
+                    <div className="doctor-card-top">
+                      <div>
+                        <h4 className="doctor-name">{doc.name}</h4>
+                        <p className="doctor-specialty">{doc.specialty}</p>
+                      </div>
+                      <span className="doctor-queue-badge">{doc.liveQueue} waiting</span>
+                    </div>
+
+                    <div className="doctor-queue-row">
+                      🎟️ Currently waiting: <strong>{doc.liveQueue} Patients</strong>
+                    </div>
+
+                    <button className="book-btn" onClick={() => handleBookToken(doc)}>
+                      Book Token / Join Queue
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {bookingError && <p className="flow-booking-error">{bookingError}</p>}
+          </div>
+        )}
+      </div>
 
       {ticketData && (
         <BookingTicket
