@@ -4,7 +4,6 @@
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   padding-bottom: 40px;
 }
-
 .flow-topbar {
   background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #1d4ed8 100%);
   padding: 24px 20px;
@@ -13,7 +12,6 @@
   margin-bottom: 24px;
   box-shadow: 0 8px 24px rgba(29, 78, 216, 0.25);
 }
-
 .flow-topbar-inner {
   max-width: 560px;
   margin: 0 auto;
@@ -21,17 +19,44 @@
   justify-content: space-between;
   align-items: center;
 }
-
 .flow-title {
   margin: 0;
   font-size: 20px;
   font-weight: 700;
 }
-
 .flow-subtitle {
   margin: 4px 0 0;
   font-size: 12px;
   opacity: 0.8;
+}
+
+.flow-user-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.flow-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #78350f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 18px;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.flow-greeting {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
 }
 
 .flow-logout-btn {
@@ -45,9 +70,67 @@
   cursor: pointer;
   transition: background 0.2s;
 }
-
 .flow-logout-btn:hover {
   background: rgba(255, 255, 255, 0.25);
+}
+
+.city-switcher-row {
+  max-width: 560px;
+  margin: 14px auto 0;
+  position: relative;
+}
+
+.city-pill {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.city-pill:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.city-dropdown {
+  position: absolute;
+  top: 40px;
+  left: 0;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  padding: 6px;
+  min-width: 180px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.city-option {
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.city-option:hover {
+  background: #f1f5f9;
+}
+
+.city-option.active {
+  background: #eff6ff;
+  color: #1d4ed8;
 }
 
 .flow-content {
@@ -55,7 +138,6 @@
   margin: 0 auto;
   padding: 0 20px;
 }
-
 .flow-section-title {
   font-size: 17px;
   font-weight: 700;
@@ -65,7 +147,6 @@
   align-items: center;
   gap: 8px;
 }
-
 .flow-back-btn {
   background: none;
   border: none;
@@ -79,19 +160,16 @@
   align-items: center;
   gap: 4px;
 }
-
 .flow-empty {
   color: #94a3b8;
   font-size: 14px;
   padding: 24px 0;
   text-align: center;
 }
-
 .hospital-list {
   display: grid;
   gap: 14px;
 }
-
 .hospital-card {
   background: #fff;
   border: 1px solid #e2e8f0;
@@ -103,13 +181,11 @@
   align-items: center;
   gap: 14px;
 }
-
 .hospital-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(37, 99, 235, 0.12);
   border-color: #93c5fd;
 }
-
 .hospital-icon {
   width: 44px;
   height: 44px;
@@ -121,24 +197,20 @@
   font-size: 20px;
   flex-shrink: 0;
 }
-
 .hospital-info h4 {
   margin: 0 0 2px;
   font-size: 16px;
   color: #0f172a;
 }
-
 .hospital-info p {
   margin: 0;
   font-size: 12.5px;
   color: #64748b;
 }
-
 .doctor-list {
   display: grid;
   gap: 16px;
 }
-
 .doctor-card {
   background: #fff;
   border: 1px solid #e2e8f0;
@@ -146,28 +218,24 @@
   padding: 22px;
   box-shadow: 0 4px 14px rgba(0,0,0,0.03);
 }
-
 .doctor-card-top {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 14px;
 }
-
 .doctor-name {
   margin: 0 0 4px;
   font-size: 17px;
   color: #0f172a;
   font-weight: 700;
 }
-
 .doctor-specialty {
   margin: 0;
   font-size: 13px;
   color: #2563eb;
   font-weight: 600;
 }
-
 .doctor-queue-badge {
   background: #eff6ff;
   color: #1d4ed8;
@@ -177,7 +245,6 @@
   border-radius: 20px;
   white-space: nowrap;
 }
-
 .doctor-queue-row {
   border-top: 1px solid #f1f5f9;
   padding-top: 12px;
@@ -185,7 +252,6 @@
   font-size: 13px;
   color: #475569;
 }
-
 .book-btn {
   width: 100%;
   padding: 13px;
@@ -198,12 +264,10 @@
   cursor: pointer;
   transition: transform 0.15s, box-shadow 0.15s;
 }
-
 .book-btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 8px 20px rgba(15, 23, 42, 0.25);
 }
-
 .flow-booking-error {
   color: #dc2626;
   background: #fef2f2;

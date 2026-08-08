@@ -10,35 +10,46 @@ export default function App() {
   const [isGuest, setIsGuest] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('home');
+  const [patientProfile, setPatientProfile] = useState(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
-      if (session?.user) ensurePatientRecord(session.user);
+      if (session?.user) loadPatientProfile(session.user);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       setSession(session);
       setLoading(false);
-      if (session?.user) ensurePatientRecord(session.user);
+      if (session?.user) loadPatientProfile(session.user);
     });
     return () => subscription.unsubscribe();
   }, []);
 
-  const ensurePatientRecord = async (user) => {
+  const loadPatientProfile = async (user) => {
     const { data: existing } = await supabase
       .from('patients')
-      .select('id')
+      .select('name, city')
       .eq('user_id', user.id)
       .maybeSingle();
 
-    if (!existing) {
+    if (existing) {
+      setPatientProfile(existing);
+    } else {
       const patientCode = 'MDQ-' + Math.floor(1000 + Math.random() * 9000);
-      await supabase.from('patients').insert({
-        user_id: user.id,
-        name: user.email?.split('@')[0] || 'Patient',
-        patient_code: patientCode,
-      });
+      const fullName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Patient';
+      const userCity = user.user_metadata?.city || '';
+      const { data: created } = await supabase
+        .from('patients')
+        .insert({
+          user_id: user.id,
+          name: fullName,
+          patient_code: patientCode,
+          city: userCity,
+        })
+        .select('name, city')
+        .single();
+      setPatientProfile(created);
     }
   };
 
@@ -52,12 +63,22 @@ export default function App() {
     supabase.auth.signOut();
     setIsGuest(false);
     setActiveTab('home');
+    setPatientProfile(null);
   };
+
+  const displayName = patientProfile?.name || session?.user?.email?.split('@')[0] || 'Guest';
+  const initialCity = patientProfile?.city || '';
 
   return (
     <>
       {activeTab === 'home' && (
-        <HospitalFlow user={session?.user || null} isGuest={isGuest} onLogout={handleLogout} />
+        <HospitalFlow
+          user={session?.user || null}
+          isGuest={isGuest}
+          onLogout={handleLogout}
+          displayName={displayName}
+          initialCity={initialCity}
+        />
       )}
       {activeTab === 'token' && (
         <MyToken user={session?.user || null} />

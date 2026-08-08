@@ -1,130 +1,116 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
+import { translations, languages } from '../i18n';
+import { getAllCities } from '../hospitalData';
+import './Login.css';
 
-export default function Login() {
-  const [lang, setLang] = useState('en'); // 'en', 'bn', 'hi'
+export default function Login({ onGuestContinue }) {
+  const [lang, setLang] = useState('en');
   const [name, setName] = useState('');
+  const [city, setCity] = useState('');
+  const [cities, setCities] = useState([]);
   const [email, setEmail] = useState('');
+  const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
 
-  // Translations dictionary
-  const t = {
-    en: {
-      title: 'MediQ Patient Login',
-      sub: 'Sign in to book live queues & track doctor timings',
-      nameLabel: 'Patient Name',
-      namePlaceholder: 'Enter your name (e.g. Yash / Siddika)',
-      emailLabel: 'Gmail / Email Address',
-      emailPlaceholder: 'name@example.com',
-      button: 'Continue to MediQ',
-      loading: 'Sending Login Link...',
-      success: 'Check your email inbox for the login link!'
-    },
-    bn: {
-      title: 'মেডি-কিউ পেশেন্ট লগইন',
-      sub: 'লাইভ টিকিট বুকিং এবং ডাক্তারের সময় দেখতে সাইন ইন করুন',
-      nameLabel: 'রোগীর নাম',
-      namePlaceholder: 'আপনার নাম লিখুন (যেমন: ইয়াশ / সিদ্দিকা)',
-      emailLabel: 'জিমেইল / ইমেল ঠিকানা',
-      emailPlaceholder: 'name@example.com',
-      button: 'এগিয়ে যান',
-      loading: 'লগইন লিংক পাঠানো হচ্ছে...',
-      success: 'আপনার ইমেল ইনবক্সে লগইন লিংক চেক করুন!'
-    },
-    hi: {
-      title: 'मेडी-क्यू पेशेंट लॉगिन',
-      sub: 'लाइव कतार बुक करने और डॉक्टर का समय देखने के लिए साइन इन करें',
-      nameLabel: 'मरीज़ का नाम',
-      namePlaceholder: 'अपना नाम दर्ज करें (जैसे: यश / सिद्दीका)',
-      emailLabel: 'जीमेल / ईमेल पता',
-      emailPlaceholder: 'name@example.com',
-      button: 'आगे बढ़ें',
-      loading: 'लॉगिन लिंक भेजा जा रहा है...',
-      success: 'अपने ईमेल इनबॉक्स में लॉगिन लिंक चेक करें!'
-    }
-  };
+  const t = translations[lang];
 
-  const handleLogin = async (e) => {
+  useEffect(() => {
+    getAllCities().then(setCities);
+  }, []);
+
+  const sendMagicLink = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMessage('');
-
-    // Send magic link with name stored in user metadata
+    setError('');
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        data: {
-          full_name: name || email.split('@')[0],
-          language: lang
-        }
-      }
+        shouldCreateUser: true,
+        data: { full_name: name, city: city },
+      },
     });
-
     setLoading(false);
-
-    if (error) setMessage(`Error: ${error.message}`);
-    else setMessage(t[lang].success);
+    if (error) setError(error.message);
+    else setSent(true);
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #eff6ff 0%, #e0f2fe 100%)', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', padding: '20px' }}>
-      <div style={{ width: '100%', maxWidth: '420px', padding: '36px 28px', backgroundColor: '#ffffff', borderRadius: '20px', boxShadow: '0 10px 30px rgba(15, 23, 42, 0.08)', position: 'relative' }}>
-        
-        {/* Language Selector Dropdown */}
-        <div style={{ position: 'absolute', top: '20px', right: '20px' }}>
-          <select 
-            value={lang} 
-            onChange={(e) => setLang(e.target.value)}
-            style={{ padding: '6px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px', fontWeight: 'bold', backgroundColor: '#f8fafc', cursor: 'pointer', outline: 'none' }}
+    <div className="login-page">
+      <div className="login-bg-shape shape-1" />
+      <div className="login-bg-shape shape-2" />
+
+      <div className="lang-toggle">
+        {languages.map((l) => (
+          <button
+            key={l.code}
+            className={`lang-pill ${lang === l.code ? 'active' : ''}`}
+            onClick={() => setLang(l.code)}
           >
-            <option value="en">🌐 English</option>
-            <option value="bn">🌐 বাংলা</option>
-            <option value="hi">🌐 हिंदी</option>
-          </select>
-        </div>
-
-        {/* Branding Header */}
-        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-          <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', color: '#fff', fontSize: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 8px 16px rgba(37, 99, 235, 0.25)', fontWeight: 'bold' }}>✙</div>
-          <h2 style={{ margin: '0 0 6px', color: '#0f172a', fontSize: '24px', fontWeight: '800' }}>{t[lang].title}</h2>
-          <p style={{ color: '#64748b', fontSize: '13px', margin: 0 }}>{t[lang].sub}</p>
-        </div>
-
-        <form onSubmit={handleLogin}>
-          {/* Patient Name Field */}
-          <div style={{ marginBottom: '16px', textAlign: 'left' }}>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>{t[lang].nameLabel}</label>
-            <input
-              type="text"
-              placeholder={t[lang].namePlaceholder}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              style={{ width: '100%', padding: '12px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box', outline: 'none' }}
-            />
-          </div>
-
-          {/* Email Field */}
-          <div style={{ marginBottom: '22px', textAlign: 'left' }}>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>{t[lang].emailLabel}</label>
-            <input
-              type="email"
-              placeholder={t[lang].emailPlaceholder}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              style={{ width: '100%', padding: '12px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box', outline: 'none' }}
-            />
-          </div>
-
-          {/* Submit Button */}
-          <button type="submit" disabled={loading} style={{ width: '100%', padding: '14px', background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)' }}>
-            {loading ? t[lang].loading : t[lang].button}
+            {l.label}
           </button>
-        </form>
+        ))}
+      </div>
 
-        {message && <p style={{ marginTop: '16px', fontSize: '13px', textAlign: 'center', color: message.startsWith('Error') ? '#dc2626' : '#16a34a', fontWeight: '600' }}>{message}</p>}
+      <div className="login-card">
+        <div className="login-logo"><span className="login-logo-icon">✛</span></div>
+        <h1 className="login-title">{t.signInTitle}</h1>
+
+        {!sent ? (
+          <>
+            <p className="login-subtitle">{t.signInSubtitle}</p>
+
+            <form onSubmit={sendMagicLink} className="login-form">
+              <div className="input-group">
+                <input
+                  id="name" type="text" className="login-input" placeholder=" "
+                  value={name} onChange={(e) => setName(e.target.value)} required
+                />
+                <label htmlFor="name" className="input-label">{t.nameLabel}</label>
+              </div>
+
+              <div className="input-group">
+                <select
+                  id="city" className="login-input login-select"
+                  value={city} onChange={(e) => setCity(e.target.value)} required
+                >
+                  <option value="" disabled hidden></option>
+                  {cities.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+                <label htmlFor="city" className="input-label input-label-select">Your City</label>
+              </div>
+
+              <div className="input-group">
+                <input
+                  id="email" type="email" className="login-input" placeholder=" "
+                  value={email} onChange={(e) => setEmail(e.target.value)} required
+                />
+                <label htmlFor="email" className="input-label">{t.emailLabel}</label>
+              </div>
+
+              <button type="submit" className="login-btn" disabled={loading || !email || !name || !city}>
+                {loading ? <span className="spinner" /> : t.continueBtn}
+              </button>
+            </form>
+
+            <button className="guest-btn" onClick={onGuestContinue}>
+              {t.guestBtn}
+            </button>
+          </>
+        ) : (
+          <>
+            <p className="login-subtitle">{t.checkEmail(email)}</p>
+            <button className="login-link-btn" onClick={() => setSent(false)}>
+              {t.differentEmail}
+            </button>
+          </>
+        )}
+
+        {error && <p className="login-error">{error}</p>}
+        <p className="login-footer">{t.terms}</p>
       </div>
     </div>
   );

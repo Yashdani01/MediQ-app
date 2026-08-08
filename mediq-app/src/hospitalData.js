@@ -1,11 +1,23 @@
 import { supabase } from './supabaseClient';
 
-export async function getHospitals() {
-  const { data, error } = await supabase
-    .from('hospitals')
-    .select('id, name, location');
+export async function getHospitals(city) {
+  let query = supabase.from('hospitals').select('id, name, location, city');
+  if (city) {
+    query = query.ilike('city', city);
+  }
+  const { data, error } = await query;
   if (error) { console.error('Error fetching hospitals:', error); return []; }
   return data;
+}
+
+export async function getAllCities() {
+  const { data, error } = await supabase
+    .from('hospitals')
+    .select('city')
+    .not('city', 'is', null);
+  if (error) { console.error('Error fetching cities:', error); return []; }
+  const unique = [...new Set(data.map((h) => h.city).filter(Boolean))];
+  return unique;
 }
 
 export async function getDoctorsForHospital(hospitalId) {
