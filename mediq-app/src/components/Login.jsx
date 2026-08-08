@@ -24,13 +24,12 @@ export default function Login({ onGuestContinue }) {
     e.preventDefault();
     setLoading(true);
     setError('');
-    localStorage.setItem('mediq_pending_name', name);
-    localStorage.setItem('mediq_pending_city', city);
+  const redirectUrl = `${window.location.origin}?name=${encodeURIComponent(name)}&city=${encodeURIComponent(city)}`;
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
         shouldCreateUser: true,
-        data: { full_name: name, city: city },
+        emailRedirectTo: redirectUrl,
       },
     });
     setLoading(false);

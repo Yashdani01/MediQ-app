@@ -30,15 +30,11 @@ export async function getDoctorsForHospital(hospitalId) {
 }
 
 export async function getWaitingCount(doctorId) {
-  const { count, error } = await supabase
-    .from('appointments')
-    .select('*', { count: 'exact', head: true })
-    .eq('doctor_id', doctorId)
-    .eq('status', 'waiting');
+  const { data, error } = await supabase
+    .rpc('get_waiting_count', { doc_id: doctorId });
   if (error) { console.error('Error counting queue:', error); return 0; }
-  return count || 0;
+  return data || 0;
 }
-
 export async function bookAppointment(patientUserId, doctorId, hospitalId) {
   const { data: patient, error: patientError } = await supabase
     .from('patients')

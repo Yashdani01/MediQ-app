@@ -28,10 +28,10 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const loadPatientProfile = async (user) => {
-    const pendingName = localStorage.getItem('mediq_pending_name');
-    const pendingCity = localStorage.getItem('mediq_pending_city');
-
+const loadPatientProfile = async (user) => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const pendingName = urlParams.get('name');
+    const pendingCity = urlParams.get('city');
     const { data: existing } = await supabase
       .from('patients')
       .select('id, name, city')
@@ -47,8 +47,7 @@ export default function App() {
           .select('name, city')
           .single();
         setPatientProfile(updated);
-        localStorage.removeItem('mediq_pending_name');
-        localStorage.removeItem('mediq_pending_city');
+        window.history.replaceState({}, '', window.location.pathname);
       } else {
         setPatientProfile(existing);
       }
