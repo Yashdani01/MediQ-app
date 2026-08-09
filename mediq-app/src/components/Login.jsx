@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { translations, languages } from '../i18n';
 import { getAllCities } from '../hospitalData';
@@ -14,6 +14,9 @@ export default function Login({ onGuestContinue }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const [otp, setOtp] = useState('');
+  const [verifying, setVerifying] = useState(false);
+
   const t = translations[lang];
 
   useEffect(() => {
@@ -24,7 +27,7 @@ export default function Login({ onGuestContinue }) {
     e.preventDefault();
     setLoading(true);
     setError('');
-  const redirectUrl = `${window.location.origin}?name=${encodeURIComponent(name)}&city=${encodeURIComponent(city)}`;
+    const redirectUrl = `?name=${encodeURIComponent(name)}&city=${encodeURIComponent(city)}`;
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
@@ -35,6 +38,26 @@ export default function Login({ onGuestContinue }) {
     setLoading(false);
     if (error) setError(error.message);
     else setSent(true);
+  };
+
+  const verifyCode = async (e) => {
+    e.preventDefault();
+    setVerifying(true);
+    setError('');
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: otp,
+      type: 'email',
+    });
+    setVerifying(false);
+    if (error) {
+      setError(error.message);
+    } else {
+      const url = new URL(window.location.href);
+      url.searchParams.set('name', name);
+      url.searchParams.set('city', city);
+      window.location.href = url.toString();
+    }
   };
 
   return (
@@ -55,7 +78,7 @@ export default function Login({ onGuestContinue }) {
       </div>
 
       <div className="login-card">
-        <div className="login-logo"><span className="login-logo-icon">✛</span></div>
+        <div className="login-logo"><span className="login-logo-icon">+</span></div>
         <h1 className="login-title">{t.signInTitle}</h1>
 
         {!sent ? (
@@ -104,7 +127,25 @@ export default function Login({ onGuestContinue }) {
         ) : (
           <>
             <p className="login-subtitle">{t.checkEmail(email)}</p>
-            <button className="login-link-btn" onClick={() => setSent(false)}>
+
+            <form onSubmit={verifyCode} className="login-form">
+              <div className="input-group">
+                <input
+                  id="otp" type="text" inputMode="numeric" maxLength={6}
+                  className="login-input" placeholder=" "
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                  required
+                />
+                <label htmlFor="otp" className="input-label">Enter 6-digit code</label>
+              </div>
+
+              <button type="submit" className="login-btn" disabled={verifying || otp.length !== 6}>
+                {verifying ? <span className="spinner" /> : 'Verify & Continue'}
+              </button>
+            </form>
+
+            <button className="login-link-btn" onClick={() => { setSent(false); setOtp(''); setError(''); }}>
               {t.differentEmail}
             </button>
           </>
