@@ -1,81 +1,72 @@
-import { useEffect, useState } from 'react'
-import { supabase } from '../supabaseClient.js'
+import { useState, useEffect } from 'react';
+import { getPatientReports } from '../hospitalData';
+import './Reports.css';
 
-// No patient login yet, so we look up the one seeded demo patient by code.
-// Once Supabase Auth is added, replace this with the signed-in user's id.
-const DEMO_PATIENT_CODE = 'MDQ-2291'
-
-export default function Reports({ t }) {
-  const [reports, setReports] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+export default function Reports({ user }) {
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadReports() {
-      const { data: patient, error: patientError } = await supabase
-        .from('patients')
-        .select('id')
-        .eq('patient_code', DEMO_PATIENT_CODE)
-        .single()
+    if (!user) { setLoading(false); return; }
+    getPatientReports(user.id).then((data) => {
+      setReports(data);
+      setLoading(false);
+    });
+  }, [user]);
 
-      if (patientError) {
-        setError(patientError.message)
-        setLoading(false)
-        return
-      }
+  const formatDate = (dateStr) =>
+    new Date(dateStr).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
 
-      const { data, error } = await supabase
-        .from('reports')
-        .select('*')
-        .eq('patient_id', patient.id)
-        .order('uploaded_at', { ascending: false })
-
-      if (error) {
-        setError(error.message)
-      } else {
-        setReports(data)
-      }
-      setLoading(false)
-    }
-
-    loadReports()
-  }, [])
+  const openReport = (report) => {
+    if (report.file_url) window.open(report.file_url, '_blank');
+  };
 
   return (
-    <section>
-      <h1 className="page-title">{t.reports_title}</h1>
-      <p className="page-sub">{t.reports_sub}</p>
-
-      <div className="upload-zone">
-        <b>{t.upload_b}</b>
-        <span>{t.upload_sub}</span>
+    <div className="reports-page">
+      <div className="reports-topbar">
+        <div className="reports-topbar-inner">
+          <h3 className="reports-title">📄 My Reports</h3>
+          <p className="reports-subtitle">Your test results and medical reports</p>
+        </div>
       </div>
 
-      <div className="section-label">{t.lbl_uploaded}</div>
-
-      {loading && <p className="page-sub">Loading reports…</p>}
-      {error && <p className="page-sub">Couldn't load reports: {error}</p>}
-      {!loading && !error && reports.length === 0 && (
-        <p className="page-sub">No reports uploaded yet.</p>
-      )}
-
-      {reports.length > 0 && (
-        <div className="card">
-          {reports.map(r => (
-            <div className="report-row" key={r.id}>
-              <div>
-                <div className="report-name">{r.name}</div>
-                <div className="report-date">
-                  {new Date(r.uploaded_at).toLocaleDateString('en-GB', {
-                    day: 'numeric', month: 'short', year: 'numeric'
-                  })}
+      <div className="reports-content">
+        {loading ? (
+          <p className="reports-empty">Loading reports...</p>
+        ) : !user ? (
+          <div className="reports-empty">
+            <div className="reports-empty-icon">🔒</div>
+            <h3 style={{ color: '#0f172a', margin: '0 0 6px' }}>Sign in to view reports</h3>
+            <p style={{ margin: 0 }}>Your medical reports will appear here once you're signed in.</p>
+          </div>
+        ) : reports.length === 0 ? (
+          <div className="reports-empty">
+            <div className="reports-empty-icon">📄</div>
+            <h3 style={{ color: '#0f172a', margin: '0 0 6px' }}>No reports yet</h3>
+            <p style={{ margin: 0 }}>Your test results and reports will show up here once available.</p>
+          </div>
+        ) : (
+          <div className="reports-list">
+            {reports.map((r) => (
+              <div key={r.id} className="report-card" onClick={() => openReport(r)}>
+                <div className="report-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                  </svg>
+                </div>
+                <div className="report-info">
+                  <h4>{r.name}</h4>
+                  <p>{formatDate(r.uploaded_at)}</p>
+                  {r.report_type && <span className="report-type-badge">{r.report_type}</span>}
                 </div>
               </div>
-              <span className="tag">{r.report_type}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </section>
-  )
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }

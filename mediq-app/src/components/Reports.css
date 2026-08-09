@@ -1,0 +1,111 @@
+.reports-page {
+  min-height: 100vh;
+  background: #f8fafc;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  padding-bottom: 100px;
+}
+
+.reports-topbar {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #1d4ed8 100%);
+  padding: 24px 20px;
+  color: #fff;
+  border-radius: 0 0 24px 24px;
+  margin-bottom: 20px;
+}
+
+.reports-topbar-inner {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.reports-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.reports-subtitle {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  opacity: 0.85;
+}
+
+.reports-content {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.reports-list {
+  display: grid;
+  gap: 12px;
+}
+
+.report-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.report-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+}
+
+.report-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #fff;
+}
+
+.report-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.report-info h4 {
+  margin: 0 0 3px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.report-info p {
+  margin: 0;
+  font-size: 12.5px;
+  color: #64748b;
+}
+
+.report-type-badge {
+  display: inline-block;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+  margin-top: 4px;
+}
+
+.reports-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #64748b;
+}
+
+.reports-empty-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+}

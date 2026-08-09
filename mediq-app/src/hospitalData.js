@@ -226,4 +226,21 @@ export async function getAllSpecialties(city) {
 
   if (error || !doctors) return [];
   return [...new Set(doctors.map((d) => d.specialty).filter(Boolean))];
+}export async function getPatientReports(patientUserId) {
+  const { data: patient, error: patientError } = await supabase
+    .from('patients')
+    .select('id')
+    .eq('user_id', patientUserId)
+    .single();
+
+  if (patientError || !patient) return [];
+
+  const { data, error } = await supabase
+    .from('reports')
+    .select('id, name, report_type, file_url, uploaded_at')
+    .eq('patient_id', patient.id)
+    .order('uploaded_at', { ascending: false });
+
+  if (error) { console.error('Error fetching reports:', error); return []; }
+  return data;
 }
