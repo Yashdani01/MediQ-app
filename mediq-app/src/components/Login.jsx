@@ -27,14 +27,14 @@ export default function Login({ onGuestContinue }) {
     e.preventDefault();
     setLoading(true);
     setError('');
-    const redirectUrl = `?name=${encodeURIComponent(name)}&city=${encodeURIComponent(city)}`;
+
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
         shouldCreateUser: true,
-        emailRedirectTo: redirectUrl,
       },
     });
+
     setLoading(false);
     if (error) setError(error.message);
     else setSent(true);
@@ -44,11 +44,13 @@ export default function Login({ onGuestContinue }) {
     e.preventDefault();
     setVerifying(true);
     setError('');
+
     const { error } = await supabase.auth.verifyOtp({
       email,
       token: otp,
       type: 'email',
     });
+
     setVerifying(false);
     if (error) {
       setError(error.message);
@@ -69,7 +71,7 @@ export default function Login({ onGuestContinue }) {
         {languages.map((l) => (
           <button
             key={l.code}
-            className={`lang-pill ${lang === l.code ? 'active' : ''}`}
+            className={lang-pill }
             onClick={() => setLang(l.code)}
           >
             {l.label}
