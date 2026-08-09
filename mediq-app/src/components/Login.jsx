@@ -6,10 +6,10 @@ import './Login.css';
 
 export default function Login({ onGuestContinue }) {
   const [lang, setLang] = useState('en');
-  const [name, setName] = useState('');
-  const [city, setCity] = useState('');
+  const [name, setName] = useState(() => sessionStorage.getItem('mediq_name') || '');
+  const [city, setCity] = useState(() => sessionStorage.getItem('mediq_city') || '');
   const [cities, setCities] = useState([]);
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(() => sessionStorage.getItem('mediq_email') || '');
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -23,18 +23,22 @@ export default function Login({ onGuestContinue }) {
     getAllCities().then(setCities);
   }, []);
 
+  useEffect(() => { sessionStorage.setItem('mediq_name', name); }, [name]);
+  useEffect(() => { sessionStorage.setItem('mediq_city', city); }, [city]);
+  useEffect(() => { sessionStorage.setItem('mediq_email', email); }, [email]);
+
   const sendMagicLink = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-
+    const redirectUrl = `${window.location.origin}?name=${encodeURIComponent(name)}&city=${encodeURIComponent(city)}`;
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
         shouldCreateUser: true,
+        emailRedirectTo: redirectUrl,
       },
     });
-
     setLoading(false);
     if (error) setError(error.message);
     else setSent(true);
@@ -44,17 +48,18 @@ export default function Login({ onGuestContinue }) {
     e.preventDefault();
     setVerifying(true);
     setError('');
-
     const { error } = await supabase.auth.verifyOtp({
       email,
       token: otp,
       type: 'email',
     });
-
     setVerifying(false);
     if (error) {
       setError(error.message);
     } else {
+      sessionStorage.removeItem('mediq_name');
+      sessionStorage.removeItem('mediq_city');
+      sessionStorage.removeItem('mediq_email');
       const url = new URL(window.location.href);
       url.searchParams.set('name', name);
       url.searchParams.set('city', city);
@@ -71,7 +76,7 @@ export default function Login({ onGuestContinue }) {
         {languages.map((l) => (
           <button
             key={l.code}
-            className={lang-pill }
+            className={`lang-pill ${lang === l.code ? 'active' : ''}`}
             onClick={() => setLang(l.code)}
           >
             {l.label}
