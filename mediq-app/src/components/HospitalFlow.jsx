@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import BookingTicket from './BookingTicket';
 import Profile from './Profile';
-import { getHospitals, getAllCities, getDoctorsForHospital, getWaitingCount, bookAppointment } from '../hospitalData';
+import {
+  getHospitals, getAllCities, getDoctorsForHospital, getWaitingCount,
+  bookAppointment, searchDoctors, getAllSpecialties,
+} from '../hospitalData';
 import './HospitalFlow.css';
 
 export default function HospitalFlow({ user, isGuest, onLogout, displayName, initialCity }) {
@@ -17,6 +20,14 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
   const [ticketData, setTicketData] = useState(null);
   const [bookingError, setBookingError] = useState('');
 
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeSpecialty, setActiveSpecialty] = useState('');
+  const [specialties, setSpecialties] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+
+  const isSearchActive = searchTerm.trim() !== '' || activeSpecialty !== '';
+
   useEffect(() => {
     getAllCities().then(setAllCities);
   }, []);
@@ -27,6 +38,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
       setHospitals(data);
       setLoadingHospitals(false);
     });
+    getAllSpecialties(currentCity).then(setSpecialties);
   }, [currentCity]);
 
   useEffect(() => {
@@ -44,14 +56,27 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
     });
   }, [selectedHospital]);
 
-  const handleBookToken = async (doc) => {
+  useEffect(() => {
+    if (!isSearchActive) { setSearchResults([]); return; }
+    setSearching(true);
+    const term = activeSpecialty || searchTerm;
+    const delay = setTimeout(() => {
+      searchDoctors(currentCity, term).then((results) => {
+        setSearchResults(results);
+        setSearching(false);
+      });
+    }, 300);
+    return () => clearTimeout(delay);
+  }, [searchTerm, activeSpecialty, currentCity]);
+
+  const handleBookToken = async (doc, hospitalId) => {
     setBookingError('');
     if (isGuest || !user) {
       setBookingError('Please sign in to book a queue token.');
       return;
     }
 
-    const { data: appointment, error } = await bookAppointment(user.id, doc.id, selectedHospital.id);
+    const { data: appointment, error } = await bookAppointment(user.id, doc.id, hospitalId);
 
     if (error) {
       setBookingError('Something went wrong while booking. Please try again.');
@@ -67,6 +92,11 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
       },
       patientsAheadOverride: doc.liveQueue,
     });
+  };
+
+  const clearSearch = () => {
+    setSearchTerm('');
+    setActiveSpecialty('');
   };
 
   const nameForAvatar = isGuest ? 'Guest' : (displayName || 'Patient');
@@ -124,23 +154,83 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
       <div className="flow-content">
         {!selectedHospital && (
           <div>
-            <h3 className="flow-section-title">🏥 Available Hospitals</h3>
-            {loadingHospitals ? (
-              <p className="flow-empty">Loading hospitals...</p>
-            ) : hospitals.length === 0 ? (
-              <p className="flow-empty">No hospitals available in {currentCity || 'this area'} yet.</p>
-            ) : (
-              <div className="hospital-list">
-                {hospitals.map((hosp) => (
-                  <div key={hosp.id} className="hospital-card" onClick={() => setSelectedHospital(hosp)}>
-                    <div className="hospital-icon">🏢</div>
-                    <div className="hospital-info">
-                      <h4>{hosp.name}</h4>
-                      {hosp.location && <p>📍 {hosp.location}</p>}
-                    </div>
-                  </div>
+            <div className="search-bar-wrap">
+              <input
+                type="text"
+                className="search-bar"
+                placeholder="Search doctor or specialty..."
+                value={searchTerm}
+                onChange={(e) => { setSearchTerm(e.target.value); setActiveSpecialty(''); }}
+              />
+              {isSearchActive && (
+                <button className="search-clear-btn" onClick={clearSearch}>✕</button>
+              )}
+            </div>
+
+            {specialties.length > 0 && (
+              <div className="specialty-chips">
+                {specialties.map((s) => (
+                  <button
+                    key={s}
+                    className={`specialty-chip ${activeSpecialty === s ? 'active' : ''}`}
+                    onClick={() => { setActiveSpecialty(activeSpecialty === s ? '' : s); setSearchTerm(''); }}
+                  >
+                    {s}
+                  </button>
                 ))}
               </div>
+            )}
+
+            {isSearchActive ? (
+              <>
+                <h3 className="flow-section-title">🔍 Search Results</h3>
+                {searching ? (
+                  <p className="flow-empty">Searching...</p>
+                ) : searchResults.length === 0 ? (
+                  <p className="flow-empty">No doctors found. Try a different search.</p>
+                ) : (
+                  <div className="doctor-list">
+                    {searchResults
+                      .sort((a, b) => a.liveQueue - b.liveQueue)
+                      .map((doc) => (
+                        <div key={doc.id} className="doctor-card">
+                          <div className="doctor-card-top">
+                            <div>
+                              <h4 className="doctor-name">{doc.name}</h4>
+                              <p className="doctor-specialty">{doc.specialty}</p>
+                              <p className="doctor-hospital-tag">🏥 {doc.hospital?.name}</p>
+                            </div>
+                            <span className="doctor-queue-badge">{doc.liveQueue} waiting</span>
+                          </div>
+                          <button className="book-btn" onClick={() => handleBookToken(doc, doc.hospital_id)}>
+                            Book Token / Join Queue
+                          </button>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <h3 className="flow-section-title">🏥 Available Hospitals</h3>
+                {loadingHospitals ? (
+                  <p className="flow-empty">Loading hospitals...</p>
+                ) : hospitals.length === 0 ? (
+                  <p className="flow-empty">No hospitals available in {currentCity || 'this area'} yet.</p>
+                ) : (
+                  <div className="hospital-list">
+                    {hospitals.map((hosp) => (
+                      <div key={hosp.id} className="hospital-card" onClick={() => setSelectedHospital(hosp)}>
+                        <div className="hospital-icon">🏢</div>
+                        <div className="hospital-info">
+                          <h4>{hosp.name}</h4>
+                          {hosp.location && <p>📍 {hosp.location}</p>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
@@ -172,7 +262,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                       🎟️ Currently waiting: <strong>{doc.liveQueue} Patients</strong>
                     </div>
 
-                    <button className="book-btn" onClick={() => handleBookToken(doc)}>
+                    <button className="book-btn" onClick={() => handleBookToken(doc, selectedHospital.id)}>
                       Book Token / Join Queue
                     </button>
                   </div>

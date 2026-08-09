@@ -174,3 +174,56 @@ export async function getBookingHistory(patientUserId) {
 
   return enriched;
 }
+
+// Search doctors by name/specialty across all hospitals in a city
+export async function searchDoctors(city, searchTerm) {
+  let hospitalQuery = supabase.from('hospitals').select('id, name, location, city');
+  if (city) {
+    hospitalQuery = hospitalQuery.ilike('city', city);
+  }
+  const { data: hospitals, error: hospitalError } = await hospitalQuery;
+  if (hospitalError || !hospitals || hospitals.length === 0) return [];
+
+  const hospitalIds = hospitals.map((h) => h.id);
+  const hospitalMap = Object.fromEntries(hospitals.map((h) => [h.id, h]));
+
+  let doctorQuery = supabase
+    .from('doctors')
+    .select('id, name, specialty, avg_minutes_per_patient, hospital_id')
+    .in('hospital_id', hospitalIds);
+
+  if (searchTerm) {
+    doctorQuery = doctorQuery.or(`name.ilike.%${searchTerm}%,specialty.ilike.%${searchTerm}%`);
+  }
+
+  const { data: doctors, error: doctorError } = await doctorQuery;
+  if (doctorError || !doctors) return [];
+
+  const withQueueAndHospital = await Promise.all(
+    doctors.map(async (doc) => ({
+      ...doc,
+      liveQueue: await getWaitingCount(doc.id),
+      hospital: hospitalMap[doc.hospital_id],
+    }))
+  );
+
+  return withQueueAndHospital;
+}
+
+export async function getAllSpecialties(city) {
+  let hospitalQuery = supabase.from('hospitals').select('id');
+  if (city) {
+    hospitalQuery = hospitalQuery.ilike('city', city);
+  }
+  const { data: hospitals } = await hospitalQuery;
+  if (!hospitals || hospitals.length === 0) return [];
+
+  const hospitalIds = hospitals.map((h) => h.id);
+  const { data: doctors, error } = await supabase
+    .from('doctors')
+    .select('specialty')
+    .in('hospital_id', hospitalIds);
+
+  if (error || !doctors) return [];
+  return [...new Set(doctors.map((d) => d.specialty).filter(Boolean))];
+}

@@ -138,6 +138,89 @@
   margin: 0 auto;
   padding: 0 20px;
 }
+.search-bar-wrap {
+  position: relative;
+  margin-bottom: 14px;
+}
+
+.search-bar {
+  width: 100%;
+  padding: 13px 40px 13px 16px;
+  font-size: 14px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.search-bar:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.search-clear-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #f1f5f9;
+  border: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: #64748b;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.specialty-chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 20px;
+  scrollbar-width: none;
+}
+
+.specialty-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.specialty-chip {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1.5px solid #e2e8f0;
+  background: #fff;
+  color: #475569;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.specialty-chip:hover {
+  border-color: #93c5fd;
+}
+
+.specialty-chip.active {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  border-color: #2563eb;
+  color: #fff;
+}
+
+.doctor-hospital-tag {
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  color: #94a3b8;
+  font-weight: 600;
+}
 .flow-section-title {
   font-size: 17px;
   font-weight: 700;
