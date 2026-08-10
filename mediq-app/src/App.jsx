@@ -1,11 +1,17 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 import Login from './components/Login';
 import HospitalFlow from './components/HospitalFlow';
 import MyToken from './components/MyToken';import Reports from './components/Reports';
+import ClinicPortal from './components/ClinicPortal';
 import './components/MyToken.css';
 
 export default function App() {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('portal') === 'clinic') {
+    return <ClinicPortal />;
+  }
+
   const [session, setSession] = useState(null);
   const [isGuest, setIsGuest] = useState(false);
   const [loading, setLoading] = useState(true);

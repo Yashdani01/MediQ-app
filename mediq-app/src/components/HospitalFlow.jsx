@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import BookingTicket from './BookingTicket';
 import Profile from './Profile';
 import {
@@ -6,6 +6,59 @@ import {
   bookAppointment, searchDoctors, getAllSpecialties,
 } from '../hospitalData';
 import './HospitalFlow.css';
+
+const STATUS_STYLES = {
+  available: { label: 'Available', color: '#22c55e' },
+  delayed: { label: 'Delayed', color: '#f59e0b' },
+  on_break: { label: 'On Break', color: '#6b7280' },
+  not_started: { label: 'Not Started', color: '#ef4444' },
+};
+
+const DAY_ABBR = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+function formatTime(t) {
+  if (!t) return '';
+  const [h, m] = t.split(':').map(Number);
+  const period = h >= 12 ? 'PM' : 'AM';
+  const hour12 = h % 12 === 0 ? 12 : h % 12;
+  return `${hour12}:${String(m).padStart(2, '0')} ${period}`;
+}
+
+function DoctorStatusBadge({ doc }) {
+  const today = DAY_ABBR[new Date().getDay()];
+  const worksToday = !doc.working_days || doc.working_days.length === 0 || doc.working_days.includes(today);
+
+  if (!worksToday) {
+    return (
+      <span style={{
+        background: '#e5e7eb', color: '#6b7280', fontSize: 12, fontWeight: 600,
+        padding: '4px 10px', borderRadius: 20, whiteSpace: 'nowrap',
+      }}>
+        Not available today
+      </span>
+    );
+  }
+
+  const statusInfo = STATUS_STYLES[doc.status] || STATUS_STYLES.available;
+  return (
+    <span style={{
+      background: statusInfo.color, color: 'white', fontSize: 12, fontWeight: 600,
+      padding: '4px 10px', borderRadius: 20, whiteSpace: 'nowrap',
+    }}>
+      {statusInfo.label}{doc.status === 'delayed' && doc.delay_minutes ? ` ${doc.delay_minutes}m` : ''}
+    </span>
+  );
+}
+
+function DoctorSchedule({ doc }) {
+  if (!doc.working_days?.length && !doc.start_time) return null;
+  return (
+    <p style={{ fontSize: 13, color: '#4f6ef7', margin: '6px 0 0', fontWeight: 600 }}>
+      {doc.working_days?.join(', ')}
+      {doc.start_time && doc.end_time ? ` · ${formatTime(doc.start_time)} – ${formatTime(doc.end_time)}` : ''}
+    </p>
+  );
+}
 
 export default function HospitalFlow({ user, isGuest, onLogout, displayName, initialCity }) {
   const [currentCity, setCurrentCity] = useState(initialCity || '');
@@ -41,7 +94,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
     getAllSpecialties(currentCity).then(setSpecialties);
   }, [currentCity]);
 
-  useEffect(() => {
+  const loadDoctorsForHospital = () => {
     if (!selectedHospital) return;
     setLoadingDoctors(true);
     getDoctorsForHospital(selectedHospital.id).then(async (docs) => {
@@ -54,6 +107,13 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
       setDoctors(withQueue);
       setLoadingDoctors(false);
     });
+  };
+
+  useEffect(() => {
+    loadDoctorsForHospital();
+    if (!selectedHospital) return;
+    const interval = setInterval(loadDoctorsForHospital, 60000);
+    return () => clearInterval(interval);
   }, [selectedHospital]);
 
   useEffect(() => {
@@ -114,7 +174,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
             <div className="flow-avatar">{avatarInitial}</div>
             <div style={{ textAlign: 'left' }}>
               <p className="flow-greeting">
-                {isGuest ? 'Browsing as Guest' : `Hello, ${nameForAvatar} 👋`}
+                {isGuest ? 'Browsing as Guest' : `Hello, ${nameForAvatar} ðŸ‘‹`}
               </p>
               {!isGuest && <p className="flow-subtitle">{user?.email}</p>}
             </div>
@@ -126,7 +186,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
 
         <div className="city-switcher-row">
           <button className="city-pill" onClick={() => setShowCityPicker(!showCityPicker)}>
-            📍 {currentCity || 'All Cities'} <span style={{ opacity: 0.7 }}>▾</span>
+            ðŸ“ {currentCity || 'All Cities'} <span style={{ opacity: 0.7 }}>â–¾</span>
           </button>
 
           {showCityPicker && (
@@ -163,7 +223,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                 onChange={(e) => { setSearchTerm(e.target.value); setActiveSpecialty(''); }}
               />
               {isSearchActive && (
-                <button className="search-clear-btn" onClick={clearSearch}>✕</button>
+                <button className="search-clear-btn" onClick={clearSearch}>âœ•</button>
               )}
             </div>
 
@@ -183,7 +243,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
 
             {isSearchActive ? (
               <>
-                <h3 className="flow-section-title">🔍 Search Results</h3>
+                <h3 className="flow-section-title">ðŸ” Search Results</h3>
                 {searching ? (
                   <p className="flow-empty">Searching...</p>
                 ) : searchResults.length === 0 ? (
@@ -198,7 +258,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                             <div>
                               <h4 className="doctor-name">{doc.name}</h4>
                               <p className="doctor-specialty">{doc.specialty}</p>
-                              <p className="doctor-hospital-tag">🏥 {doc.hospital?.name}</p>
+                              <p className="doctor-hospital-tag">ðŸ¥ {doc.hospital?.name}</p>
                             </div>
                             <span className="doctor-queue-badge">{doc.liveQueue} waiting</span>
                           </div>
@@ -212,7 +272,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
               </>
             ) : (
               <>
-                <h3 className="flow-section-title">🏥 Available Hospitals</h3>
+                <h3 className="flow-section-title">ðŸ¥ Available Hospitals</h3>
                 {loadingHospitals ? (
                   <p className="flow-empty">Loading hospitals...</p>
                 ) : hospitals.length === 0 ? (
@@ -221,10 +281,10 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                   <div className="hospital-list">
                     {hospitals.map((hosp) => (
                       <div key={hosp.id} className="hospital-card" onClick={() => setSelectedHospital(hosp)}>
-                        <div className="hospital-icon">🏢</div>
+                        <div className="hospital-icon">ðŸ¢</div>
                         <div className="hospital-info">
                           <h4>{hosp.name}</h4>
-                          {hosp.location && <p>📍 {hosp.location}</p>}
+                          {hosp.location && <p>ðŸ“ {hosp.location}</p>}
                         </div>
                       </div>
                     ))}
@@ -238,9 +298,9 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
         {selectedHospital && (
           <div>
             <button className="flow-back-btn" onClick={() => { setSelectedHospital(null); setDoctors([]); }}>
-              ← Back to Hospitals
+              â† Back to Hospitals
             </button>
-            <h3 className="flow-section-title">🩺 Doctors at {selectedHospital.name}</h3>
+            <h3 className="flow-section-title">ðŸ©º Doctors at {selectedHospital.name}</h3>
 
             {loadingDoctors ? (
               <p className="flow-empty">Loading doctors...</p>
@@ -254,12 +314,13 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                       <div>
                         <h4 className="doctor-name">{doc.name}</h4>
                         <p className="doctor-specialty">{doc.specialty}</p>
+                        <DoctorSchedule doc={doc} />
                       </div>
-                      <span className="doctor-queue-badge">{doc.liveQueue} waiting</span>
+                      <DoctorStatusBadge doc={doc} />
                     </div>
 
                     <div className="doctor-queue-row">
-                      🎟️ Currently waiting: <strong>{doc.liveQueue} Patients</strong>
+                      ðŸŽŸï¸ Currently waiting: <strong>{doc.liveQueue} Patients</strong>
                     </div>
 
                     <button className="book-btn" onClick={() => handleBookToken(doc, selectedHospital.id)}>

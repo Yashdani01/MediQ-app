@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+﻿import { supabase } from './supabaseClient';
 
 export async function getHospitals(city) {
   let query = supabase.from('hospitals').select('id, name, location, city');
@@ -23,7 +23,7 @@ export async function getAllCities() {
 export async function getDoctorsForHospital(hospitalId) {
   const { data, error } = await supabase
     .from('doctors')
-    .select('id, name, specialty, avg_minutes_per_patient')
+    .select('id, name, specialty, avg_minutes_per_patient, status, delay_minutes, status_updated_at, working_days, start_time, end_time, notes')
     .eq('hospital_id', hospitalId);
   if (error) { console.error('Error fetching doctors:', error); return []; }
   return data;
@@ -244,3 +244,59 @@ export async function getAllSpecialties(city) {
   if (error) { console.error('Error fetching reports:', error); return []; }
   return data;
 }
+// ---- Clinic Portal functions ----
+
+export async function checkClinicPin(pin) {
+  const { data, error } = await supabase.rpc('check_clinic_pin', { input_pin: pin });
+  if (error || !data) return null;
+  return data;
+}
+
+export async function getDoctorsForClinic(pin) {
+  const { data, error } = await supabase.rpc('get_doctors_for_clinic', { input_pin: pin });
+  if (error) { console.error('Error fetching clinic doctors:', error); return []; }
+  return data;
+}
+
+export async function addDoctor(pin, name, specialty, avgMinutes, workingDays, startTime, endTime, notes) {
+  const { data, error } = await supabase.rpc('add_doctor', {
+    input_pin: pin, input_name: name, input_specialty: specialty, input_avg_minutes: avgMinutes,
+    input_working_days: workingDays, input_start_time: startTime, input_end_time: endTime, input_notes: notes,
+  });
+  if (error) { console.error('Error adding doctor:', error); return { error }; }
+  return { data };
+}
+
+export async function updateDoctor(pin, doctorId, name, specialty, avgMinutes, workingDays, startTime, endTime, notes) {
+  const { error } = await supabase.rpc('update_doctor', {
+    input_pin: pin, input_doctor_id: doctorId, input_name: name, input_specialty: specialty, input_avg_minutes: avgMinutes,
+    input_working_days: workingDays, input_start_time: startTime, input_end_time: endTime, input_notes: notes,
+  });
+  if (error) { console.error('Error updating doctor:', error); return { error }; }
+  return { success: true };
+}
+
+export async function deleteDoctor(pin, doctorId) {
+  const { error } = await supabase.rpc('delete_doctor', { input_pin: pin, input_doctor_id: doctorId });
+  if (error) { console.error('Error deleting doctor:', error); return { error }; }
+  return { success: true };
+}
+
+export async function updateDoctorStatus(pin, doctorId, status, delayMinutes) {
+  const { error } = await supabase.rpc('update_doctor_status', {
+    input_pin: pin, input_doctor_id: doctorId, input_status: status, input_delay_minutes: delayMinutes,
+  });
+  if (error) { console.error('Error updating status:', error); return { error }; }
+  return { success: true };
+}
+
+export async function addWalkinBooking(pin, doctorId, name, phone) {
+  const { data, error } = await supabase.rpc('create_walkin_booking', {
+    input_pin: pin, input_doctor_id: doctorId, input_name: name, input_phone: phone,
+  });
+  if (error) { console.error('Error adding walk-in:', error); return { error }; }
+  return { data };
+}
+
+
+
