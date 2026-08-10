@@ -1,4 +1,4 @@
-﻿import { supabase } from './supabaseClient';
+import { supabase } from './supabaseClient';
 
 export async function getHospitals(city) {
   let query = supabase.from('hospitals').select('id, name, location, city');
@@ -36,7 +36,7 @@ export async function getWaitingCount(doctorId) {
   return data || 0;
 }
 
-export async function bookAppointment(patientUserId, doctorId, hospitalId) {
+export async function bookAppointment(patientUserId, doctorId, hospitalId, paymentMethod) {
   const { data: patient, error: patientError } = await supabase
     .from('patients')
     .select('id')
@@ -69,6 +69,7 @@ export async function bookAppointment(patientUserId, doctorId, hospitalId) {
       token_number: String(queueNumber),
       appointment_time: timeString,
       status: 'waiting',
+      payment_method: paymentMethod || 'cash',
     })
     .select()
     .single();
@@ -297,6 +298,29 @@ export async function addWalkinBooking(pin, doctorId, name, phone) {
   if (error) { console.error('Error adding walk-in:', error); return { error }; }
   return { data };
 }
+export async function updateHospitalUpi(pin, upiId) {
+  const { error } = await supabase.rpc('update_hospital_upi', {
+    input_pin: pin, input_upi_id: upiId,
+  });
+  if (error) { console.error('Error updating UPI ID:', error); return { error }; }
+  return { success: true };
+}
+
+export async function getHospitalUpi(pin) {
+  const { data, error } = await supabase.rpc('get_hospital_upi', { input_pin: pin });
+  if (error) { console.error('Error fetching UPI ID:', error); return null; }
+  return data;
+}
+export async function getHospitalPaymentInfo(hospitalId) {
+  const { data, error } = await supabase
+    .from('hospitals')
+    .select('upi_id')
+    .eq('id', hospitalId)
+    .single();
+  if (error) { console.error('Error fetching payment info:', error); return null; }
+  return data?.upi_id || null;
+}
+
 
 
 

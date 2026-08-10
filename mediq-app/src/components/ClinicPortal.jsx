@@ -2,6 +2,7 @@
 import {
   checkClinicPin, getDoctorsForClinic, addDoctor, updateDoctor,
   deleteDoctor, updateDoctorStatus, addWalkinBooking,
+  getHospitalUpi, updateHospitalUpi,
 } from '../hospitalData';
 import './Login.css';
 
@@ -57,7 +58,12 @@ export default function ClinicPortal() {
   const [unlocked, setUnlocked] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
+  
+  const [upiId, setUpiId] = useState('');
+  const [upiInput, setUpiInput] = useState('');
+  const [savingUpi, setSavingUpi] = useState(false);
+  const [editingUpi, setEditingUpi] = useState(false);
+  
   const [doctors, setDoctors] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -93,9 +99,16 @@ export default function ClinicPortal() {
     setRefreshing(false);
   };
 
+  const loadUpi = async (currentPin) => {
+    const data = await getHospitalUpi(currentPin);
+    setUpiId(data || '');
+    setUpiInput(data || '');
+  };
+
   useEffect(() => {
     if (unlocked) {
       loadDoctors(pin);
+      loadUpi(pin);
       const interval = setInterval(() => loadDoctors(pin), 60000);
       return () => clearInterval(interval);
     }
@@ -179,6 +192,15 @@ export default function ClinicPortal() {
     setWalkinName(''); setWalkinPhone('');
   };
 
+  const handleSaveUpi = async () => {
+    setSavingUpi(true);
+    const { error } = await updateHospitalUpi(pin, upiInput.trim());
+    setSavingUpi(false);
+    if (error) { setError('Could not save UPI ID.'); return; }
+    setUpiId(upiInput.trim());
+    setEditingUpi(false);
+  };
+
   const timeAgo = (timestamp) => {
     if (!timestamp) return '';
     const diffMin = Math.floor((Date.now() - new Date(timestamp)) / 60000);
@@ -220,9 +242,41 @@ export default function ClinicPortal() {
   return (
     <div style={{ maxWidth: 600, margin: '0 auto', padding: '20px 16px 100px' }}>
       <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>Clinic Portal</h1>
-      <p style={{ color: '#666', fontSize: 14, marginBottom: 20 }}>
+      <p style={{ color: '#666', fontSize: 14, marginBottom: 16 }}>
         {refreshing ? 'Refreshing...' : `${doctors.length} doctor(s) on your roster`}
       </p>
+
+      {/* Payment Settings Block */}
+      <div style={{
+        background: '#f8f9fb', border: '1px solid #eee', borderRadius: 14, padding: 16, marginBottom: 16,
+      }}>
+        <p style={{ fontSize: 13, fontWeight: 600, color: '#555', marginBottom: 8 }}>Payment Settings</p>
+        {editingUpi ? (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input
+              placeholder="Your UPI ID (e.g. clinicname@upi)"
+              value={upiInput} onChange={(e) => setUpiInput(e.target.value)}
+              style={{ flex: 1, padding: 10, borderRadius: 8, border: '1px solid #e0e0e0', fontSize: 14 }}
+            />
+            <button onClick={handleSaveUpi} disabled={savingUpi} style={{
+              padding: '10px 16px', borderRadius: 8, border: 'none', background: '#22c55e', color: 'white', fontWeight: 600, cursor: 'pointer',
+            }}>
+              {savingUpi ? 'Saving...' : 'Save'}
+            </button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: 14, color: upiId ? '#333' : '#999' }}>
+              {upiId || 'No UPI ID set — patients will only see Cash option'}
+            </span>
+            <button onClick={() => { setUpiInput(upiId); setEditingUpi(true); }} style={{
+              padding: '6px 12px', borderRadius: 8, border: '1px solid #ddd', background: 'white', fontSize: 13, cursor: 'pointer',
+            }}>
+              {upiId ? 'Edit' : '+ Add'}
+            </button>
+          </div>
+        )}
+      </div>
 
       <button
         onClick={() => setShowAddForm(!showAddForm)}

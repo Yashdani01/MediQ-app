@@ -3,7 +3,7 @@ import BookingTicket from './BookingTicket';
 import Profile from './Profile';
 import {
   getHospitals, getAllCities, getDoctorsForHospital, getWaitingCount,
-  bookAppointment, searchDoctors, getAllSpecialties,
+  bookAppointment, searchDoctors, getAllSpecialties,getHospitalPaymentInfo,
 } from '../hospitalData';
 import './HospitalFlow.css';
 
@@ -73,6 +73,10 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
   const [ticketData, setTicketData] = useState(null);
   const [bookingError, setBookingError] = useState('');
 
+  const [pendingBooking, setPendingBooking] = useState(null);
+  const [selectedPayment, setSelectedPayment] = useState('cash');
+  const [hospitalUpi, setHospitalUpi] = useState(null);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [activeSpecialty, setActiveSpecialty] = useState('');
   const [specialties, setSpecialties] = useState([]);
@@ -129,17 +133,25 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
     return () => clearTimeout(delay);
   }, [searchTerm, activeSpecialty, currentCity]);
 
-  const handleBookToken = async (doc, hospitalId) => {
-    setBookingError('');
+ const openPaymentChoice = async (doc, hospitalId) => {
     if (isGuest || !user) {
       setBookingError('Please sign in to book a queue token.');
       return;
     }
+    setBookingError('');
+    const upi = await getHospitalPaymentInfo(hospitalId);
+    setHospitalUpi(upi);
+    setSelectedPayment('cash');
+    setPendingBooking({ doc, hospitalId });
+  };
 
-    const { data: appointment, error } = await bookAppointment(user.id, doc.id, hospitalId);
+  const handleConfirmBooking = async () => {
+    const { doc, hospitalId } = pendingBooking;
+    const { data: appointment, error } = await bookAppointment(user.id, doc.id, hospitalId, selectedPayment);
 
     if (error) {
       setBookingError('Something went wrong while booking. Please try again.');
+      setPendingBooking(null);
       return;
     }
 
@@ -151,9 +163,11 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
         avg_minutes_per_patient: doc.avg_minutes_per_patient,
       },
       patientsAheadOverride: doc.liveQueue,
+      paymentMethod: selectedPayment,
+      upiInfo: selectedPayment === 'upi' && hospitalUpi ? { upiId: hospitalUpi } : null,
     });
+    setPendingBooking(null);
   };
-
   const clearSearch = () => {
     setSearchTerm('');
     setActiveSpecialty('');
@@ -262,7 +276,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                             </div>
                             <span className="doctor-queue-badge">{doc.liveQueue} waiting</span>
                           </div>
-                          <button className="book-btn" onClick={() => handleBookToken(doc, doc.hospital_id)}>
+                          <button className="book-btn" onClick={() => openPaymentChoice(doc, doc.hospital_id)}>
                             Book Token / Join Queue
                           </button>
                         </div>
@@ -323,7 +337,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                       Currently waiting: <strong>{doc.liveQueue} Patients</strong>
                     </div>
 
-                    <button className="book-btn" onClick={() => handleBookToken(doc, selectedHospital.id)}>
+                    <button className="book-btn" onClick={() => openPaymentChoice(doc, selectedHospital.id)}>
                       Book Token / Join Queue
                     </button>
                   </div>
@@ -336,15 +350,69 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
         )}
       </div>
 
-      {ticketData && (
+    {ticketData && (
         <BookingTicket
           appointment={ticketData.appointment}
           doctor={ticketData.doctor}
           patientsAheadOverride={ticketData.patientsAheadOverride}
+          paymentMethod={ticketData.paymentMethod}
+          upiInfo={ticketData.upiInfo}
           onClose={() => setTicketData(null)}
         />
       )}
 
+      {pendingBooking && (
+        <div className="ticket-overlay">
+          <div className="ticket-card">
+            <div className="ticket-header">
+              <h2>Choose Payment Method</h2>
+            </div>
+            <div style={{ display: 'flex', gap: 10, margin: '16px 0' }}>
+              <button
+                onClick={() => setSelectedPayment('cash')}
+                style={{
+                  flex: 1, padding: 14, borderRadius: 10, fontWeight: 600, cursor: 'pointer',
+                  border: selectedPayment === 'cash' ? 'none' : '1px solid #ddd',
+                  background: selectedPayment === 'cash' ? '#4f6ef7' : 'white',
+                  color: selectedPayment === 'cash' ? 'white' : '#333',
+                }}
+              >
+                Cash
+              </button>
+              <button
+                onClick={() => setSelectedPayment('upi')}
+                disabled={!hospitalUpi}
+                style={{
+                  flex: 1, padding: 14, borderRadius: 10, fontWeight: 600,
+                  cursor: hospitalUpi ? 'pointer' : 'not-allowed',
+                  border: selectedPayment === 'upi' ? 'none' : '1px solid #ddd',
+                  background: selectedPayment === 'upi' ? '#4f6ef7' : 'white',
+                  color: selectedPayment === 'upi' ? 'white' : (hospitalUpi ? '#333' : '#bbb'),
+                }}
+              >
+                Online / UPI
+              </button>
+            </div>
+            {!hospitalUpi && (
+              <p style={{ fontSize: 13, color: '#999', textAlign: 'center' }}>
+                This clinic hasn't set up UPI yet — Cash only.
+              </p>
+            )}
+            {selectedPayment === 'upi' && hospitalUpi && (
+              <p style={{ textAlign: 'center', fontSize: 14, marginBottom: 12 }}>
+                Pay to: <strong>{hospitalUpi}</strong>
+              </p>
+            )}
+            <button className="ticket-close-btn" onClick={handleConfirmBooking}>Confirm Booking</button>
+            <button
+              onClick={() => setPendingBooking(null)}
+              style={{ width: '100%', marginTop: 8, padding: 10, borderRadius: 8, border: '1px solid #ddd', background: 'white', cursor: 'pointer' }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
       {showProfile && (
         <Profile
           user={user}
