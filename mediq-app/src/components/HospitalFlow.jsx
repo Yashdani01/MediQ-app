@@ -3,7 +3,7 @@ import BookingTicket from './BookingTicket';
 import Profile from './Profile';
 import {
   getHospitals, getAllCities, getDoctorsForHospital, getWaitingCount,
-  bookAppointment, searchDoctors, getAllSpecialties,getHospitalPaymentInfo,
+  bookAppointment, searchDoctors, getAllSpecialties, getHospitalPaymentInfo, uploadPaymentScreenshot,
 } from '../hospitalData';
 import './HospitalFlow.css';
 
@@ -76,6 +76,11 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
   const [pendingBooking, setPendingBooking] = useState(null);
   const [selectedPayment, setSelectedPayment] = useState('cash');
   const [hospitalUpi, setHospitalUpi] = useState(null);
+  const [txnId, setTxnId] = useState('');
+  const [screenshotFile, setScreenshotFile] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(90);
+  const [paymentExpired, setPaymentExpired] = useState(false);
+  const [submittingPayment, setSubmittingPayment] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [activeSpecialty, setActiveSpecialty] = useState('');
@@ -88,6 +93,23 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
   useEffect(() => {
     getAllCities().then(setAllCities);
   }, []);
+
+  useEffect(() => {
+    if (selectedPayment !== 'upi' || !pendingBooking) return;
+    setTimeLeft(90);
+    setPaymentExpired(false);
+    const interval = setInterval(() => {
+      setTimeLeft((t) => {
+        if (t <= 1) {
+          clearInterval(interval);
+          setPaymentExpired(true);
+          return 0;
+        }
+        return t - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [selectedPayment, pendingBooking]);
 
   useEffect(() => {
     setLoadingHospitals(true);
@@ -133,7 +155,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
     return () => clearTimeout(delay);
   }, [searchTerm, activeSpecialty, currentCity]);
 
- const openPaymentChoice = async (doc, hospitalId) => {
+  const openPaymentChoice = async (doc, hospitalId) => {
     if (isGuest || !user) {
       setBookingError('Please sign in to book a queue token.');
       return;
@@ -142,32 +164,70 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
     const upi = await getHospitalPaymentInfo(hospitalId);
     setHospitalUpi(upi);
     setSelectedPayment('cash');
+    setTxnId('');
+    setScreenshotFile(null);
+    setPaymentExpired(false);
     setPendingBooking({ doc, hospitalId });
   };
 
   const handleConfirmBooking = async () => {
     const { doc, hospitalId } = pendingBooking;
-    const { data: appointment, error } = await bookAppointment(user.id, doc.id, hospitalId, selectedPayment);
 
+    if (selectedPayment === 'upi') {
+      if (paymentExpired) {
+        setBookingError('Payment time expired. Please try booking again.');
+        setPendingBooking(null);
+        return;
+      }
+      if (!txnId.trim() || !screenshotFile) {
+        setBookingError('Please enter the transaction ID and upload a payment screenshot.');
+        return;
+      }
+      setSubmittingPayment(true);
+      const { url, error: uploadError } = await uploadPaymentScreenshot(screenshotFile);
+      if (uploadError) {
+        setSubmittingPayment(false);
+        setBookingError('Could not upload screenshot. Please try again.');
+        return;
+      }
+      const { data: appointment, error } = await bookAppointment(
+        user.id, doc.id, hospitalId, 'upi', txnId.trim(), url
+      );
+      setSubmittingPayment(false);
+      if (error) {
+        setBookingError('Something went wrong while booking. Please try again.');
+        setPendingBooking(null);
+        return;
+      }
+      setTicketData({
+        appointment,
+        doctor: { name: doc.name, specialty: doc.specialty, avg_minutes_per_patient: doc.avg_minutes_per_patient },
+        patientsAheadOverride: doc.liveQueue,
+        paymentMethod: 'upi',
+        upiInfo: hospitalUpi ? { upiId: hospitalUpi } : null,
+      });
+      setPendingBooking(null);
+      setTxnId('');
+      setScreenshotFile(null);
+      return;
+    }
+
+    const { data: appointment, error } = await bookAppointment(user.id, doc.id, hospitalId, 'cash');
     if (error) {
       setBookingError('Something went wrong while booking. Please try again.');
       setPendingBooking(null);
       return;
     }
-
     setTicketData({
       appointment,
-      doctor: {
-        name: doc.name,
-        specialty: doc.specialty,
-        avg_minutes_per_patient: doc.avg_minutes_per_patient,
-      },
+      doctor: { name: doc.name, specialty: doc.specialty, avg_minutes_per_patient: doc.avg_minutes_per_patient },
       patientsAheadOverride: doc.liveQueue,
-      paymentMethod: selectedPayment,
-      upiInfo: selectedPayment === 'upi' && hospitalUpi ? { upiId: hospitalUpi } : null,
+      paymentMethod: 'cash',
+      upiInfo: null,
     });
     setPendingBooking(null);
   };
+
   const clearSearch = () => {
     setSearchTerm('');
     setActiveSpecialty('');
@@ -350,7 +410,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
         )}
       </div>
 
-    {ticketData && (
+      {ticketData && (
         <BookingTicket
           appointment={ticketData.appointment}
           doctor={ticketData.doctor}
@@ -398,12 +458,40 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                 This clinic hasn't set up UPI yet — Cash only.
               </p>
             )}
-            {selectedPayment === 'upi' && hospitalUpi && (
-              <p style={{ textAlign: 'center', fontSize: 14, marginBottom: 12 }}>
-                Pay to: <strong>{hospitalUpi}</strong>
+            {selectedPayment === 'upi' && hospitalUpi && !paymentExpired && (
+              <>
+                <p style={{ textAlign: 'center', fontSize: 14, marginBottom: 4 }}>
+                  Pay to: <strong>{hospitalUpi}</strong>
+                </p>
+                <p style={{ textAlign: 'center', fontSize: 13, color: timeLeft <= 20 ? '#ef4444' : '#666', fontWeight: 700, marginBottom: 12 }}>
+                  Time remaining: {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
+                </p>
+                <input
+                  placeholder="Transaction / UTR ID"
+                  value={txnId}
+                  onChange={(e) => setTxnId(e.target.value)}
+                  style={{ width: '100%', padding: 10, borderRadius: 8, border: '1px solid #e0e0e0', fontSize: 14, marginBottom: 8, boxSizing: 'border-box' }}
+                />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setScreenshotFile(e.target.files[0])}
+                  style={{ width: '100%', marginBottom: 12, fontSize: 13 }}
+                />
+              </>
+            )}
+            {selectedPayment === 'upi' && hospitalUpi && paymentExpired && (
+              <p style={{ textAlign: 'center', color: '#ef4444', fontWeight: 600, marginBottom: 12 }}>
+                Time expired. Please cancel and book again.
               </p>
             )}
-            <button className="ticket-close-btn" onClick={handleConfirmBooking}>Confirm Booking</button>
+            <button
+              className="ticket-close-btn"
+              onClick={handleConfirmBooking}
+              disabled={submittingPayment || (selectedPayment === 'upi' && paymentExpired)}
+            >
+              {submittingPayment ? 'Submitting...' : 'Confirm Booking'}
+            </button>
             <button
               onClick={() => setPendingBooking(null)}
               style={{ width: '100%', marginTop: 8, padding: 10, borderRadius: 8, border: '1px solid #ddd', background: 'white', cursor: 'pointer' }}
@@ -413,6 +501,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
           </div>
         </div>
       )}
+
       {showProfile && (
         <Profile
           user={user}

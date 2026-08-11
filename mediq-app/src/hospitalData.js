@@ -36,7 +36,7 @@ export async function getWaitingCount(doctorId) {
   return data || 0;
 }
 
-export async function bookAppointment(patientUserId, doctorId, hospitalId, paymentMethod) {
+export async function bookAppointment(patientUserId, doctorId, hospitalId, paymentMethod, transactionId, screenshotUrl) {
   const { data: patient, error: patientError } = await supabase
     .from('patients')
     .select('id')
@@ -70,6 +70,8 @@ export async function bookAppointment(patientUserId, doctorId, hospitalId, payme
       appointment_time: timeString,
       status: 'waiting',
       payment_method: paymentMethod || 'cash',
+      transaction_id: transactionId || null,
+         payment_screenshot_url: screenshotUrl || null,
     })
     .select()
     .single();
@@ -320,7 +322,21 @@ export async function getHospitalPaymentInfo(hospitalId) {
   if (error) { console.error('Error fetching payment info:', error); return null; }
   return data?.upi_id || null;
 }
+export async function uploadPaymentScreenshot(file) {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+    const { error: uploadError } = await supabase.storage
+      .from('payment-screenshots')
+      .upload(fileName, file);
 
+    if (uploadError) {
+      console.error('Error uploading screenshot:', uploadError);
+      return { error: uploadError };
+    }
+
+    const { data } = supabase.storage.from('payment-screenshots').getPublicUrl(fileName);
+    return { url: data.publicUrl };
+  }
 
 
 
