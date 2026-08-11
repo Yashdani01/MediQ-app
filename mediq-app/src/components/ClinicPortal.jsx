@@ -133,6 +133,14 @@ export default function ClinicPortal() {
     setUnlocked(true);
   };
 
+  const handleLogout = () => {
+    setUnlocked(false);
+    setPin('');
+    setDoctors([]);
+    setExpandedDoctor(null);
+    setBookingsByDoctor({});
+  };
+
   const handleSaveUpi = async () => {
     setSavingUpi(true);
     const { error } = await updateHospitalUpi(pin, upiInput.trim());
@@ -272,7 +280,18 @@ export default function ClinicPortal() {
 
   return (
     <div style={{ maxWidth: 600, margin: '0 auto', padding: '20px 16px 100px' }}>
-      <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>Clinic Portal</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>Clinic Portal</h1>
+        <button
+          onClick={handleLogout}
+          style={{
+            padding: '6px 14px', borderRadius: 8, border: '1px solid #fca5a5',
+            background: 'white', color: '#ef4444', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+          }}
+        >
+          Logout
+        </button>
+      </div>
       <p style={{ color: '#666', fontSize: 14, marginBottom: 20 }}>
         {refreshing ? 'Refreshing...' : `${doctors.length} doctor(s) on your roster`}
       </p>
