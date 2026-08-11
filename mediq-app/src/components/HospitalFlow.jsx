@@ -76,6 +76,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
   const [pendingBooking, setPendingBooking] = useState(null);
   const [selectedPayment, setSelectedPayment] = useState('cash');
   const [hospitalUpi, setHospitalUpi] = useState(null);
+  const [contactPhone, setContactPhone] = useState('');
   const [txnId, setTxnId] = useState('');
   const [screenshotFile, setScreenshotFile] = useState(null);
   const [timeLeft, setTimeLeft] = useState(90);
@@ -164,6 +165,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
     const upi = await getHospitalPaymentInfo(hospitalId);
     setHospitalUpi(upi);
     setSelectedPayment('cash');
+    setContactPhone('');
     setTxnId('');
     setScreenshotFile(null);
     setPaymentExpired(false);
@@ -172,6 +174,11 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
 
   const handleConfirmBooking = async () => {
     const { doc, hospitalId } = pendingBooking;
+
+    if (!contactPhone.trim()) {
+      setBookingError('Please enter a contact phone number.');
+      return;
+    }
 
     if (selectedPayment === 'upi') {
       if (paymentExpired) {
@@ -191,7 +198,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
         return;
       }
       const { data: appointment, error } = await bookAppointment(
-        user.id, doc.id, hospitalId, 'upi', txnId.trim(), url
+        user.id, doc.id, hospitalId, 'upi', txnId.trim(), url, contactPhone.trim()
       );
       setSubmittingPayment(false);
       if (error) {
@@ -212,7 +219,9 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
       return;
     }
 
-    const { data: appointment, error } = await bookAppointment(user.id, doc.id, hospitalId, 'cash');
+    const { data: appointment, error } = await bookAppointment(
+      user.id, doc.id, hospitalId, 'cash', null, null, contactPhone.trim()
+    );
     if (error) {
       setBookingError('Something went wrong while booking. Please try again.');
       setPendingBooking(null);
@@ -425,9 +434,18 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
         <div className="ticket-overlay">
           <div className="ticket-card">
             <div className="ticket-header">
-              <h2>Choose Payment Method</h2>
+              <h2>Confirm Your Booking</h2>
             </div>
-            <div style={{ display: 'flex', gap: 10, margin: '16px 0' }}>
+
+            <input
+              placeholder="Your contact phone number"
+              value={contactPhone}
+              onChange={(e) => setContactPhone(e.target.value)}
+              style={{ width: '100%', padding: 10, borderRadius: 8, border: '1px solid #e0e0e0', fontSize: 14, marginBottom: 14, boxSizing: 'border-box' }}
+            />
+
+            <p style={{ fontSize: 13, fontWeight: 600, color: '#555', marginBottom: 8 }}>Payment Method</p>
+            <div style={{ display: 'flex', gap: 10, margin: '0 0 16px' }}>
               <button
                 onClick={() => setSelectedPayment('cash')}
                 style={{

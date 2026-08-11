@@ -36,7 +36,7 @@ export async function getWaitingCount(doctorId) {
   return data || 0;
 }
 
-export async function bookAppointment(patientUserId, doctorId, hospitalId, paymentMethod, transactionId, screenshotUrl) {
+export async function bookAppointment(patientUserId, doctorId, hospitalId, paymentMethod, transactionId, screenshotUrl, contactPhone) {
   const { data: patient, error: patientError } = await supabase
     .from('patients')
     .select('id')
@@ -71,7 +71,8 @@ export async function bookAppointment(patientUserId, doctorId, hospitalId, payme
       status: 'waiting',
       payment_method: paymentMethod || 'cash',
       transaction_id: transactionId || null,
-         payment_screenshot_url: screenshotUrl || null,
+      payment_screenshot_url: screenshotUrl || null,
+      contact_phone: contactPhone || null,
     })
     .select()
     .single();
@@ -229,7 +230,9 @@ export async function getAllSpecialties(city) {
 
   if (error || !doctors) return [];
   return [...new Set(doctors.map((d) => d.specialty).filter(Boolean))];
-}export async function getPatientReports(patientUserId) {
+}
+
+export async function getPatientReports(patientUserId) {
   const { data: patient, error: patientError } = await supabase
     .from('patients')
     .select('id')
@@ -247,6 +250,7 @@ export async function getAllSpecialties(city) {
   if (error) { console.error('Error fetching reports:', error); return []; }
   return data;
 }
+
 // ---- Clinic Portal functions ----
 
 export async function checkClinicPin(pin) {
@@ -300,6 +304,17 @@ export async function addWalkinBooking(pin, doctorId, name, phone) {
   if (error) { console.error('Error adding walk-in:', error); return { error }; }
   return { data };
 }
+
+export async function getHospitalPaymentInfo(hospitalId) {
+  const { data, error } = await supabase
+    .from('hospitals')
+    .select('upi_id')
+    .eq('id', hospitalId)
+    .single();
+  if (error) { console.error('Error fetching payment info:', error); return null; }
+  return data?.upi_id || null;
+}
+
 export async function updateHospitalUpi(pin, upiId) {
   const { error } = await supabase.rpc('update_hospital_upi', {
     input_pin: pin, input_upi_id: upiId,
@@ -313,30 +328,27 @@ export async function getHospitalUpi(pin) {
   if (error) { console.error('Error fetching UPI ID:', error); return null; }
   return data;
 }
-export async function getHospitalPaymentInfo(hospitalId) {
-  const { data, error } = await supabase
-    .from('hospitals')
-    .select('upi_id')
-    .eq('id', hospitalId)
-    .single();
-  if (error) { console.error('Error fetching payment info:', error); return null; }
-  return data?.upi_id || null;
-}
+
 export async function uploadPaymentScreenshot(file) {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
-    const { error: uploadError } = await supabase.storage
-      .from('payment-screenshots')
-      .upload(fileName, file);
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+  const { error: uploadError } = await supabase.storage
+    .from('payment-screenshots')
+    .upload(fileName, file);
 
-    if (uploadError) {
-      console.error('Error uploading screenshot:', uploadError);
-      return { error: uploadError };
-    }
-
-    const { data } = supabase.storage.from('payment-screenshots').getPublicUrl(fileName);
-    return { url: data.publicUrl };
+  if (uploadError) {
+    console.error('Error uploading screenshot:', uploadError);
+    return { error: uploadError };
   }
 
+  const { data } = supabase.storage.from('payment-screenshots').getPublicUrl(fileName);
+  return { url: data.publicUrl };
+}
 
-
+export async function getTodaysBookings(pin, doctorId) {
+  const { data, error } = await supabase.rpc('get_todays_bookings', {
+    input_pin: pin, input_doctor_id: doctorId,
+  });
+  if (error) { console.error('Error fetching bookings:', error); return []; }
+  return data;
+}

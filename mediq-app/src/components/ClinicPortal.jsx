@@ -2,7 +2,7 @@
 import {
   checkClinicPin, getDoctorsForClinic, addDoctor, updateDoctor,
   deleteDoctor, updateDoctorStatus, addWalkinBooking,
-  getHospitalUpi, updateHospitalUpi,
+  getHospitalUpi, updateHospitalUpi, getTodaysBookings,
 } from '../hospitalData';
 import './Login.css';
 
@@ -58,14 +58,14 @@ export default function ClinicPortal() {
   const [unlocked, setUnlocked] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
+  const [doctors, setDoctors] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+
   const [upiId, setUpiId] = useState('');
   const [upiInput, setUpiInput] = useState('');
   const [savingUpi, setSavingUpi] = useState(false);
   const [editingUpi, setEditingUpi] = useState(false);
-  
-  const [doctors, setDoctors] = useState([]);
-  const [refreshing, setRefreshing] = useState(false);
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [newName, setNewName] = useState('');
@@ -91,6 +91,10 @@ export default function ClinicPortal() {
   const [walkinName, setWalkinName] = useState('');
   const [walkinPhone, setWalkinPhone] = useState('');
   const [walkinResult, setWalkinResult] = useState(null);
+
+  const [expandedDoctor, setExpandedDoctor] = useState(null);
+  const [bookingsByDoctor, setBookingsByDoctor] = useState({});
+  const [loadingBookings, setLoadingBookings] = useState(false);
 
   const loadDoctors = async (currentPin) => {
     setRefreshing(true);
@@ -125,6 +129,15 @@ export default function ClinicPortal() {
       return;
     }
     setUnlocked(true);
+  };
+
+  const handleSaveUpi = async () => {
+    setSavingUpi(true);
+    const { error } = await updateHospitalUpi(pin, upiInput.trim());
+    setSavingUpi(false);
+    if (error) { setError('Could not save UPI ID.'); return; }
+    setUpiId(upiInput.trim());
+    setEditingUpi(false);
   };
 
   const toggleNewDay = (day) => {
@@ -192,13 +205,16 @@ export default function ClinicPortal() {
     setWalkinName(''); setWalkinPhone('');
   };
 
-  const handleSaveUpi = async () => {
-    setSavingUpi(true);
-    const { error } = await updateHospitalUpi(pin, upiInput.trim());
-    setSavingUpi(false);
-    if (error) { setError('Could not save UPI ID.'); return; }
-    setUpiId(upiInput.trim());
-    setEditingUpi(false);
+  const toggleTodaysPatients = async (doctorId) => {
+    if (expandedDoctor === doctorId) {
+      setExpandedDoctor(null);
+      return;
+    }
+    setExpandedDoctor(doctorId);
+    setLoadingBookings(true);
+    const data = await getTodaysBookings(pin, doctorId);
+    setBookingsByDoctor((prev) => ({ ...prev, [doctorId]: data }));
+    setLoadingBookings(false);
   };
 
   const timeAgo = (timestamp) => {
@@ -242,11 +258,10 @@ export default function ClinicPortal() {
   return (
     <div style={{ maxWidth: 600, margin: '0 auto', padding: '20px 16px 100px' }}>
       <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>Clinic Portal</h1>
-      <p style={{ color: '#666', fontSize: 14, marginBottom: 16 }}>
+      <p style={{ color: '#666', fontSize: 14, marginBottom: 20 }}>
         {refreshing ? 'Refreshing...' : `${doctors.length} doctor(s) on your roster`}
       </p>
 
-      {/* Payment Settings Block */}
       <div style={{
         background: '#f8f9fb', border: '1px solid #eee', borderRadius: 14, padding: 16, marginBottom: 16,
       }}>
@@ -467,6 +482,56 @@ export default function ClinicPortal() {
                       <p style={{ textAlign: 'center', fontWeight: 700, color: '#22c55e' }}>
                         Token #{walkinResult.token} created
                       </p>
+                    )}
+                  </div>
+                )}
+
+                <button
+                  onClick={() => toggleTodaysPatients(doc.id)}
+                  style={{
+                    width: '100%', marginTop: 10, padding: 9, borderRadius: 8, border: '1px solid #ddd',
+                    background: expandedDoctor === doc.id ? '#f0f2ff' : 'white', color: '#4f6ef7', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                  }}
+                >
+                  {expandedDoctor === doc.id ? 'Hide Today\'s Patients' : "View Today's Patients"}
+                </button>
+
+                {expandedDoctor === doc.id && (
+                  <div style={{ marginTop: 10 }}>
+                    {loadingBookings ? (
+                      <p style={{ fontSize: 13, color: '#999', textAlign: 'center' }}>Loading...</p>
+                    ) : !bookingsByDoctor[doc.id] || bookingsByDoctor[doc.id].length === 0 ? (
+                      <p style={{ fontSize: 13, color: '#999', textAlign: 'center' }}>No bookings for today yet.</p>
+                    ) : (
+                      bookingsByDoctor[doc.id].map((b) => (
+                        <div key={b.id} style={{
+                          background: '#f8f9fb', borderRadius: 10, padding: 12, marginBottom: 8,
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div>
+                              <p style={{ fontWeight: 700, fontSize: 14, margin: 0 }}>{b.patient_name || 'Unknown'}</p>
+                              <p style={{ fontSize: 13, color: '#666', margin: '2px 0 0' }}>{b.patient_phone || 'No phone'}</p>
+                            </div>
+                            <span style={{
+                              background: b.payment_method === 'upi' ? '#4f6ef7' : '#6b7280', color: 'white',
+                              fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 20,
+                            }}>
+                              {b.payment_method === 'upi' ? 'UPI' : 'Cash'}
+                            </span>
+                          </div>
+                          <p style={{ fontSize: 12, color: '#999', margin: '6px 0 0' }}>
+                            Booking ID: <strong>{b.booking_code || '—'}</strong> · Token: <strong>{b.token_number}</strong>
+                          </p>
+                          {b.payment_method === 'upi' && (
+                            <p style={{ fontSize: 12, color: '#999', margin: '4px 0 0' }}>
+                              Txn ID: <strong>{b.transaction_id || '—'}</strong>
+                              {b.payment_screenshot_url && (
+                                <> · <a href={b.payment_screenshot_url} target="_blank" rel="noopener noreferrer" style={{ color: '#4f6ef7' }}>View screenshot</a></>
+                              )}
+                            </p>
+                          )}
+                        </div>
+                      ))
                     )}
                   </div>
                 )}
