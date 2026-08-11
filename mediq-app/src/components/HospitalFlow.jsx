@@ -12,6 +12,7 @@ const STATUS_STYLES = {
   delayed: { label: 'Delayed', color: '#f59e0b' },
   on_break: { label: 'On Break', color: '#6b7280' },
   not_started: { label: 'Not Started', color: '#ef4444' },
+  completed: { label: 'Done for Today', color: '#374151' },
 };
 
 const DAY_ABBR = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -24,29 +25,70 @@ function formatTime(t) {
   return `${hour12}:${String(m).padStart(2, '0')} ${period}`;
 }
 
-function DoctorStatusBadge({ doc }) {
+function toMinutes(t) {
+  if (!t) return null;
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+}
+
+// Combines working-day, working-hours, and manual clinic status into one
+// display + bookability decision, so a closed slot can never be booked.
+function getAvailability(doc) {
   const today = DAY_ABBR[new Date().getDay()];
   const worksToday = !doc.working_days || doc.working_days.length === 0 || doc.working_days.includes(today);
 
   if (!worksToday) {
-    return (
-      <span style={{
-        background: '#e5e7eb', color: '#6b7280', fontSize: 12, fontWeight: 600,
-        padding: '4px 10px', borderRadius: 20, whiteSpace: 'nowrap',
-      }}>
-        Not available today
-      </span>
-    );
+    return { label: 'Not available today', color: '#e5e7eb', textColor: '#6b7280', bookable: false };
+  }
+
+  const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+  const startMin = toMinutes(doc.start_time);
+  const endMin = toMinutes(doc.end_time);
+
+  // Only auto-override based on time if the clinic hasn't manually set a
+  // non-default status (delayed/on_break/completed/not_started stay as-is).
+  if ((!doc.status || doc.status === 'available') && startMin != null && endMin != null) {
+    if (nowMinutes < startMin) {
+      return { label: `Opens at ${formatTime(doc.start_time)}`, color: '#e5e7eb', textColor: '#6b7280', bookable: false };
+    }
+    if (nowMinutes > endMin) {
+      return { label: 'Visiting hours over', color: '#e5e7eb', textColor: '#6b7280', bookable: false };
+    }
   }
 
   const statusInfo = STATUS_STYLES[doc.status] || STATUS_STYLES.available;
+  const bookable = doc.status !== 'completed' && doc.status !== 'not_started';
+  return {
+    label: `${statusInfo.label}${doc.status === 'delayed' && doc.delay_minutes ? ` ${doc.delay_minutes}m` : ''}`,
+    color: statusInfo.color,
+    textColor: 'white',
+    bookable,
+  };
+}
+
+function DoctorStatusBadge({ availability }) {
   return (
     <span style={{
-      background: statusInfo.color, color: 'white', fontSize: 12, fontWeight: 600,
+      background: availability.color, color: availability.textColor, fontSize: 12, fontWeight: 600,
       padding: '4px 10px', borderRadius: 20, whiteSpace: 'nowrap',
     }}>
-      {statusInfo.label}{doc.status === 'delayed' && doc.delay_minutes ? ` ${doc.delay_minutes}m` : ''}
+      {availability.label}
     </span>
+  );
+}
+
+function BookButton({ availability, onClick }) {
+  if (!availability.bookable) {
+    return (
+      <button className="book-btn" disabled style={{ background: '#e5e7eb', color: '#9ca3af', cursor: 'not-allowed' }}>
+        Not Available Right Now
+      </button>
+    );
+  }
+  return (
+    <button className="book-btn" onClick={onClick}>
+      Book Token / Join Queue
+    </button>
   );
 }
 
@@ -335,21 +377,25 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                   <div className="doctor-list">
                     {searchResults
                       .sort((a, b) => a.liveQueue - b.liveQueue)
-                      .map((doc) => (
-                        <div key={doc.id} className="doctor-card">
-                          <div className="doctor-card-top">
-                            <div>
-                              <h4 className="doctor-name">{doc.name}</h4>
-                              <p className="doctor-specialty">{doc.specialty}</p>
-                              <p className="doctor-hospital-tag">{doc.hospital?.name}</p>
+                      .map((doc) => {
+                        const availability = getAvailability(doc);
+                        return (
+                          <div key={doc.id} className="doctor-card">
+                            <div className="doctor-card-top">
+                              <div>
+                                <h4 className="doctor-name">{doc.name}</h4>
+                                <p className="doctor-specialty">{doc.specialty}</p>
+                                <p className="doctor-hospital-tag">{doc.hospital?.name}</p>
+                              </div>
+                              <DoctorStatusBadge availability={availability} />
                             </div>
-                            <span className="doctor-queue-badge">{doc.liveQueue} waiting</span>
+                            <div className="doctor-queue-row">
+                              Currently waiting: <strong>{doc.liveQueue} Patients</strong>
+                            </div>
+                            <BookButton availability={availability} onClick={() => openPaymentChoice(doc, doc.hospital_id)} />
                           </div>
-                          <button className="book-btn" onClick={() => openPaymentChoice(doc, doc.hospital_id)}>
-                            Book Token / Join Queue
-                          </button>
-                        </div>
-                      ))}
+                        );
+                      })}
                   </div>
                 )}
               </>
@@ -391,26 +437,27 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
               <p className="flow-empty">No doctors listed for this hospital yet.</p>
             ) : (
               <div className="doctor-list">
-                {doctors.map((doc) => (
-                  <div key={doc.id} className="doctor-card">
-                    <div className="doctor-card-top">
-                      <div>
-                        <h4 className="doctor-name">{doc.name}</h4>
-                        <p className="doctor-specialty">{doc.specialty}</p>
-                        <DoctorSchedule doc={doc} />
+                {doctors.map((doc) => {
+                  const availability = getAvailability(doc);
+                  return (
+                    <div key={doc.id} className="doctor-card">
+                      <div className="doctor-card-top">
+                        <div>
+                          <h4 className="doctor-name">{doc.name}</h4>
+                          <p className="doctor-specialty">{doc.specialty}</p>
+                          <DoctorSchedule doc={doc} />
+                        </div>
+                        <DoctorStatusBadge availability={availability} />
                       </div>
-                      <DoctorStatusBadge doc={doc} />
-                    </div>
 
-                    <div className="doctor-queue-row">
-                      Currently waiting: <strong>{doc.liveQueue} Patients</strong>
-                    </div>
+                      <div className="doctor-queue-row">
+                        Currently waiting: <strong>{doc.liveQueue} Patients</strong>
+                      </div>
 
-                    <button className="book-btn" onClick={() => openPaymentChoice(doc, selectedHospital.id)}>
-                      Book Token / Join Queue
-                    </button>
-                  </div>
-                ))}
+                      <BookButton availability={availability} onClick={() => openPaymentChoice(doc, selectedHospital.id)} />
+                    </div>
+                  );
+                })}
               </div>
             )}
 

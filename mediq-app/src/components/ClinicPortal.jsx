@@ -11,8 +11,8 @@ const STATUS_OPTIONS = [
   { value: 'delayed', label: 'Delayed', color: '#f59e0b' },
   { value: 'on_break', label: 'On Break', color: '#6b7280' },
   { value: 'not_started', label: 'Not Started', color: '#ef4444' },
+  { value: 'completed', label: 'Completed', color: '#374151' },
 ];
-
 const SPECIALTIES = [
   'General Physician', 'Gynecologist', 'Orthopedic', 'ENT Specialist', 'Dermatologist',
   'Pediatrician', 'Cardiologist', 'Dentist', 'Ophthalmologist', 'Psychiatrist',
