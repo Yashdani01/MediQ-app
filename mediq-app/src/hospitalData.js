@@ -352,3 +352,10 @@ export async function getTodaysBookings(pin, doctorId) {
   if (error) { console.error('Error fetching bookings:', error); return []; }
   return data;
 }
+export async function markAppointmentSeen(pin, appointmentId) {
+  const { error } = await supabase.rpc('mark_appointment_seen', {
+    input_pin: pin, input_appointment_id: appointmentId,
+  });
+  if (error) { console.error('Error marking appointment seen:', error); return { error }; }
+  return { success: true };
+}

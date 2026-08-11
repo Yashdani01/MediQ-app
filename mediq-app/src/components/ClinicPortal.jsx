@@ -2,7 +2,7 @@
 import {
   checkClinicPin, getDoctorsForClinic, addDoctor, updateDoctor,
   deleteDoctor, updateDoctorStatus, addWalkinBooking,
-  getHospitalUpi, updateHospitalUpi, getTodaysBookings,
+  getHospitalUpi, updateHospitalUpi, getTodaysBookings, markAppointmentSeen,
 } from '../hospitalData';
 import './Login.css';
 
@@ -11,8 +11,9 @@ const STATUS_OPTIONS = [
   { value: 'delayed', label: 'Delayed', color: '#f59e0b' },
   { value: 'on_break', label: 'On Break', color: '#6b7280' },
   { value: 'not_started', label: 'Not Started', color: '#ef4444' },
-  { value: 'completed', label: 'Completed', color: '#374151' },
+  { value: 'completed', label: 'Done for Today', color: '#374151' },
 ];
+
 const SPECIALTIES = [
   'General Physician', 'Gynecologist', 'Orthopedic', 'ENT Specialist', 'Dermatologist',
   'Pediatrician', 'Cardiologist', 'Dentist', 'Ophthalmologist', 'Psychiatrist',
@@ -95,6 +96,7 @@ export default function ClinicPortal() {
   const [expandedDoctor, setExpandedDoctor] = useState(null);
   const [bookingsByDoctor, setBookingsByDoctor] = useState({});
   const [loadingBookings, setLoadingBookings] = useState(false);
+  const [markingSeen, setMarkingSeen] = useState(null);
 
   const loadDoctors = async (currentPin) => {
     setRefreshing(true);
@@ -205,6 +207,11 @@ export default function ClinicPortal() {
     setWalkinName(''); setWalkinPhone('');
   };
 
+  const refreshBookings = async (doctorId) => {
+    const data = await getTodaysBookings(pin, doctorId);
+    setBookingsByDoctor((prev) => ({ ...prev, [doctorId]: data }));
+  };
+
   const toggleTodaysPatients = async (doctorId) => {
     if (expandedDoctor === doctorId) {
       setExpandedDoctor(null);
@@ -212,9 +219,17 @@ export default function ClinicPortal() {
     }
     setExpandedDoctor(doctorId);
     setLoadingBookings(true);
-    const data = await getTodaysBookings(pin, doctorId);
-    setBookingsByDoctor((prev) => ({ ...prev, [doctorId]: data }));
+    await refreshBookings(doctorId);
     setLoadingBookings(false);
+  };
+
+  const handleMarkSeen = async (appointmentId, doctorId) => {
+    setMarkingSeen(appointmentId);
+    const { error } = await markAppointmentSeen(pin, appointmentId);
+    setMarkingSeen(null);
+    if (error) { setError('Could not update patient status.'); return; }
+    await refreshBookings(doctorId);
+    loadDoctors(pin);
   };
 
   const timeAgo = (timestamp) => {
@@ -503,35 +518,53 @@ export default function ClinicPortal() {
                     ) : !bookingsByDoctor[doc.id] || bookingsByDoctor[doc.id].length === 0 ? (
                       <p style={{ fontSize: 13, color: '#999', textAlign: 'center' }}>No bookings for today yet.</p>
                     ) : (
-                      bookingsByDoctor[doc.id].map((b) => (
-                        <div key={b.id} style={{
-                          background: '#f8f9fb', borderRadius: 10, padding: 12, marginBottom: 8,
-                        }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                            <div>
-                              <p style={{ fontWeight: 700, fontSize: 14, margin: 0 }}>{b.patient_name || 'Unknown'}</p>
-                              <p style={{ fontSize: 13, color: '#666', margin: '2px 0 0' }}>{b.patient_phone || 'No phone'}</p>
+                      bookingsByDoctor[doc.id].map((b) => {
+                        const isWaiting = b.status === 'waiting';
+                        return (
+                          <div key={b.id} style={{
+                            background: isWaiting ? '#f8f9fb' : '#f0fdf4', borderRadius: 10, padding: 12, marginBottom: 8,
+                            opacity: isWaiting ? 1 : 0.75,
+                          }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                              <div>
+                                <p style={{ fontWeight: 700, fontSize: 14, margin: 0 }}>{b.patient_name || 'Unknown'}</p>
+                                <p style={{ fontSize: 13, color: '#666', margin: '2px 0 0' }}>{b.patient_phone || 'No phone'}</p>
+                              </div>
+                              <span style={{
+                                background: b.payment_method === 'upi' ? '#4f6ef7' : '#6b7280', color: 'white',
+                                fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 20,
+                              }}>
+                                {b.payment_method === 'upi' ? 'UPI' : 'Cash'}
+                              </span>
                             </div>
-                            <span style={{
-                              background: b.payment_method === 'upi' ? '#4f6ef7' : '#6b7280', color: 'white',
-                              fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 20,
-                            }}>
-                              {b.payment_method === 'upi' ? 'UPI' : 'Cash'}
-                            </span>
-                          </div>
-                          <p style={{ fontSize: 12, color: '#999', margin: '6px 0 0' }}>
-                            Booking ID: <strong>{b.booking_code || '—'}</strong> · Token: <strong>{b.token_number}</strong>
-                          </p>
-                          {b.payment_method === 'upi' && (
-                            <p style={{ fontSize: 12, color: '#999', margin: '4px 0 0' }}>
-                              Txn ID: <strong>{b.transaction_id || '—'}</strong>
-                              {b.payment_screenshot_url && (
-                                <> · <a href={b.payment_screenshot_url} target="_blank" rel="noopener noreferrer" style={{ color: '#4f6ef7' }}>View screenshot</a></>
-                              )}
+                            <p style={{ fontSize: 12, color: '#999', margin: '6px 0 0' }}>
+                              Booking ID: <strong>{b.booking_code || '—'}</strong> · Token: <strong>{b.token_number}</strong>
                             </p>
-                          )}
-                        </div>
-                      ))
+                            {b.payment_method === 'upi' && (
+                              <p style={{ fontSize: 12, color: '#999', margin: '4px 0 0' }}>
+                                Txn ID: <strong>{b.transaction_id || '—'}</strong>
+                                {b.payment_screenshot_url && (
+                                  <> · <a href={b.payment_screenshot_url} target="_blank" rel="noopener noreferrer" style={{ color: '#4f6ef7' }}>View screenshot</a></>
+                                )}
+                              </p>
+                            )}
+                            {isWaiting ? (
+                              <button
+                                onClick={() => handleMarkSeen(b.id, doc.id)}
+                                disabled={markingSeen === b.id}
+                                style={{
+                                  width: '100%', marginTop: 8, padding: 8, borderRadius: 8, border: 'none',
+                                  background: '#22c55e', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                                }}
+                              >
+                                {markingSeen === b.id ? 'Updating...' : '✓ Mark as Seen'}
+                              </button>
+                            ) : (
+                              <p style={{ fontSize: 12, color: '#22c55e', fontWeight: 600, margin: '8px 0 0' }}>✓ Seen</p>
+                            )}
+                          </div>
+                        );
+                      })
                     )}
                   </div>
                 )}
