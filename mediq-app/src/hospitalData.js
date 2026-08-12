@@ -370,3 +370,46 @@ export async function setDoctorPause(pin, doctorId, paused) {
   if (error) { console.error('Error toggling pause:', error); return { error }; }
   return { success: true };
 }
+
+export async function getHospitalLocation(pin) {
+  const { data: access, error: accessError } = await supabase
+    .from('clinic_access')
+    .select('hospital_id')
+    .eq('pin', pin)
+    .maybeSingle();
+
+  if (accessError || !access) return null;
+
+  const { data: hosp, error: hospError } = await supabase
+    .from('hospitals')
+    .select('location')
+    .eq('id', access.hospital_id)
+    .single();
+
+  if (hospError || !hosp) return null;
+
+  return hosp.location || null;
+}
+
+export async function updateHospitalLocation(pin, location) {
+  const { data: access, error: accessError } = await supabase
+    .from('clinic_access')
+    .select('hospital_id')
+    .eq('pin', pin)
+    .maybeSingle();
+
+  if (accessError || !access) {
+    return { error: accessError || new Error('Invalid PIN') };
+  }
+
+  const { error } = await supabase
+    .from('hospitals')
+    .update({ location })
+    .eq('id', access.hospital_id);
+
+  if (error) {
+    console.error('Error updating hospital location:', error);
+    return { error };
+  }
+  return { success: true };
+}

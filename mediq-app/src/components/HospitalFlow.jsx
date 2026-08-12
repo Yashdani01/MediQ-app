@@ -407,9 +407,38 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                     {hospitals.map((hosp) => (
                       <div key={hosp.id} className="hospital-card" onClick={() => setSelectedHospital(hosp)}>
                         <div className="hospital-icon">H</div>
-                        <div className="hospital-info">
+                        <div className="hospital-info" style={{ flex: 1 }}>
                           <h4>{hosp.name}</h4>
                           {hosp.location && <p>{hosp.location}</p>}
+                          {hosp.location && (
+                            <a
+                              href={
+                                hosp.location.startsWith('http')
+                                  ? hosp.location
+                                  : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+                                      `${hosp.name}, ${hosp.location}`
+                                    )}`
+                              }
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 4,
+                                marginTop: 6,
+                                padding: '4px 10px',
+                                borderRadius: 6,
+                                background: '#eff6ff',
+                                color: '#2563eb',
+                                fontSize: 12,
+                                fontWeight: 600,
+                                textDecoration: 'none',
+                              }}
+                            >
+                              📍 Get Directions
+                            </a>
+                          )}
                         </div>
                       </div>
                     ))}

@@ -3,6 +3,7 @@ import {
   checkClinicPin, getDoctorsForClinic, addDoctor, updateDoctor,
   deleteDoctor, updateDoctorStatus, addWalkinBooking,
   getHospitalUpi, updateHospitalUpi, getTodaysBookings, markAppointmentSeen,
+  getHospitalLocation, updateHospitalLocation,
 } from '../hospitalData';
 import './Login.css';
 
@@ -68,6 +69,11 @@ export default function ClinicPortal() {
   const [savingUpi, setSavingUpi] = useState(false);
   const [editingUpi, setEditingUpi] = useState(false);
 
+  const [locationStr, setLocationStr] = useState('');
+  const [locationInput, setLocationInput] = useState('');
+  const [savingLocation, setSavingLocation] = useState(false);
+  const [editingLocation, setEditingLocation] = useState(false);
+
   const [showAddForm, setShowAddForm] = useState(false);
   const [newName, setNewName] = useState('');
   const [newSpecialty, setNewSpecialty] = useState(SPECIALTIES[0]);
@@ -113,10 +119,17 @@ export default function ClinicPortal() {
     setUpiInput(data || '');
   };
 
+  const loadLocation = async (currentPin) => {
+    const data = await getHospitalLocation(currentPin);
+    setLocationStr(data || '');
+    setLocationInput(data || '');
+  };
+
   useEffect(() => {
     if (unlocked) {
       loadDoctors(pin);
       loadUpi(pin);
+      loadLocation(pin);
       const interval = setInterval(() => loadDoctors(pin), 60000);
       return () => clearInterval(interval);
     }
@@ -150,6 +163,15 @@ export default function ClinicPortal() {
     if (error) { setError('Could not save UPI ID.'); return; }
     setUpiId(upiInput.trim());
     setEditingUpi(false);
+  };
+
+  const handleSaveLocation = async () => {
+    setSavingLocation(true);
+    const { error } = await updateHospitalLocation(pin, locationInput.trim());
+    setSavingLocation(false);
+    if (error) { setError('Could not save location.'); return; }
+    setLocationStr(locationInput.trim());
+    setEditingLocation(false);
   };
 
   const toggleNewDay = (day) => {
@@ -301,6 +323,39 @@ export default function ClinicPortal() {
         {refreshing ? 'Refreshing...' : `${doctors.length} doctor(s) on your roster`}
       </p>
 
+      {/* Location Settings Block */}
+      <div style={{
+        background: '#f8f9fb', border: '1px solid #eee', borderRadius: 14, padding: 16, marginBottom: 12,
+      }}>
+        <p style={{ fontSize: 13, fontWeight: 600, color: '#555', marginBottom: 8 }}>📍 Clinic Location / Maps Link</p>
+        {editingLocation ? (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input
+              placeholder="Address or Google Maps link"
+              value={locationInput} onChange={(e) => setLocationInput(e.target.value)}
+              style={{ flex: 1, padding: 10, borderRadius: 8, border: '1px solid #e0e0e0', fontSize: 14 }}
+            />
+            <button onClick={handleSaveLocation} disabled={savingLocation} style={{
+              padding: '10px 16px', borderRadius: 8, border: 'none', background: '#22c55e', color: 'white', fontWeight: 600, cursor: 'pointer',
+            }}>
+              {savingLocation ? 'Saving...' : 'Save'}
+            </button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: 14, color: locationStr ? '#333' : '#999', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '75%' }}>
+              {locationStr || 'No location set — patients won\'t see direction link'}
+            </span>
+            <button onClick={() => { setLocationInput(locationStr); setEditingLocation(true); }} style={{
+              padding: '6px 12px', borderRadius: 8, border: '1px solid #ddd', background: 'white', fontSize: 13, cursor: 'pointer',
+            }}>
+              {locationStr ? 'Edit' : '+ Add'}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Payment Settings Block */}
       <div style={{
         background: '#f8f9fb', border: '1px solid #eee', borderRadius: 14, padding: 16, marginBottom: 16,
       }}>
