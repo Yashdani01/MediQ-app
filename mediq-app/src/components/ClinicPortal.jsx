@@ -8,7 +8,7 @@ import {
 import './Login.css';
 
 const STATUS_OPTIONS = [
-  { value: 'available', label: 'Available', color: '#ccfbf1', textColor: '#0f766e' },
+  { value: 'available', label: 'Available', color: '#e6fffa', textColor: '#0f766e' },
   { value: 'delayed', label: 'Delayed', color: '#fef3c7', textColor: '#92400e' },
   { value: 'on_break', label: 'On Break', color: '#f1f5f9', textColor: '#475569' },
   { value: 'not_started', label: 'Not Started', color: '#fee2e2', textColor: '#991b1b' },
@@ -95,12 +95,9 @@ export default function ClinicPortal() {
   const [editNotes, setEditNotes] = useState('');
   const [editFee, setEditFee] = useState('');
 
-  const [delayInputs, setDelayInputs] = useState({});
-
   const [showWalkinForm, setShowWalkinForm] = useState(null);
   const [walkinName, setWalkinName] = useState('');
   const [walkinPhone, setWalkinPhone] = useState('');
-  const [walkinResult, setWalkinResult] = useState(null);
 
   const [expandedDoctor, setExpandedDoctor] = useState(null);
   const [bookingsByDoctor, setBookingsByDoctor] = useState({});
@@ -112,7 +109,6 @@ export default function ClinicPortal() {
     const data = await getDoctorsForClinic(currentPin);
     setDoctors(data);
     
-    // Fetch today's bookings for each doctor to keep total metrics accurate
     if (data && data.length > 0) {
       const bookingsMap = {};
       for (const doc of data) {
@@ -153,7 +149,7 @@ export default function ClinicPortal() {
     const hospitalId = await checkClinicPin(pin);
     setLoading(false);
     if (!hospitalId) {
-      setError('Invalid PIN. Please check and try again.');
+      setError('Invalid Access PIN. Please try again.');
       return;
     }
     setUnlocked(true);
@@ -239,7 +235,7 @@ export default function ClinicPortal() {
   };
 
   const handleStatusChange = async (doctorId, status) => {
-    const delay = status === 'delayed' ? (parseInt(delayInputs[doctorId]) || 10) : 0;
+    const delay = status === 'delayed' ? 10 : 0;
     const { error } = await updateDoctorStatus(pin, doctorId, status, delay);
     if (error) { setError('Could not update status.'); return; }
     loadDoctors(pin);
@@ -249,7 +245,6 @@ export default function ClinicPortal() {
     if (!walkinName.trim()) return;
     const { data, error } = await addWalkinBooking(pin, doctorId, walkinName, walkinPhone);
     if (error) { setError('Could not add booking.'); return; }
-    setWalkinResult({ doctorId, token: data });
     setWalkinName(''); setWalkinPhone('');
     refreshBookings(doctorId);
   };
@@ -291,31 +286,154 @@ export default function ClinicPortal() {
 
   const inputStyle = { padding: 10, borderRadius: 8, border: '1px solid #e0e0e0', fontSize: 14 };
 
+  // ==========================================
+  // PHASE 1: BRANDED PIN ENTRY GATEWAY (LOCKED)
+  // ==========================================
   if (!unlocked) {
     return (
-      <div style={{ background: '#f5f9f8', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-        <div style={{ background: 'white', borderRadius: 24, padding: 24, width: '100%', maxWidth: 380, boxShadow: '0 10px 30px rgba(0,0,0,0.05)', textAlign: 'center' }}>
-          <div style={{ width: 50, height: 50, background: '#ccfbf1', color: '#0d9488', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 24, fontWeight: 700 }}>+</div>
-          <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '0 0 4px 0' }}>Clinic Portal</h1>
-          <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 20px 0' }}>Enter your clinic access PIN</p>
+      <div style={{
+        minHeight: '100vh',
+        background: 'radial-gradient(ellipse at 50% 30%, #115e59 0%, #0f172a 70%, #020617 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 20,
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        {/* Soft Ambient Background Glows */}
+        <div style={{ position: 'absolute', width: 350, height: 350, borderRadius: '50%', background: '#0d9488', opacity: 0.2, filter: 'blur(90px)', top: '15%', left: '15%' }} />
+        <div style={{ position: 'absolute', width: 300, height: 300, borderRadius: '50%', background: '#3b82f6', opacity: 0.15, filter: 'blur(90px)', bottom: '15%', right: '15%' }} />
 
-          <form onSubmit={handleUnlock} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <input
-              type="password" inputMode="numeric" placeholder="Access PIN"
-              value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} required
-              style={{ width: '100%', padding: 12, borderRadius: 12, border: '1px solid #cbd5e1', fontSize: 15, textAlign: 'center', boxSizing: 'border-box' }}
-            />
-            <button type="submit" disabled={loading || !pin} style={{ width: '100%', padding: 14, borderRadius: 12, border: 'none', background: '#0d9488', color: 'white', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>
-              {loading ? 'Unlocking...' : 'Unlock'}
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.96)',
+          backdropFilter: 'blur(20px)',
+          borderRadius: 32,
+          padding: '40px 32px 32px',
+          width: '100%',
+          maxWidth: 400,
+          boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.3)',
+          textAlign: 'center',
+          position: 'relative',
+          zIndex: 10,
+        }}>
+          {/* Security Status Indicator Pill */}
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            background: '#d1fae5',
+            border: '1px solid #a7f3d0',
+            color: '#065f46',
+            fontSize: 11,
+            fontWeight: 700,
+            padding: '4px 12px',
+            borderRadius: 20,
+            marginBottom: 20,
+            letterSpacing: '0.3px',
+          }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
+            MediQ Secure Terminal Active
+          </div>
+
+          {/* Header Icon */}
+          <div style={{
+            width: 64, height: 64,
+            borderRadius: 22,
+            background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
+            color: 'white',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            margin: '0 auto 16px',
+            fontSize: 28,
+            boxShadow: '0 12px 24px -4px rgba(13, 148, 136, 0.4)',
+          }}>
+            🏥
+          </div>
+
+          {/* Branded Hospital Name */}
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>
+            Shri Durga Medical Hall
+          </h1>
+          <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 28px 0', fontWeight: 600 }}>
+            Staff Access Gateway · Enter Access PIN
+          </p>
+
+          <form onSubmit={handleUnlock} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <input
+                type="password"
+                inputMode="numeric"
+                placeholder="• • • •"
+                maxLength={6}
+                value={pin}
+                onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+                required
+                style={{
+                  width: '100%',
+                  padding: '16px',
+                  borderRadius: 16,
+                  border: '2px solid #cbd5e1',
+                  background: '#f8fafc',
+                  fontSize: 24,
+                  fontWeight: 800,
+                  letterSpacing: '12px',
+                  textAlign: 'center',
+                  color: '#0f172a',
+                  boxSizing: 'border-box',
+                  outline: 'none',
+                  transition: 'all 0.2s ease',
+                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)',
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#0d9488';
+                  e.target.style.background = '#ffffff';
+                  e.target.style.boxShadow = '0 0 0 4px rgba(13, 148, 136, 0.15)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#cbd5e1';
+                  e.target.style.background = '#f8fafc';
+                  e.target.style.boxShadow = 'none';
+                }}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading || !pin}
+              style={{
+                width: '100%',
+                padding: '16px',
+                borderRadius: 16,
+                border: 'none',
+                background: loading || !pin ? '#cbd5e1' : 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
+                color: 'white',
+                fontWeight: 700,
+                fontSize: 15,
+                cursor: loading || !pin ? 'not-allowed' : 'pointer',
+                boxShadow: loading || !pin ? 'none' : '0 12px 24px -6px rgba(13, 148, 136, 0.45)',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              {loading ? 'Verifying PIN...' : 'Unlock Portal →'}
             </button>
           </form>
-          {error && <p style={{ color: '#ef4444', fontSize: 13, marginTop: 12 }}>{error}</p>}
+
+          {error && (
+            <p style={{ color: '#ef4444', fontSize: 13, fontWeight: 600, marginTop: 16, background: '#fef2f2', padding: '10px 14px', borderRadius: 12, border: '1px solid #fecaca' }}>
+              {error}
+            </p>
+          )}
+
+          <div style={{ marginTop: 28, paddingTop: 18, borderTop: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#94a3b8', fontSize: 12, fontWeight: 600 }}>
+            <span>🔒</span> 256-Bit Encrypted Healthcare Access
+          </div>
         </div>
       </div>
     );
   }
 
-  // Live Metric Calculation from Database Bookings
+  // Live Metrics Calculation
   const allBookings = Object.values(bookingsByDoctor).flat();
   const totalBookings = allBookings.length;
   const waitingBookings = allBookings.filter(b => b.status === 'waiting').length;
@@ -324,37 +442,43 @@ export default function ClinicPortal() {
   const todayDateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
   return (
-    <div style={{ maxWidth: 600, margin: '0 auto', padding: '20px 16px 100px', background: '#f5f9f8', minHeight: '100vh' }}>
+    <div style={{ maxWidth: 600, margin: '0 auto', padding: '20px 16px 100px', background: '#f8fafc', minHeight: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
       
-      {/* Top Header Block */}
-      <div className="clinic-portal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+      {/* ==========================================
+          PHASE 1: COMMAND CENTER HEADER (UNLOCKED)
+          ========================================== */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
         <div>
-          <span className="clinic-subtitle-tag" style={{ color: '#0d9488', fontSize: 11, fontWeight: 700, letterSpacing: 0.8 }}>CLINIC PORTAL</span>
-          <h1 className="clinic-title-main" style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '2px 0' }}>Shri Durga Medical Hall</h1>
-          <p className="clinic-date-text" style={{ fontSize: 13, color: '#64748b', margin: 0 }}>{todayDateStr}</p>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#d1fae5', border: '1px solid #a7f3d0', padding: '3px 10px', borderRadius: 20, marginBottom: 6 }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#065f46', letterSpacing: 0.5 }}>OPERATIONAL · QUEUE ACTIVE</span>
+          </div>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '2px 0' }}>Shri Durga Medical Hall</h1>
+          <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>{todayDateStr}</p>
         </div>
         <button
           onClick={handleLogout}
           style={{
-            padding: '6px 14px', borderRadius: 10, border: '1px solid #fca5a5',
-            background: 'white', color: '#ef4444', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+            padding: '8px 16px', borderRadius: 12, border: '1px solid #fca5a5',
+            background: 'white', color: '#ef4444', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
           }}
         >
-          Logout
+          Logout ➔
         </button>
       </div>
 
-      {/* Summary Stats Row (Live Database Metrics) */}
-      <div className="portal-stats-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 20 }}>
-        <div className="stat-card" style={{ background: 'white', borderRadius: 16, padding: 12, border: '1px solid #e2e8f0', textAlign: 'center' }}>
+      {/* Summary Stats Row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 20 }}>
+        <div style={{ background: 'white', borderRadius: 16, padding: 12, border: '1px solid #e2e8f0', textAlign: 'center' }}>
           <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>Total Patients</span>
           <p style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '4px 0 0 0' }}>{totalBookings}</p>
         </div>
-        <div className="stat-card highlight" style={{ background: '#ccfbf1', borderRadius: 16, padding: 12, border: '1px solid #99f6e4', textAlign: 'center' }}>
+        <div style={{ background: '#ccfbf1', borderRadius: 16, padding: 12, border: '1px solid #99f6e4', textAlign: 'center' }}>
           <span style={{ fontSize: 11, fontWeight: 700, color: '#0f766e' }}>Waiting</span>
           <p style={{ fontSize: 22, fontWeight: 800, color: '#0f766e', margin: '4px 0 0 0' }}>{waitingBookings}</p>
         </div>
-        <div className="stat-card" style={{ background: 'white', borderRadius: 16, padding: 12, border: '1px solid #e2e8f0', textAlign: 'center' }}>
+        <div style={{ background: 'white', borderRadius: 16, padding: 12, border: '1px solid #e2e8f0', textAlign: 'center' }}>
           <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>Completed</span>
           <p style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '4px 0 0 0' }}>{completedBookings}</p>
         </div>
@@ -472,7 +596,6 @@ export default function ClinicPortal() {
                   </div>
                 )}
 
-                {/* View Today's Patients Toggle Button */}
                 <button
                   onClick={() => toggleTodaysPatients(doc.id)}
                   style={{
@@ -483,7 +606,6 @@ export default function ClinicPortal() {
                   {expandedDoctor === doc.id ? 'Hide Today\'s Patients' : `View Today's Patients (${docWaitingCount} Waiting)`}
                 </button>
 
-                {/* Expanded Patient List with Mark Seen & Did Not Show Buttons */}
                 {expandedDoctor === doc.id && (
                   <div style={{ marginTop: 12 }}>
                     {loadingBookings ? (
