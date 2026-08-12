@@ -12,6 +12,7 @@ const STATUS_OPTIONS = [
   { value: 'delayed', label: 'Delayed', color: '#f59e0b' },
   { value: 'on_break', label: 'On Break', color: '#6b7280' },
   { value: 'not_started', label: 'Not Started', color: '#ef4444' },
+  { value: 'on_leave', label: 'On Leave / Holiday', color: '#dc2626' },
   { value: 'completed', label: 'Done for Today', color: '#374151' },
 ];
 

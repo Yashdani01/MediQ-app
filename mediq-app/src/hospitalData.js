@@ -392,6 +392,7 @@ export async function updateHospitalLocation(pin, location) {
   }
   return { success: true };
 }
+
 export async function cancelAppointment(appointmentId) {
   const { data, error } = await supabase
     .from('appointments')
