@@ -58,6 +58,7 @@ function DayPicker({ selectedDays, onToggle }) {
 
 export default function ClinicPortal() {
   const [pin, setPin] = useState('');
+  const [unlockedPin, setUnlockedPin] = useState('');
   const [unlocked, setUnlocked] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -78,7 +79,7 @@ export default function ClinicPortal() {
   const [showSettingsDrawer, setShowSettingsDrawer] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
 
-  // Add Doctor States
+  // Add Doctor Form States
   const [showAddForm, setShowAddForm] = useState(false);
   const [newName, setNewName] = useState('');
   const [newSpecialty, setNewSpecialty] = useState(SPECIALTIES[0]);
@@ -112,6 +113,7 @@ export default function ClinicPortal() {
   const [viewScreenshotModal, setViewScreenshotModal] = useState(null);
 
   const loadDoctors = async (currentPin) => {
+    if (!currentPin) return;
     setRefreshing(true);
     const data = await getDoctorsForClinic(currentPin);
     setDoctors(data || []);
@@ -128,42 +130,47 @@ export default function ClinicPortal() {
   };
 
   const loadUpi = async (currentPin) => {
+    if (!currentPin) return;
     const data = await getHospitalUpi(currentPin);
     setUpiId(data || '');
     setUpiInput(data || '');
   };
 
   const loadLocation = async (currentPin) => {
+    if (!currentPin) return;
     const data = await getHospitalLocation(currentPin);
     setLocationStr(data || '');
     setLocationInput(data || '');
   };
 
   useEffect(() => {
-    if (unlocked) {
-      loadDoctors(pin);
-      loadUpi(pin);
-      loadLocation(pin);
-      const interval = setInterval(() => loadDoctors(pin), 30000);
+    if (unlocked && unlockedPin) {
+      loadDoctors(unlockedPin);
+      loadUpi(unlockedPin);
+      loadLocation(unlockedPin);
+      const interval = setInterval(() => loadDoctors(unlockedPin), 30000);
       return () => clearInterval(interval);
     }
-  }, [unlocked]);
+  }, [unlocked, unlockedPin]);
 
   const handleUnlock = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    const hospitalId = await checkClinicPin(pin);
+    const cleanPin = pin.trim();
+    const hospitalId = await checkClinicPin(cleanPin);
     setLoading(false);
     if (!hospitalId) {
       setError('Invalid Access PIN. Please try again.');
       return;
     }
+    setUnlockedPin(cleanPin);
     setUnlocked(true);
   };
 
   const handleLogout = () => {
     setUnlocked(false);
+    setUnlockedPin('');
     setPin('');
     setDoctors([]);
     setExpandedDoctor(null);
@@ -172,7 +179,7 @@ export default function ClinicPortal() {
 
   const handleSaveUpi = async () => {
     setSavingUpi(true);
-    const { error } = await updateHospitalUpi(pin, upiInput.trim());
+    const { error } = await updateHospitalUpi(unlockedPin, upiInput.trim());
     setSavingUpi(false);
     if (error) { setError('Could not save UPI ID.'); return; }
     setUpiId(upiInput.trim());
@@ -181,7 +188,7 @@ export default function ClinicPortal() {
 
   const handleSaveLocation = async () => {
     setSavingLocation(true);
-    const { error } = await updateHospitalLocation(pin, locationInput.trim());
+    const { error } = await updateHospitalLocation(unlockedPin, locationInput.trim());
     setSavingLocation(false);
     if (error) { setError('Could not save location.'); return; }
     setLocationStr(locationInput.trim());
@@ -199,7 +206,7 @@ export default function ClinicPortal() {
   const handleAddDoctor = async (e) => {
     e.preventDefault();
     if (!newName.trim()) {
-      alert('Please enter a doctor name.');
+      alert('Please enter doctor name.');
       return;
     }
     setSavingDoctor(true);
@@ -207,7 +214,7 @@ export default function ClinicPortal() {
 
     try {
       const res = await addDoctor(
-        pin,
+        unlockedPin,
         newName.trim(),
         newSpecialty,
         parseInt(newAvgMinutes) || 10,
@@ -231,7 +238,7 @@ export default function ClinicPortal() {
         setNewNotes('');
         setNewFee('');
         setShowAddForm(false);
-        await loadDoctors(pin);
+        await loadDoctors(unlockedPin);
       }
     } catch (err) {
       alert('Error adding doctor: ' + (err.message || String(err)));
@@ -254,39 +261,39 @@ export default function ClinicPortal() {
 
   const handleSaveEdit = async (doctorId) => {
     const { error } = await updateDoctor(
-      pin, doctorId, editName, editSpecialty, parseInt(editAvgMinutes) || 10,
+      unlockedPin, doctorId, editName, editSpecialty, parseInt(editAvgMinutes) || 10,
       editWorkingDays, editStartTime, editEndTime, editNotes,
       editFee ? parseFloat(editFee) : null
     );
     if (error) { setError('Could not save changes.'); return; }
     setEditingId(null);
-    loadDoctors(pin);
+    loadDoctors(unlockedPin);
   };
 
   const handleDelete = async (doctorId, name) => {
     if (!window.confirm(`Remove Dr. ${name} from your clinic?`)) return;
-    const { error } = await deleteDoctor(pin, doctorId);
+    const { error } = await deleteDoctor(unlockedPin, doctorId);
     if (error) { setError('Could not remove doctor.'); return; }
-    loadDoctors(pin);
+    loadDoctors(unlockedPin);
   };
 
   const handleStatusChange = async (doctorId, status) => {
     const delay = status === 'delayed' ? 10 : 0;
-    const { error } = await updateDoctorStatus(pin, doctorId, status, delay);
+    const { error } = await updateDoctorStatus(unlockedPin, doctorId, status, delay);
     if (error) { setError('Could not update status.'); return; }
-    loadDoctors(pin);
+    loadDoctors(unlockedPin);
   };
 
   const handleWalkinSubmit = async (doctorId) => {
     if (!walkinName.trim()) return;
-    const { data, error } = await addWalkinBooking(pin, doctorId, walkinName, walkinPhone);
+    const { data, error } = await addWalkinBooking(unlockedPin, doctorId, walkinName, walkinPhone);
     if (error) { setError('Could not add booking.'); return; }
     setWalkinName(''); setWalkinPhone('');
     refreshBookings(doctorId);
   };
 
   const refreshBookings = async (doctorId) => {
-    const data = await getTodaysBookings(pin, doctorId);
+    const data = await getTodaysBookings(unlockedPin, doctorId);
     setBookingsByDoctor((prev) => ({ ...prev, [doctorId]: data || [] }));
   };
 
@@ -303,11 +310,11 @@ export default function ClinicPortal() {
 
   const handleMarkSeen = async (appointmentId, doctorId) => {
     setUpdatingPatient(appointmentId);
-    const { error } = await markAppointmentSeen(pin, appointmentId);
+    const { error } = await markAppointmentSeen(unlockedPin, appointmentId);
     setUpdatingPatient(null);
     if (error) { setError('Could not update patient status.'); return; }
     await refreshBookings(doctorId);
-    loadDoctors(pin);
+    loadDoctors(unlockedPin);
   };
 
   const handleNoShowCancel = async (appointmentId, doctorId) => {
@@ -317,7 +324,7 @@ export default function ClinicPortal() {
     setUpdatingPatient(null);
     if (error) { setError('Could not cancel booking.'); return; }
     await refreshBookings(doctorId);
-    loadDoctors(pin);
+    loadDoctors(unlockedPin);
   };
 
   const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 14, boxSizing: 'border-box' };
@@ -481,7 +488,6 @@ export default function ClinicPortal() {
                 <input type="number" value={editAvgMinutes} onChange={(e) => setEditAvgMinutes(e.target.value)} style={inputStyle} placeholder="Avg min per patient" />
                 <input placeholder="Consultation fee (₹)" type="number" value={editFee} onChange={(e) => setEditFee(e.target.value)} style={inputStyle} />
                 
-                {/* Doctor Visiting Hours Edit */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   <input type="time" value={editStartTime} onChange={(e) => setEditStartTime(e.target.value)} style={inputStyle} />
                   <input type="time" value={editEndTime} onChange={(e) => setEditEndTime(e.target.value)} style={inputStyle} />
@@ -676,7 +682,7 @@ export default function ClinicPortal() {
         {showAddForm ? 'Close Form' : '+ Add New Doctor'}
       </button>
 
-      {/* FULL ADD DOCTOR FORM WITH TIMINGS RESTORED */}
+      {/* Add Doctor Form */}
       {showAddForm && (
         <form onSubmit={handleAddDoctor} style={{ background: 'white', borderRadius: 20, padding: 20, marginTop: 14, display: 'flex', flexDirection: 'column', gap: 12, border: '1px solid #e2e8f0', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)' }}>
           <h4 style={{ margin: '0 0 4px 0', fontSize: 16, fontWeight: 800, color: '#0f172a' }}>Add Doctor Profile</h4>
@@ -704,7 +710,6 @@ export default function ClinicPortal() {
             </div>
           </div>
 
-          {/* DOCTOR CLINIC TIMINGS SECTION */}
           <div style={{ background: '#f8fafc', padding: 12, borderRadius: 12, border: '1px solid #f1f5f9' }}>
             <p style={{ fontSize: 12, fontWeight: 700, color: '#0f172a', margin: '0 0 8px 0' }}>🕒 Doctor Clinic Timings & Schedule</p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
