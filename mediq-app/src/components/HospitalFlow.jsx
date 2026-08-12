@@ -31,9 +31,11 @@ function toMinutes(t) {
   return h * 60 + m;
 }
 
-// Combines working-day, working-hours, and manual clinic status into one
-// display + bookability decision, so a closed slot can never be booked.
 function getAvailability(doc) {
+  if (doc.is_paused) {
+    return { label: 'Temporarily Unavailable', color: '#6b7280', textColor: 'white', bookable: false };
+  }
+
   const today = DAY_ABBR[new Date().getDay()];
   const worksToday = !doc.working_days || doc.working_days.length === 0 || doc.working_days.includes(today);
 
@@ -45,24 +47,27 @@ function getAvailability(doc) {
   const startMin = toMinutes(doc.start_time);
   const endMin = toMinutes(doc.end_time);
 
-  // Only auto-override based on time if the clinic hasn't manually set a
-  // non-default status (delayed/on_break/completed/not_started stay as-is).
-  if ((!doc.status || doc.status === 'available') && startMin != null && endMin != null) {
-    if (nowMinutes < startMin) {
-      return { label: `Opens at ${formatTime(doc.start_time)}`, color: '#e5e7eb', textColor: '#6b7280', bookable: false };
-    }
-    if (nowMinutes > endMin) {
-      return { label: 'Visiting hours over', color: '#e5e7eb', textColor: '#6b7280', bookable: false };
-    }
+  if (doc.status === 'completed') {
+    return { label: 'Done for Today', color: '#374151', textColor: 'white', bookable: false };
+  }
+  if (endMin != null && nowMinutes > endMin) {
+    return { label: 'Visiting hours over', color: '#e5e7eb', textColor: '#6b7280', bookable: false };
+  }
+
+  if ((!doc.status || doc.status === 'available' || doc.status === 'not_started') && startMin != null && nowMinutes < startMin) {
+    return { label: `Opens at ${formatTime(doc.start_time)}`, color: '#dbeafe', textColor: '#1d4ed8', bookable: true };
+  }
+
+  if (doc.status === 'not_started' && startMin != null && nowMinutes >= startMin) {
+    return { label: 'Running Late - Not Checked In', color: '#ef4444', textColor: 'white', bookable: true };
   }
 
   const statusInfo = STATUS_STYLES[doc.status] || STATUS_STYLES.available;
-  const bookable = doc.status !== 'completed' && doc.status !== 'not_started';
   return {
     label: `${statusInfo.label}${doc.status === 'delayed' && doc.delay_minutes ? ` ${doc.delay_minutes}m` : ''}`,
     color: statusInfo.color,
     textColor: 'white',
-    bookable,
+    bookable: true,
   };
 }
 
@@ -520,7 +525,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
             </div>
             {!hospitalUpi && (
               <p style={{ fontSize: 13, color: '#999', textAlign: 'center' }}>
-                This clinic hasn't set up UPI yet — Cash only.
+                This clinic hasn't set up UPI yet - Cash only.
               </p>
             )}
             {selectedPayment === 'upi' && hospitalUpi && !paymentExpired && (
