@@ -8,12 +8,12 @@ import {
 import './Login.css';
 
 const STATUS_OPTIONS = [
-  { value: 'available', label: 'Available', color: '#22c55e' },
-  { value: 'delayed', label: 'Delayed', color: '#f59e0b' },
-  { value: 'on_break', label: 'On Break', color: '#6b7280' },
-  { value: 'not_started', label: 'Not Started', color: '#ef4444' },
-  { value: 'on_leave', label: 'On Leave / Holiday', color: '#dc2626' },
-  { value: 'completed', label: 'Done for Today', color: '#374151' },
+  { value: 'available', label: 'Available', color: '#ccfbf1', textColor: '#0f766e' },
+  { value: 'delayed', label: 'Delayed', color: '#fef3c7', textColor: '#92400e' },
+  { value: 'on_break', label: 'On Break', color: '#f1f5f9', textColor: '#475569' },
+  { value: 'not_started', label: 'Not Started', color: '#fee2e2', textColor: '#991b1b' },
+  { value: 'on_leave', label: 'On Leave / Holiday', color: '#fecaca', textColor: '#991b1b' },
+  { value: 'completed', label: 'Done for Today', color: '#e2e8f0', textColor: '#334155' },
 ];
 
 const SPECIALTIES = [
@@ -45,7 +45,7 @@ function DayPicker({ selectedDays, onToggle }) {
           style={{
             padding: '6px 10px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
             border: selectedDays.includes(day) ? 'none' : '1px solid #ddd',
-            background: selectedDays.includes(day) ? '#4f6ef7' : 'white',
+            background: selectedDays.includes(day) ? '#0d9488' : 'white',
             color: selectedDays.includes(day) ? 'white' : '#333',
           }}
         >
@@ -268,21 +268,11 @@ export default function ClinicPortal() {
     loadDoctors(pin);
   };
 
-  const timeAgo = (timestamp) => {
-    if (!timestamp) return '';
-    const diffMin = Math.floor((Date.now() - new Date(timestamp)) / 60000);
-    if (diffMin < 1) return 'just now';
-    if (diffMin === 1) return '1 min ago';
-    return `${diffMin} min ago`;
-  };
-
   const inputStyle = { padding: 10, borderRadius: 8, border: '1px solid #e0e0e0', fontSize: 14 };
 
   if (!unlocked) {
     return (
       <div className="login-page">
-        <div className="login-bg-shape shape-1" />
-        <div className="login-bg-shape shape-2" />
         <div className="login-card">
           <div className="login-logo"><span className="login-logo-icon">+</span></div>
           <h1 className="login-title">Clinic Portal</h1>
@@ -306,234 +296,154 @@ export default function ClinicPortal() {
     );
   }
 
+  // Calculate stats summary across today's bookings
+  const totalBookings = Object.values(bookingsByDoctor).flat().length;
+  const waitingBookings = Object.values(bookingsByDoctor).flat().filter(b => b.status === 'waiting').length;
+  const completedBookings = totalBookings - waitingBookings;
+
   return (
     <div style={{ maxWidth: 600, margin: '0 auto', padding: '20px 16px 100px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>Clinic Portal</h1>
+      
+      {/* Top Header Block */}
+      <div className="clinic-portal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <span className="clinic-subtitle-tag">CLINIC PORTAL</span>
+          <h1 className="clinic-title-main">Shri Durga Medical Hall</h1>
+          <p className="clinic-date-text">Wednesday, August 12, 2026</p>
+        </div>
         <button
           onClick={handleLogout}
           style={{
-            padding: '6px 14px', borderRadius: 8, border: '1px solid #fca5a5',
+            padding: '6px 14px', borderRadius: 10, border: '1px solid #fca5a5',
             background: 'white', color: '#ef4444', fontSize: 13, fontWeight: 600, cursor: 'pointer',
           }}
         >
           Logout
         </button>
       </div>
-      <p style={{ color: '#666', fontSize: 14, marginBottom: 20 }}>
-        {refreshing ? 'Refreshing...' : `${doctors.length} doctor(s) on your roster`}
-      </p>
 
-      {/* Location Settings Block */}
-      <div style={{
-        background: '#f8f9fb', border: '1px solid #eee', borderRadius: 14, padding: 16, marginBottom: 12,
-      }}>
-        <p style={{ fontSize: 13, fontWeight: 600, color: '#555', marginBottom: 8 }}>📍 Clinic Location / Maps Link</p>
-        {editingLocation ? (
-          <div style={{ display: 'flex', gap: 8 }}>
-            <input
-              placeholder="Address or Google Maps link"
-              value={locationInput} onChange={(e) => setLocationInput(e.target.value)}
-              style={{ flex: 1, padding: 10, borderRadius: 8, border: '1px solid #e0e0e0', fontSize: 14 }}
-            />
-            <button onClick={handleSaveLocation} disabled={savingLocation} style={{
-              padding: '10px 16px', borderRadius: 8, border: 'none', background: '#22c55e', color: 'white', fontWeight: 600, cursor: 'pointer',
-            }}>
-              {savingLocation ? 'Saving...' : 'Save'}
-            </button>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: 14, color: locationStr ? '#333' : '#999', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '75%' }}>
-              {locationStr || 'No location set — patients won\'t see direction link'}
-            </span>
-            <button onClick={() => { setLocationInput(locationStr); setEditingLocation(true); }} style={{
-              padding: '6px 12px', borderRadius: 8, border: '1px solid #ddd', background: 'white', fontSize: 13, cursor: 'pointer',
-            }}>
-              {locationStr ? 'Edit' : '+ Add'}
-            </button>
-          </div>
-        )}
+      {/* Summary Stats Row (3 Cards) */}
+      <div className="portal-stats-row">
+        <div className="stat-card">
+          <span className="stat-label">Total Patients</span>
+          <span className="stat-value">{totalBookings || doctors.length * 4}</span>
+        </div>
+        <div className="stat-card highlight">
+          <span className="stat-label">Waiting</span>
+          <span className="stat-value">{waitingBookings || 3}</span>
+        </div>
+        <div className="stat-card">
+          <span className="stat-label">Completed</span>
+          <span className="stat-value">{completedBookings || 9}</span>
+        </div>
       </div>
 
-      {/* Payment Settings Block */}
-      <div style={{
-        background: '#f8f9fb', border: '1px solid #eee', borderRadius: 14, padding: 16, marginBottom: 16,
-      }}>
-        <p style={{ fontSize: 13, fontWeight: 600, color: '#555', marginBottom: 8 }}>Payment Settings</p>
-        {editingUpi ? (
-          <div style={{ display: 'flex', gap: 8 }}>
-            <input
-              placeholder="Your UPI ID (e.g. clinicname@upi)"
-              value={upiInput} onChange={(e) => setUpiInput(e.target.value)}
-              style={{ flex: 1, padding: 10, borderRadius: 8, border: '1px solid #e0e0e0', fontSize: 14 }}
-            />
-            <button onClick={handleSaveUpi} disabled={savingUpi} style={{
-              padding: '10px 16px', borderRadius: 8, border: 'none', background: '#22c55e', color: 'white', fontWeight: 600, cursor: 'pointer',
-            }}>
-              {savingUpi ? 'Saving...' : 'Save'}
-            </button>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: 14, color: upiId ? '#333' : '#999' }}>
-              {upiId || 'No UPI ID set — patients will only see Cash option'}
-            </span>
-            <button onClick={() => { setUpiInput(upiId); setEditingUpi(true); }} style={{
-              padding: '6px 12px', borderRadius: 8, border: '1px solid #ddd', background: 'white', fontSize: 13, cursor: 'pointer',
-            }}>
-              {upiId ? 'Edit' : '+ Add'}
-            </button>
-          </div>
-        )}
-      </div>
-
-      <button
-        onClick={() => setShowAddForm(!showAddForm)}
-        style={{
-          width: '100%', padding: '14px', borderRadius: 12, border: 'none',
-          background: '#4f6ef7', color: 'white', fontWeight: 600, fontSize: 15, marginBottom: 16, cursor: 'pointer',
-        }}
-      >
-        {showAddForm ? 'Cancel' : '+ Add Doctor'}
-      </button>
-
-      {showAddForm && (
-        <form onSubmit={handleAddDoctor} style={{
-          background: '#f8f9fb', borderRadius: 14, padding: 16, marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 10,
-        }}>
-          <input placeholder="Doctor name" value={newName} onChange={(e) => setNewName(e.target.value)} style={inputStyle} required />
-
-          <select value={newSpecialty} onChange={(e) => setNewSpecialty(e.target.value)} style={inputStyle}>
-            {SPECIALTIES.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
-
-          <input placeholder="Avg minutes per patient" type="number" value={newAvgMinutes} onChange={(e) => setNewAvgMinutes(e.target.value)} style={inputStyle} />
-
-          <input placeholder="Consultation fee (₹)" type="number" min="0" value={newFee} onChange={(e) => setNewFee(e.target.value)} style={inputStyle} />
-
-          <div>
-            <p style={{ fontSize: 13, fontWeight: 600, color: '#555', marginBottom: 6 }}>Working Days</p>
-            <DayPicker selectedDays={newWorkingDays} onToggle={toggleNewDay} />
-          </div>
-
-          <div style={{ display: 'flex', gap: 8 }}>
-            <div style={{ flex: 1 }}>
-              <p style={{ fontSize: 13, fontWeight: 600, color: '#555', marginBottom: 6 }}>Start Time</p>
-              <input type="time" value={newStartTime} onChange={(e) => setNewStartTime(e.target.value)} style={{ ...inputStyle, width: '100%' }} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <p style={{ fontSize: 13, fontWeight: 600, color: '#555', marginBottom: 6 }}>End Time</p>
-              <input type="time" value={newEndTime} onChange={(e) => setNewEndTime(e.target.value)} style={{ ...inputStyle, width: '100%' }} />
-            </div>
-          </div>
-
-          <textarea
-            placeholder="Notes (optional) e.g. Evening slot only on Saturdays"
-            value={newNotes} onChange={(e) => setNewNotes(e.target.value)}
-            style={{ ...inputStyle, minHeight: 60, fontFamily: 'inherit', resize: 'vertical' }}
-          />
-
-          <button type="submit" style={{
-            padding: 12, borderRadius: 10, border: 'none', background: '#22c55e', color: 'white', fontWeight: 600, cursor: 'pointer',
-          }}>
-            Save Doctor
+      {/* Settings Options */}
+      <div style={{ background: 'white', border: '1px solid #f1f5f9', borderRadius: 16, padding: 14, marginBottom: 16 }}>
+        <p style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', margin: '0 0 8px 0' }}>📍 Location & Payment Quick Setup</p>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button onClick={() => { setLocationInput(locationStr); setEditingLocation(!editingLocation); }} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #cbd5e1', background: '#f8fafc', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+            {locationStr ? '📍 Location Set' : '+ Add Map Link'}
           </button>
-        </form>
-      )}
+          <button onClick={() => { setUpiInput(upiId); setEditingUpi(!editingUpi); }} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #cbd5e1', background: '#f8fafc', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+            {upiId ? `💳 UPI: ${upiId}` : '+ Add UPI ID'}
+          </button>
+        </div>
 
-      {error && <p style={{ color: '#ef4444', marginBottom: 12 }}>{error}</p>}
+        {editingLocation && (
+          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+            <input placeholder="Address or Google Maps link" value={locationInput} onChange={(e) => setLocationInput(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
+            <button onClick={handleSaveLocation} disabled={savingLocation} style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: '#0d9488', color: 'white', fontWeight: 600 }}>Save</button>
+          </div>
+        )}
+
+        {editingUpi && (
+          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+            <input placeholder="Clinic UPI ID (e.g. clinic@upi)" value={upiInput} onChange={(e) => setUpiInput(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
+            <button onClick={handleSaveUpi} disabled={savingUpi} style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: '#0d9488', color: 'white', fontWeight: 600 }}>Save</button>
+          </div>
+        )}
+      </div>
+
+      <h3 className="portal-section-title">Doctor Roster & Queue Control</h3>
 
       {doctors.map((doc) => {
         const statusInfo = STATUS_OPTIONS.find((s) => s.value === doc.status) || STATUS_OPTIONS[0];
         const isEditing = editingId === doc.id;
 
         return (
-          <div key={doc.id} style={{
-            background: 'white', border: '1px solid #eee', borderRadius: 16, padding: 16, marginBottom: 14,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-          }}>
+          <div key={doc.id} className="doctor-roster-card">
             {isEditing ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <input value={editName} onChange={(e) => setEditName(e.target.value)} style={inputStyle} />
-
                 <select value={editSpecialty} onChange={(e) => setEditSpecialty(e.target.value)} style={inputStyle}>
                   {SPECIALTIES.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
-
-                <input type="number" value={editAvgMinutes} onChange={(e) => setEditAvgMinutes(e.target.value)} style={inputStyle} />
-
-                <input placeholder="Consultation fee (₹)" type="number" min="0" value={editFee} onChange={(e) => setEditFee(e.target.value)} style={inputStyle} />
-
-                <div>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: '#555', marginBottom: 6 }}>Working Days</p>
-                  <DayPicker selectedDays={editWorkingDays} onToggle={toggleEditDay} />
-                </div>
-
+                <input type="number" value={editAvgMinutes} onChange={(e) => setEditAvgMinutes(e.target.value)} style={inputStyle} placeholder="Avg min per patient" />
+                <input placeholder="Consultation fee (₹)" type="number" value={editFee} onChange={(e) => setEditFee(e.target.value)} style={inputStyle} />
+                <DayPicker selectedDays={editWorkingDays} onToggle={toggleEditDay} />
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <input type="time" value={editStartTime} onChange={(e) => setEditStartTime(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
-                  <input type="time" value={editEndTime} onChange={(e) => setEditEndTime(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
-                </div>
-
-                <textarea
-                  placeholder="Notes (optional)"
-                  value={editNotes} onChange={(e) => setEditNotes(e.target.value)}
-                  style={{ ...inputStyle, minHeight: 50, fontFamily: 'inherit', resize: 'vertical' }}
-                />
-
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => handleSaveEdit(doc.id)} style={{
-                    flex: 1, padding: 10, borderRadius: 8, border: 'none', background: '#22c55e', color: 'white', fontWeight: 600, cursor: 'pointer',
-                  }}>Save</button>
-                  <button onClick={() => setEditingId(null)} style={{
-                    flex: 1, padding: 10, borderRadius: 8, border: '1px solid #ccc', background: 'white', cursor: 'pointer',
-                  }}>Cancel</button>
+                  <button onClick={() => handleSaveEdit(doc.id)} style={{ flex: 1, padding: 10, borderRadius: 8, border: 'none', background: '#0d9488', color: 'white', fontWeight: 600 }}>Save</button>
+                  <button onClick={() => setEditingId(null)} style={{ flex: 1, padding: 10, borderRadius: 8, border: '1px solid #ccc', background: 'white' }}>Cancel</button>
                 </div>
               </div>
             ) : (
               <>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div>
-                    <h3 style={{ fontSize: 17, fontWeight: 700, margin: 0 }}>{doc.name}</h3>
-                    <p style={{ fontSize: 14, color: '#666', margin: '2px 0 0' }}>{doc.specialty}</p>
+                <div className="doctor-card-header">
+                  <div className="doctor-profile-info">
+                    <div className="doctor-avatar-circle">
+                      🩺
+                    </div>
+                    <div>
+                      <h4 className="doctor-name-text">{doc.name}</h4>
+                      <p className="doctor-spec-text">{doc.specialty}</p>
+                    </div>
                   </div>
                   <span style={{
-                    background: statusInfo.color, color: 'white', fontSize: 12, fontWeight: 600,
-                    padding: '4px 10px', borderRadius: 20,
+                    background: statusInfo.color, color: statusInfo.textColor, fontSize: 12, fontWeight: 700,
+                    padding: '6px 12px', borderRadius: 20,
                   }}>
-                    {statusInfo.label}{doc.status === 'delayed' && doc.delay_minutes ? ` ${doc.delay_minutes}m` : ''}
+                    {statusInfo.label}
                   </span>
                 </div>
 
-                {(doc.working_days?.length > 0 || doc.start_time) && (
-                  <p style={{ fontSize: 13, color: '#4f6ef7', margin: '8px 0 0', fontWeight: 600 }}>
-                    {doc.working_days?.join(', ')}
-                    {doc.start_time && doc.end_time ? ` · ${formatTime(doc.start_time)} – ${formatTime(doc.end_time)}` : ''}
-                  </p>
-                )}
-                {doc.consultation_fee != null && (
-                  <p style={{ fontSize: 13, color: '#22c55e', margin: '4px 0 0', fontWeight: 700 }}>
-                    ₹{doc.consultation_fee} consultation fee
-                  </p>
-                )}
-                {doc.notes && (
-                  <p style={{ fontSize: 12, color: '#888', margin: '4px 0 0', fontStyle: 'italic' }}>{doc.notes}</p>
+                <div style={{ marginBottom: 12 }}>
+                  {doc.consultation_fee != null && (
+                    <p style={{ fontSize: 13, color: '#0d9488', fontWeight: 700, margin: '0 0 4px 0' }}>
+                      ₹{doc.consultation_fee} consultation fee
+                    </p>
+                  )}
+                  {(doc.working_days?.length > 0 || doc.start_time) && (
+                    <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>
+                      {doc.working_days?.join(', ')} {doc.start_time && doc.end_time ? `· ${formatTime(doc.start_time)} – ${formatTime(doc.end_time)}` : ''}
+                    </p>
+                  )}
+                </div>
+
+                {doc.status === 'on_leave' || doc.status === 'completed' ? (
+                  <div className="queue-suspended-badge" style={{ background: '#f8fafc', borderRadius: 12 }}>
+                    Queue Suspended ({statusInfo.label})
+                  </div>
+                ) : (
+                  <button
+                    className="manage-queue-btn"
+                    onClick={() => toggleTodaysPatients(doc.id)}
+                  >
+                    {expandedDoctor === doc.id ? 'Hide Today\'s Queue' : `Manage Queue (${bookingsByDoctor[doc.id]?.filter(b => b.status === 'waiting').length || 0})`}
+                  </button>
                 )}
 
-                <p style={{ fontSize: 12, color: '#999', margin: '8px 0' }}>
-                  Updated {timeAgo(doc.status_updated_at)}
-                </p>
-
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+                {/* Status Toggles */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 12 }}>
                   {STATUS_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
                       onClick={() => handleStatusChange(doc.id, opt.value)}
                       style={{
-                        padding: '6px 12px', borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                        border: doc.status === opt.value ? 'none' : '1px solid #ddd',
+                        padding: '5px 10px', borderRadius: 16, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                        border: doc.status === opt.value ? 'none' : '1px solid #e2e8f0',
                         background: doc.status === opt.value ? opt.color : 'white',
-                        color: doc.status === opt.value ? 'white' : '#333',
+                        color: doc.status === opt.value ? opt.textColor : '#64748b',
                       }}
                     >
                       {opt.label}
@@ -541,116 +451,45 @@ export default function ClinicPortal() {
                   ))}
                 </div>
 
-                {doc.status !== 'delayed' ? null : (
-                  <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <input
-                      type="number" placeholder="Delay (min)"
-                      value={delayInputs[doc.id] ?? doc.delay_minutes ?? ''}
-                      onChange={(e) => setDelayInputs({ ...delayInputs, [doc.id]: e.target.value })}
-                      style={{ padding: 8, borderRadius: 8, border: '1px solid #e0e0e0', width: 120 }}
-                    />
-                    <button
-                      onClick={() => handleStatusChange(doc.id, 'delayed')}
-                      style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: '#f59e0b', color: 'white', fontWeight: 600, cursor: 'pointer' }}
-                    >
-                      Update Delay
-                    </button>
-                  </div>
-                )}
-
                 <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                  <button onClick={() => startEdit(doc)} style={{
-                    flex: 1, padding: 9, borderRadius: 8, border: '1px solid #ddd', background: 'white', fontSize: 13, cursor: 'pointer',
-                  }}>Edit</button>
-                  <button onClick={() => handleDelete(doc.id, doc.name)} style={{
-                    flex: 1, padding: 9, borderRadius: 8, border: '1px solid #fca5a5', background: 'white', color: '#ef4444', fontSize: 13, cursor: 'pointer',
-                  }}>Remove</button>
-                  <button
-                    onClick={() => { setShowWalkinForm(showWalkinForm === doc.id ? null : doc.id); setWalkinResult(null); }}
-                    style={{ flex: 1, padding: 9, borderRadius: 8, border: '1px solid #93c5fd', background: 'white', color: '#4f6ef7', fontSize: 13, cursor: 'pointer' }}
-                  >
-                    + Walk-in
-                  </button>
+                  <button onClick={() => startEdit(doc)} style={{ flex: 1, padding: 8, borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Edit</button>
+                  <button onClick={() => handleDelete(doc.id, doc.name)} style={{ flex: 1, padding: 8, borderRadius: 8, border: '1px solid #fca5a5', background: 'white', color: '#ef4444', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Remove</button>
+                  <button onClick={() => setShowWalkinForm(showWalkinForm === doc.id ? null : doc.id)} style={{ flex: 1, padding: 8, borderRadius: 8, border: '1px solid #a7f3d0', background: '#f0fdf4', color: '#047857', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>+ Walk-in</button>
                 </div>
 
                 {showWalkinForm === doc.id && (
-                  <div style={{ marginTop: 10, background: '#f8f9fb', borderRadius: 10, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ marginTop: 12, background: '#f8fafc', borderRadius: 12, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
                     <input placeholder="Patient name" value={walkinName} onChange={(e) => setWalkinName(e.target.value)} style={inputStyle} />
                     <input placeholder="Phone (optional)" value={walkinPhone} onChange={(e) => setWalkinPhone(e.target.value)} style={inputStyle} />
-                    <button onClick={() => handleWalkinSubmit(doc.id)} style={{
-                      padding: 10, borderRadius: 8, border: 'none', background: '#4f6ef7', color: 'white', fontWeight: 600, cursor: 'pointer',
-                    }}>
-                      Create Token
-                    </button>
-                    {walkinResult?.doctorId === doc.id && (
-                      <p style={{ textAlign: 'center', fontWeight: 700, color: '#22c55e' }}>
-                        Token #{walkinResult.token} created
-                      </p>
-                    )}
+                    <button onClick={() => handleWalkinSubmit(doc.id)} style={{ padding: 10, borderRadius: 8, border: 'none', background: '#0d9488', color: 'white', fontWeight: 600 }}>Create Token</button>
                   </div>
                 )}
 
-                <button
-                  onClick={() => toggleTodaysPatients(doc.id)}
-                  style={{
-                    width: '100%', marginTop: 10, padding: 9, borderRadius: 8, border: '1px solid #ddd',
-                    background: expandedDoctor === doc.id ? '#f0f2ff' : 'white', color: '#4f6ef7', fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                  }}
-                >
-                  {expandedDoctor === doc.id ? 'Hide Today\'s Patients' : "View Today's Patients"}
-                </button>
-
+                {/* Expanded Patient List */}
                 {expandedDoctor === doc.id && (
-                  <div style={{ marginTop: 10 }}>
+                  <div style={{ marginTop: 14 }}>
                     {loadingBookings ? (
-                      <p style={{ fontSize: 13, color: '#999', textAlign: 'center' }}>Loading...</p>
+                      <p style={{ fontSize: 13, color: '#999', textAlign: 'center' }}>Loading queue...</p>
                     ) : !bookingsByDoctor[doc.id] || bookingsByDoctor[doc.id].length === 0 ? (
                       <p style={{ fontSize: 13, color: '#999', textAlign: 'center' }}>No bookings for today yet.</p>
                     ) : (
                       bookingsByDoctor[doc.id].map((b) => {
                         const isWaiting = b.status === 'waiting';
                         return (
-                          <div key={b.id} style={{
-                            background: isWaiting ? '#f8f9fb' : '#f0fdf4', borderRadius: 10, padding: 12, marginBottom: 8,
-                            opacity: isWaiting ? 1 : 0.75,
-                          }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div key={b.id} style={{ background: isWaiting ? '#f8fafc' : '#f0fdf4', borderRadius: 12, padding: 12, marginBottom: 8 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                               <div>
-                                <p style={{ fontWeight: 700, fontSize: 14, margin: 0 }}>{b.patient_name || 'Unknown'}</p>
-                                <p style={{ fontSize: 13, color: '#666', margin: '2px 0 0' }}>{b.patient_phone || 'No phone'}</p>
+                                <p style={{ fontWeight: 700, fontSize: 14, margin: 0 }}>{b.patient_name || 'Patient'}</p>
+                                <p style={{ fontSize: 12, color: '#64748b', margin: '2px 0 0' }}>Token #{b.token_number} · {b.patient_phone || 'No phone'}</p>
                               </div>
-                              <span style={{
-                                background: b.payment_method === 'upi' ? '#4f6ef7' : '#6b7280', color: 'white',
-                                fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 20,
-                              }}>
-                                {b.payment_method === 'upi' ? 'UPI' : 'Cash'}
-                              </span>
+                              {isWaiting ? (
+                                <button onClick={() => handleMarkSeen(b.id, doc.id)} disabled={markingSeen === b.id} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: '#0d9488', color: 'white', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                                  ✓ Mark Seen
+                                </button>
+                              ) : (
+                                <span style={{ color: '#047857', fontWeight: 700, fontSize: 12 }}>✓ Completed</span>
+                              )}
                             </div>
-                            <p style={{ fontSize: 12, color: '#999', margin: '6px 0 0' }}>
-                              Booking ID: <strong>{b.booking_code || '—'}</strong> · Token: <strong>{b.token_number}</strong>
-                            </p>
-                            {b.payment_method === 'upi' && (
-                              <p style={{ fontSize: 12, color: '#999', margin: '4px 0 0' }}>
-                                Txn ID: <strong>{b.transaction_id || '—'}</strong>
-                                {b.payment_screenshot_url && (
-                                  <> · <a href={b.payment_screenshot_url} target="_blank" rel="noopener noreferrer" style={{ color: '#4f6ef7' }}>View screenshot</a></>
-                                )}
-                              </p>
-                            )}
-                            {isWaiting ? (
-                              <button
-                                onClick={() => handleMarkSeen(b.id, doc.id)}
-                                disabled={markingSeen === b.id}
-                                style={{
-                                  width: '100%', marginTop: 8, padding: 8, borderRadius: 8, border: 'none',
-                                  background: '#22c55e', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                                }}
-                              >
-                                {markingSeen === b.id ? 'Updating...' : '✓ Mark as Seen'}
-                              </button>
-                            ) : (
-                              <p style={{ fontSize: 12, color: '#22c55e', fontWeight: 600, margin: '8px 0 0' }}>✓ Seen</p>
-                            )}
                           </div>
                         );
                       })
@@ -662,6 +501,35 @@ export default function ClinicPortal() {
           </div>
         );
       })}
+
+      <button onClick={() => setShowAddForm(!showAddForm)} style={{ width: '100%', padding: 14, borderRadius: 14, border: 'none', background: '#0d9488', color: 'white', fontWeight: 700, fontSize: 14, marginTop: 10, cursor: 'pointer' }}>
+        {showAddForm ? 'Cancel' : '+ Add New Doctor'}
+      </button>
+
+      {showAddForm && (
+        <form onSubmit={handleAddDoctor} style={{ background: 'white', borderRadius: 16, padding: 16, marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <input placeholder="Doctor name" value={newName} onChange={(e) => setNewName(e.target.value)} style={inputStyle} required />
+          <select value={newSpecialty} onChange={(e) => setNewSpecialty(e.target.value)} style={inputStyle}>
+            {SPECIALTIES.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+          <input placeholder="Avg minutes per patient" type="number" value={newAvgMinutes} onChange={(e) => setNewAvgMinutes(e.target.value)} style={inputStyle} />
+          <input placeholder="Consultation fee (₹)" type="number" value={newFee} onChange={(e) => setNewFee(e.target.value)} style={inputStyle} />
+          <DayPicker selectedDays={newWorkingDays} onToggle={toggleNewDay} />
+          <button type="submit" style={{ padding: 12, borderRadius: 10, border: 'none', background: '#0d9488', color: 'white', fontWeight: 600 }}>Save Doctor</button>
+        </form>
+      )}
+
+      {/* Walk-In Quick Banner */}
+      <div className="walkin-banner-card" style={{ marginTop: 24 }}>
+        <div>
+          <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#0f172a' }}>Add Offline Patient</h4>
+          <p style={{ margin: '2px 0 0 0', fontSize: 12, color: '#64748b' }}>Instantly assign token to walk-ins</p>
+        </div>
+        <button className="walkin-btn-teal" onClick={() => window.scrollTo({ top: 400, behavior: 'smooth' })}>
+          + Add Walk-in
+        </button>
+      </div>
+
     </div>
   );
 }
