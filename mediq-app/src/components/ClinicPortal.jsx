@@ -203,22 +203,24 @@ export default function ClinicPortal() {
       return;
     }
     setSavingDoctor(true);
-    
+    setError('');
+
     try {
       const res = await addDoctor(
         pin,
         newName.trim(),
         newSpecialty,
         parseInt(newAvgMinutes) || 10,
-        newWorkingDays,
+        newWorkingDays.length > 0 ? newWorkingDays : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
         newStartTime || '10:00',
         newEndTime || '14:00',
         newNotes || '',
         newFee ? parseFloat(newFee) : 0
       );
 
-      if (res?.error) {
-        alert('Failed to add doctor: ' + res.error);
+      if (res && res.error) {
+        const errorMsg = typeof res.error === 'object' ? (res.error.message || JSON.stringify(res.error)) : res.error;
+        alert('Failed to add doctor: ' + errorMsg);
       } else {
         setNewName('');
         setNewSpecialty(SPECIALTIES[0]);
@@ -232,7 +234,7 @@ export default function ClinicPortal() {
         await loadDoctors(pin);
       }
     } catch (err) {
-      alert('Error adding doctor. Please check database connection.');
+      alert('Error adding doctor: ' + (err.message || String(err)));
     } finally {
       setSavingDoctor(false);
     }
