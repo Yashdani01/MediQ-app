@@ -359,3 +359,12 @@ export async function markAppointmentSeen(pin, appointmentId) {
   if (error) { console.error('Error marking appointment seen:', error); return { error }; }
   return { success: true };
 }
+
+
+export async function setDoctorPause(pin, doctorId, paused) {
+  const { error } = await supabase.rpc('set_doctor_pause', {
+    input_pin: pin, input_doctor_id: doctorId, input_paused: paused,
+  });
+  if (error) { console.error('Error toggling pause:', error); return { error }; }
+  return { success: true };
+}
