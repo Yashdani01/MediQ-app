@@ -4,6 +4,7 @@ import Profile from './Profile';
 import {
   getHospitals, getAllCities, getDoctorsForHospital, getWaitingCount,
   bookAppointment, searchDoctors, getAllSpecialties, getHospitalPaymentInfo, uploadPaymentScreenshot,
+  getMyCurrentBooking,
 } from '../hospitalData';
 import './HospitalFlow.css';
 
@@ -199,6 +200,14 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
       return;
     }
     setBookingError('');
+
+    // Check if patient already has an active booking with this doctor
+    const existingBooking = await getMyCurrentBooking(user.id);
+    if (existingBooking && existingBooking.doctor_id === doc.id) {
+      setBookingError(`Booking Error: You already have an active token (#${existingBooking.queue_number}) with Dr. ${doc.name}.`);
+      return;
+    }
+
     const upi = await getHospitalPaymentInfo(hospitalId);
     setHospitalUpi(upi);
     setSelectedPayment('cash');
