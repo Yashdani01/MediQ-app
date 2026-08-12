@@ -75,10 +75,10 @@ export default function ClinicPortal() {
   const [savingLocation, setSavingLocation] = useState(false);
   const [editingLocation, setEditingLocation] = useState(false);
 
-  // Phase 4 State Variables
   const [showSettingsDrawer, setShowSettingsDrawer] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
 
+  // Add Doctor Form States
   const [showAddForm, setShowAddForm] = useState(false);
   const [newName, setNewName] = useState('');
   const [newSpecialty, setNewSpecialty] = useState(SPECIALTIES[0]);
@@ -88,6 +88,7 @@ export default function ClinicPortal() {
   const [newEndTime, setNewEndTime] = useState('14:00');
   const [newNotes, setNewNotes] = useState('');
   const [newFee, setNewFee] = useState('');
+  const [savingDoctor, setSavingDoctor] = useState(false);
 
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState('');
@@ -113,7 +114,7 @@ export default function ClinicPortal() {
   const loadDoctors = async (currentPin) => {
     setRefreshing(true);
     const data = await getDoctorsForClinic(currentPin);
-    setDoctors(data);
+    setDoctors(data || []);
     
     if (data && data.length > 0) {
       const bookingsMap = {};
@@ -197,17 +198,26 @@ export default function ClinicPortal() {
 
   const handleAddDoctor = async (e) => {
     e.preventDefault();
-    if (!newName || !newSpecialty) return;
+    if (!newName.trim() || !newSpecialty) {
+      setError('Please provide doctor name and specialty.');
+      return;
+    }
+    setSavingDoctor(true);
+    setError('');
     const { error } = await addDoctor(
-      pin, newName, newSpecialty, parseInt(newAvgMinutes) || 10,
+      pin, newName.trim(), newSpecialty, parseInt(newAvgMinutes) || 10,
       newWorkingDays, newStartTime, newEndTime, newNotes,
       newFee ? parseFloat(newFee) : null
     );
-    if (error) { setError('Could not add doctor.'); return; }
+    setSavingDoctor(false);
+    if (error) {
+      setError('Could not add doctor. Please try again.');
+      return;
+    }
     setNewName(''); setNewSpecialty(SPECIALTIES[0]); setNewAvgMinutes('10');
     setNewWorkingDays([]); setNewStartTime('10:00'); setNewEndTime('14:00'); setNewNotes(''); setNewFee('');
     setShowAddForm(false);
-    loadDoctors(pin);
+    await loadDoctors(pin);
   };
 
   const startEdit = (doc) => {
@@ -290,9 +300,8 @@ export default function ClinicPortal() {
     loadDoctors(pin);
   };
 
-  const inputStyle = { padding: 10, borderRadius: 8, border: '1px solid #e0e0e0', fontSize: 14 };
+  const inputStyle = { width: '100%', padding: 12, borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 14, boxSizing: 'border-box' };
 
-  // Phase 1 Locked Screen
   if (!unlocked) {
     return (
       <div style={{
@@ -331,7 +340,6 @@ export default function ClinicPortal() {
     );
   }
 
-  // Live Metrics
   const allBookings = Object.values(bookingsByDoctor).flat();
   const totalBookings = allBookings.length;
   const waitingBookings = allBookings.filter(b => b.status === 'waiting').length;
@@ -380,9 +388,7 @@ export default function ClinicPortal() {
         </div>
       </div>
 
-      {/* ==========================================
-          PHASE 4: COLLAPSIBLE CLINIC CONFIGURATIONS PANEL
-          ========================================== */}
+      {/* Settings Drawer */}
       {showSettingsDrawer && (
         <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 20, padding: 18, marginBottom: 20, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
@@ -391,7 +397,6 @@ export default function ClinicPortal() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {/* Location Section */}
             <div style={{ background: '#f8fafc', borderRadius: 12, padding: 12, border: '1px solid #f1f5f9' }}>
               <p style={{ fontSize: 12, fontWeight: 700, color: '#64748b', margin: '0 0 6px 0', textTransform: 'uppercase' }}>📍 Google Maps Navigation Link</p>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -413,7 +418,6 @@ export default function ClinicPortal() {
               )}
             </div>
 
-            {/* UPI QR Code Section */}
             <div style={{ background: '#f8fafc', borderRadius: 12, padding: 12, border: '1px solid #f1f5f9' }}>
               <p style={{ fontSize: 12, fontWeight: 700, color: '#64748b', margin: '0 0 6px 0', textTransform: 'uppercase' }}>💳 Clinic UPI & On-Screen QR Code</p>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -637,20 +641,64 @@ export default function ClinicPortal() {
         );
       })}
 
-      <button onClick={() => setShowAddForm(!showAddForm)} style={{ width: '100%', padding: 14, borderRadius: 14, border: 'none', background: '#0d9488', color: 'white', fontWeight: 700, fontSize: 14, marginTop: 10, cursor: 'pointer' }}>
-        {showAddForm ? 'Cancel' : '+ Add New Doctor'}
+      {/* Add New Doctor Button & Form */}
+      <button
+        onClick={() => setShowAddForm(!showAddForm)}
+        style={{ width: '100%', padding: 14, borderRadius: 14, border: 'none', background: '#0d9488', color: 'white', fontWeight: 700, fontSize: 14, marginTop: 10, cursor: 'pointer' }}
+      >
+        {showAddForm ? 'Close Form' : '+ Add New Doctor'}
       </button>
 
       {showAddForm && (
-        <form onSubmit={handleAddDoctor} style={{ background: 'white', borderRadius: 16, padding: 16, marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <input placeholder="Doctor name" value={newName} onChange={(e) => setNewName(e.target.value)} style={inputStyle} required />
-          <select value={newSpecialty} onChange={(e) => setNewSpecialty(e.target.value)} style={inputStyle}>
-            {SPECIALTIES.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
-          <input placeholder="Avg minutes per patient" type="number" value={newAvgMinutes} onChange={(e) => setNewAvgMinutes(e.target.value)} style={inputStyle} />
-          <input placeholder="Consultation fee (₹)" type="number" value={newFee} onChange={(e) => setNewFee(e.target.value)} style={inputStyle} />
-          <DayPicker selectedDays={newWorkingDays} onToggle={toggleNewDay} />
-          <button type="submit" style={{ padding: 12, borderRadius: 10, border: 'none', background: '#0d9488', color: 'white', fontWeight: 600 }}>Save Doctor</button>
+        <form onSubmit={handleAddDoctor} style={{ background: 'white', borderRadius: 20, padding: 20, marginTop: 14, display: 'flex', flexDirection: 'column', gap: 12, border: '1px solid #e2e8f0', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)' }}>
+          <h4 style={{ margin: '0 0 4px 0', fontSize: 16, fontWeight: 800, color: '#0f172a' }}>Add Doctor Profile</h4>
+          
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 4 }}>Doctor Name *</label>
+            <input placeholder="e.g. Dr. Siddika Khatun" value={newName} onChange={(e) => setNewName(e.target.value)} style={inputStyle} required />
+          </div>
+
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 4 }}>Specialty *</label>
+            <select value={newSpecialty} onChange={(e) => setNewSpecialty(e.target.value)} style={inputStyle}>
+              {SPECIALTIES.map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 4 }}>Fee (₹)</label>
+              <input placeholder="200" type="number" value={newFee} onChange={(e) => setNewFee(e.target.value)} style={inputStyle} />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 4 }}>Avg Min / Patient</label>
+              <input placeholder="10" type="number" value={newAvgMinutes} onChange={(e) => setNewAvgMinutes(e.target.value)} style={inputStyle} />
+            </div>
+          </div>
+
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 4 }}>Working Days</label>
+            <DayPicker selectedDays={newWorkingDays} onToggle={toggleNewDay} />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 4 }}>Start Time</label>
+              <input type="time" value={newStartTime} onChange={(e) => setNewStartTime(e.target.value)} style={inputStyle} />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 4 }}>End Time</label>
+              <input type="time" value={newEndTime} onChange={(e) => setNewEndTime(e.target.value)} style={inputStyle} />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={savingDoctor}
+            style={{ padding: 14, borderRadius: 12, border: 'none', background: '#0d9488', color: 'white', fontWeight: 700, fontSize: 14, cursor: 'pointer', marginTop: 6 }}
+          >
+            {savingDoctor ? 'Saving Doctor...' : '✓ Save Doctor Profile'}
+          </button>
         </form>
       )}
 
@@ -703,9 +751,7 @@ export default function ClinicPortal() {
         </div>
       )}
 
-      {/* ==========================================
-          PHASE 4: ON-SCREEN SCANNABLE UPI QR CODE MODAL
-          ========================================== */}
+      {/* QR Code Modal */}
       {showQrModal && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
