@@ -13,6 +13,7 @@ const STATUS_STYLES = {
   delayed: { label: 'Delayed', color: '#f59e0b' },
   on_break: { label: 'On Break', color: '#6b7280' },
   not_started: { label: 'Not Started', color: '#ef4444' },
+  on_leave: { label: 'On Leave / Holiday', color: '#dc2626' },
   completed: { label: 'Done for Today', color: '#374151' },
 };
 
@@ -42,8 +43,8 @@ function getAvailability(doc) {
 
   const statusInfo = STATUS_STYLES[doc.status] || STATUS_STYLES.available;
   
-  // Allow booking for every parameter except 'completed' (Done for Today)
-  const bookable = doc.status !== 'completed';
+  // Disable booking for completed AND on_leave statuses
+  const bookable = doc.status !== 'completed' && doc.status !== 'on_leave';
 
   return {
     label: `${statusInfo.label}${doc.status === 'delayed' && doc.delay_minutes ? ` ${doc.delay_minutes}m` : ''}`,
@@ -68,7 +69,7 @@ function BookButton({ availability, onClick }) {
   if (!availability.bookable) {
     return (
       <button className="book-btn" disabled style={{ background: '#e5e7eb', color: '#9ca3af', cursor: 'not-allowed' }}>
-        Done for Today
+        {availability.label.includes('Leave') ? 'Booking Unavailable (On Leave)' : 'Done for Today'}
       </button>
     );
   }

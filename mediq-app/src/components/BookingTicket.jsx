@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cancelAppointment } from '../hospitalData';
 import './BookingTicket.css';
 
@@ -9,6 +9,25 @@ export default function BookingTicket({ appointment, doctor, patientsAheadOverri
 
   const patientsAhead = patientsAheadOverride ?? 0;
   const estWaitMinutes = patientsAhead * (doctor.avg_minutes_per_patient || 10);
+
+  // Request Web Notification permission on ticket view
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  // Trigger Browser Notification if queue drops to <= 3
+  useEffect(() => {
+    if (patientsAhead > 0 && patientsAhead <= 3 && !isCancelled) {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('MediQ - Turn Approaching!', {
+          body: `Dr. ${doctor.name}: Only ${patientsAhead} patient(s) ahead of you. Please head to the clinic!`,
+          icon: '/favicon.ico',
+        });
+      }
+    }
+  }, [patientsAhead, isCancelled, doctor.name]);
 
   const handleCancel = async () => {
     if (!window.confirm('Are you sure you want to cancel this token?')) return;
@@ -29,6 +48,23 @@ export default function BookingTicket({ appointment, doctor, patientsAheadOverri
   return (
     <div className="ticket-overlay">
       <div className="ticket-card">
+        {/* Real-time In-App Alert Banner */}
+        {!isCancelled && patientsAhead > 0 && patientsAhead <= 3 && (
+          <div style={{
+            background: '#fef2f2',
+            border: '1px solid #fca5a5',
+            color: '#991b1b',
+            borderRadius: 8,
+            padding: '8px 12px',
+            marginBottom: 12,
+            fontSize: 13,
+            fontWeight: 600,
+            textAlign: 'center',
+          }}>
+            🚨 <strong>Turn Approaching!</strong> Only {patientsAhead} patient(s) ahead of you.
+          </div>
+        )}
+
         <div className="ticket-header">
           <span className="ticket-check" style={{ background: isCancelled ? '#ef4444' : '#22c55e' }}>
             {isCancelled ? 'Cancelled' : 'Confirmed'}
