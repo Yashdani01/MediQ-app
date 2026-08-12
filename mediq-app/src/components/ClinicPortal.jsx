@@ -75,6 +75,10 @@ export default function ClinicPortal() {
   const [savingLocation, setSavingLocation] = useState(false);
   const [editingLocation, setEditingLocation] = useState(false);
 
+  // Phase 4 State Variables
+  const [showSettingsDrawer, setShowSettingsDrawer] = useState(false);
+  const [showQrModal, setShowQrModal] = useState(false);
+
   const [showAddForm, setShowAddForm] = useState(false);
   const [newName, setNewName] = useState('');
   const [newSpecialty, setNewSpecialty] = useState(SPECIALTIES[0]);
@@ -104,7 +108,6 @@ export default function ClinicPortal() {
   const [loadingBookings, setLoadingBookings] = useState(false);
   const [updatingPatient, setUpdatingPatient] = useState(null);
 
-  // Phase 3 Screenshot Modal State
   const [viewScreenshotModal, setViewScreenshotModal] = useState(null);
 
   const loadDoctors = async (currentPin) => {
@@ -348,9 +351,17 @@ export default function ClinicPortal() {
           <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '2px 0' }}>Shri Durga Medical Hall</h1>
           <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>{todayDateStr}</p>
         </div>
-        <button onClick={handleLogout} style={{ padding: '8px 16px', borderRadius: 12, border: '1px solid #fca5a5', background: 'white', color: '#ef4444', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-          Logout ➔
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            onClick={() => setShowSettingsDrawer(!showSettingsDrawer)}
+            style={{ padding: '8px 12px', borderRadius: 12, border: '1px solid #cbd5e1', background: 'white', color: '#0f172a', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+          >
+            ⚙️ Settings
+          </button>
+          <button onClick={handleLogout} style={{ padding: '8px 16px', borderRadius: 12, border: '1px solid #fca5a5', background: 'white', color: '#ef4444', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+            Logout ➔
+          </button>
+        </div>
       </div>
 
       {/* Stats Summary */}
@@ -369,32 +380,63 @@ export default function ClinicPortal() {
         </div>
       </div>
 
-      {/* Quick Settings */}
-      <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 16, padding: 14, marginBottom: 20 }}>
-        <p style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', margin: '0 0 8px 0' }}>📍 Location & Payment Quick Setup</p>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <button onClick={() => { setLocationInput(locationStr); setEditingLocation(!editingLocation); }} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #cbd5e1', background: '#f8fafc', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-            {locationStr ? '📍 Location Set' : '+ Add Map Link'}
-          </button>
-          <button onClick={() => { setUpiInput(upiId); setEditingUpi(!editingUpi); }} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #cbd5e1', background: '#f8fafc', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-            {upiId ? `💳 UPI: ${upiId}` : '+ Add UPI ID'}
-          </button>
+      {/* ==========================================
+          PHASE 4: COLLAPSIBLE CLINIC CONFIGURATIONS PANEL
+          ========================================== */}
+      {showSettingsDrawer && (
+        <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 20, padding: 18, marginBottom: 20, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+            <h4 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#0f172a' }}>⚙️ Clinic Configurations</h4>
+            <button onClick={() => setShowSettingsDrawer(false)} style={{ border: 'none', background: '#f1f5f9', borderRadius: '50%', width: 26, height: 26, fontWeight: 700, cursor: 'pointer' }}>✕</button>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {/* Location Section */}
+            <div style={{ background: '#f8fafc', borderRadius: 12, padding: 12, border: '1px solid #f1f5f9' }}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: '#64748b', margin: '0 0 6px 0', textTransform: 'uppercase' }}>📍 Google Maps Navigation Link</p>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <button onClick={() => { setLocationInput(locationStr); setEditingLocation(!editingLocation); }} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                  {locationStr ? '✏️ Edit Map Link' : '+ Add Map Link'}
+                </button>
+                {locationStr && (
+                  <a href={locationStr} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: '#0284c7', fontWeight: 700, textDecoration: 'none' }}>
+                    🔗 Test Route Link ➔
+                  </a>
+                )}
+              </div>
+
+              {editingLocation && (
+                <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                  <input placeholder="Paste Google Maps share link" value={locationInput} onChange={(e) => setLocationInput(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
+                  <button onClick={handleSaveLocation} disabled={savingLocation} style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: '#0d9488', color: 'white', fontWeight: 600, cursor: 'pointer' }}>Save</button>
+                </div>
+              )}
+            </div>
+
+            {/* UPI QR Code Section */}
+            <div style={{ background: '#f8fafc', borderRadius: 12, padding: 12, border: '1px solid #f1f5f9' }}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: '#64748b', margin: '0 0 6px 0', textTransform: 'uppercase' }}>💳 Clinic UPI & On-Screen QR Code</p>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <button onClick={() => { setUpiInput(upiId); setEditingUpi(!editingUpi); }} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                  {upiId ? `✏️ Change UPI (${upiId})` : '+ Add UPI ID'}
+                </button>
+                {upiId && (
+                  <button onClick={() => setShowQrModal(true)} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: '#ccfbf1', color: '#0f766e', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                    📱 Show On-Screen QR Code
+                  </button>
+                )}
+              </div>
+
+              {editingUpi && (
+                <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                  <input placeholder="Clinic UPI ID (e.g. 9064036668@slc)" value={upiInput} onChange={(e) => setUpiInput(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
+                  <button onClick={handleSaveUpi} disabled={savingUpi} style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: '#0d9488', color: 'white', fontWeight: 600, cursor: 'pointer' }}>Save</button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-
-        {editingLocation && (
-          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-            <input placeholder="Address or Google Maps link" value={locationInput} onChange={(e) => setLocationInput(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
-            <button onClick={handleSaveLocation} disabled={savingLocation} style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: '#0d9488', color: 'white', fontWeight: 600 }}>Save</button>
-          </div>
-        )}
-
-        {editingUpi && (
-          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-            <input placeholder="Clinic UPI ID (e.g. clinic@upi)" value={upiInput} onChange={(e) => setUpiInput(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
-            <button onClick={handleSaveUpi} disabled={savingUpi} style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: '#0d9488', color: 'white', fontWeight: 600 }}>Save</button>
-          </div>
-        )}
-      </div>
+      )}
 
       <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginBottom: 14 }}>Doctor Roster & Queue Control</h3>
 
@@ -506,9 +548,7 @@ export default function ClinicPortal() {
                   </div>
                 )}
 
-                {/* ==========================================
-                    PHASE 3: PATIENT QUEUE DRAWER & VERIFICATION
-                    ========================================== */}
+                {/* Queue Drawer */}
                 {expandedDoctor === doc.id && (
                   <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid #f1f5f9' }}>
                     {loadingBookings ? (
@@ -536,7 +576,6 @@ export default function ClinicPortal() {
                                 )}
                               </div>
 
-                              {/* Source Badge */}
                               <span style={{
                                 background: isWalkin ? '#f1f5f9' : '#e0e7ff', color: isWalkin ? '#334155' : '#3730a3',
                                 fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 8,
@@ -545,7 +584,6 @@ export default function ClinicPortal() {
                               </span>
                             </div>
 
-                            {/* Payment Method & Screenshot Verification Bar */}
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f8fafc', padding: '8px 10px', borderRadius: 10, margin: '8px 0' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                 <span style={{
@@ -557,7 +595,6 @@ export default function ClinicPortal() {
                                 {b.utr_id && <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>UTR: {b.utr_id}</span>}
                               </div>
 
-                              {/* Screenshot Trigger */}
                               {isUpi && b.payment_screenshot_url && (
                                 <button
                                   onClick={() => setViewScreenshotModal({ ...b, doctorName: doc.name })}
@@ -568,7 +605,6 @@ export default function ClinicPortal() {
                               )}
                             </div>
 
-                            {/* Action Buttons */}
                             {isWaiting ? (
                               <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                                 <button
@@ -618,9 +654,7 @@ export default function ClinicPortal() {
         </form>
       )}
 
-      {/* ==========================================
-          PHASE 3: PAYMENT SCREENSHOT VERIFICATION MODAL
-          ========================================== */}
+      {/* Screenshot Modal */}
       {viewScreenshotModal && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -654,7 +688,7 @@ export default function ClinicPortal() {
                 href={viewScreenshotModal.payment_screenshot_url}
                 target="_blank"
                 rel="noreferrer"
-                style={{ flex: 1, textCenter: 'center', padding: 12, borderRadius: 12, border: '1px solid #cbd5e1', background: 'white', color: '#0f172a', fontWeight: 700, fontSize: 13, textDecoration: 'none', textAlign: 'center' }}
+                style={{ flex: 1, padding: 12, borderRadius: 12, border: '1px solid #cbd5e1', background: 'white', color: '#0f172a', fontWeight: 700, fontSize: 13, textDecoration: 'none', textAlign: 'center' }}
               >
                 🔍 Open Full Image
               </a>
@@ -665,6 +699,46 @@ export default function ClinicPortal() {
                 ✓ Confirm Verified
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==========================================
+          PHASE 4: ON-SCREEN SCANNABLE UPI QR CODE MODAL
+          ========================================== */}
+      {showQrModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 1000,
+        }}>
+          <div style={{ background: 'white', borderRadius: 28, padding: 24, width: '100%', maxWidth: 360, textAlign: 'center', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.3)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#0d9488', background: '#ccfbf1', padding: '4px 10px', borderRadius: 12 }}>CLINIC PAYMENT QR</span>
+              <button onClick={() => setShowQrModal(false)} style={{ border: 'none', background: '#f1f5f9', borderRadius: '50%', width: 28, height: 28, fontWeight: 700, cursor: 'pointer' }}>✕</button>
+            </div>
+
+            <h3 style={{ margin: '0 0 4px 0', fontSize: 18, fontWeight: 800, color: '#0f172a' }}>Scan to Pay Reception</h3>
+            <p style={{ margin: '0 0 16px 0', fontSize: 12, color: '#64748b' }}>Works with Google Pay, PhonePe, Paytm & BHIM</p>
+
+            <div style={{ background: '#f8fafc', padding: 16, borderRadius: 20, border: '1px solid #e2e8f0', display: 'inline-block', marginBottom: 16 }}>
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`upi://pay?pa=${upiId}&pn=Shri Durga Medical Hall&cu=INR`)}`}
+                alt="Clinic UPI QR Code"
+                style={{ width: 180, height: 180, display: 'block', margin: '0 auto' }}
+              />
+            </div>
+
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#0d9488', margin: '0 0 18px 0', background: '#f0fdf4', padding: '8px 12px', borderRadius: 10 }}>
+              UPI ID: {upiId}
+            </p>
+
+            <button
+              onClick={() => setShowQrModal(false)}
+              style={{ width: '100%', padding: 14, borderRadius: 14, border: 'none', background: '#0f172a', color: 'white', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}
+            >
+              Done / Close
+            </button>
           </div>
         </div>
       )}
