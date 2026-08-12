@@ -8,12 +8,12 @@ import {
 import './Login.css';
 
 const STATUS_OPTIONS = [
-  { value: 'available', label: 'Available', color: '#e6fffa', textColor: '#0f766e' },
-  { value: 'delayed', label: 'Delayed', color: '#fef3c7', textColor: '#92400e' },
-  { value: 'on_break', label: 'On Break', color: '#f1f5f9', textColor: '#475569' },
-  { value: 'not_started', label: 'Not Started', color: '#fee2e2', textColor: '#991b1b' },
-  { value: 'on_leave', label: 'On Leave / Holiday', color: '#fecaca', textColor: '#991b1b' },
-  { value: 'completed', label: 'Done for Today', color: '#e2e8f0', textColor: '#334155' },
+  { value: 'available', label: 'Available', color: '#d1fae5', textColor: '#065f46', dotColor: '#10b981' },
+  { value: 'delayed', label: 'Delayed', color: '#fef3c7', textColor: '#92400e', dotColor: '#f59e0b' },
+  { value: 'on_break', label: 'On Break', color: '#f1f5f9', textColor: '#475569', dotColor: '#64748b' },
+  { value: 'not_started', label: 'Not Started', color: '#fee2e2', textColor: '#991b1b', dotColor: '#ef4444' },
+  { value: 'on_leave', label: 'On Leave / Holiday', color: '#fecaca', textColor: '#991b1b', dotColor: '#dc2626' },
+  { value: 'completed', label: 'Done for Today', color: '#e2e8f0', textColor: '#334155', dotColor: '#475569' },
 ];
 
 const SPECIALTIES = [
@@ -286,189 +286,71 @@ export default function ClinicPortal() {
 
   const inputStyle = { padding: 10, borderRadius: 8, border: '1px solid #e0e0e0', fontSize: 14 };
 
-  // ==========================================
-  // PHASE 1: BRANDED PIN ENTRY GATEWAY (LOCKED)
-  // ==========================================
+  // Phase 1 Locked Screen
   if (!unlocked) {
     return (
       <div style={{
         minHeight: '100vh',
         background: 'radial-gradient(ellipse at 50% 30%, #115e59 0%, #0f172a 70%, #020617 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        position: 'relative',
-        overflow: 'hidden',
       }}>
-        {/* Soft Ambient Background Glows */}
-        <div style={{ position: 'absolute', width: 350, height: 350, borderRadius: '50%', background: '#0d9488', opacity: 0.2, filter: 'blur(90px)', top: '15%', left: '15%' }} />
-        <div style={{ position: 'absolute', width: 300, height: 300, borderRadius: '50%', background: '#3b82f6', opacity: 0.15, filter: 'blur(90px)', bottom: '15%', right: '15%' }} />
-
         <div style={{
-          background: 'rgba(255, 255, 255, 0.96)',
-          backdropFilter: 'blur(20px)',
-          borderRadius: 32,
-          padding: '40px 32px 32px',
-          width: '100%',
-          maxWidth: 400,
-          boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.3)',
-          textAlign: 'center',
-          position: 'relative',
-          zIndex: 10,
+          background: 'rgba(255, 255, 255, 0.96)', backdropFilter: 'blur(20px)', borderRadius: 32,
+          padding: '40px 32px 32px', width: '100%', maxWidth: 400, textAlign: 'center',
+          boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.45)',
         }}>
-          {/* Security Status Indicator Pill */}
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
-            background: '#d1fae5',
-            border: '1px solid #a7f3d0',
-            color: '#065f46',
-            fontSize: 11,
-            fontWeight: 700,
-            padding: '4px 12px',
-            borderRadius: 20,
-            marginBottom: 20,
-            letterSpacing: '0.3px',
-          }}>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#d1fae5', border: '1px solid #a7f3d0', color: '#065f46', fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 20, marginBottom: 20 }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981' }} />
             MediQ Secure Terminal Active
           </div>
-
-          {/* Header Icon */}
-          <div style={{
-            width: 64, height: 64,
-            borderRadius: 22,
-            background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
-            color: 'white',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            margin: '0 auto 16px',
-            fontSize: 28,
-            boxShadow: '0 12px 24px -4px rgba(13, 148, 136, 0.4)',
-          }}>
+          <div style={{ width: 64, height: 64, borderRadius: 22, background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 28 }}>
             🏥
           </div>
-
-          {/* Branded Hospital Name */}
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>
-            Shri Durga Medical Hall
-          </h1>
-          <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 28px 0', fontWeight: 600 }}>
-            Staff Access Gateway · Enter Access PIN
-          </p>
-
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', margin: '0 0 4px 0' }}>Shri Durga Medical Hall</h1>
+          <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 28px 0', fontWeight: 600 }}>Staff Access Gateway · Enter Access PIN</p>
           <form onSubmit={handleUnlock} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <input
-                type="password"
-                inputMode="numeric"
-                placeholder="• • • •"
-                maxLength={6}
-                value={pin}
-                onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-                required
-                style={{
-                  width: '100%',
-                  padding: '16px',
-                  borderRadius: 16,
-                  border: '2px solid #cbd5e1',
-                  background: '#f8fafc',
-                  fontSize: 24,
-                  fontWeight: 800,
-                  letterSpacing: '12px',
-                  textAlign: 'center',
-                  color: '#0f172a',
-                  boxSizing: 'border-box',
-                  outline: 'none',
-                  transition: 'all 0.2s ease',
-                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)',
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#0d9488';
-                  e.target.style.background = '#ffffff';
-                  e.target.style.boxShadow = '0 0 0 4px rgba(13, 148, 136, 0.15)';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = '#cbd5e1';
-                  e.target.style.background = '#f8fafc';
-                  e.target.style.boxShadow = 'none';
-                }}
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading || !pin}
-              style={{
-                width: '100%',
-                padding: '16px',
-                borderRadius: 16,
-                border: 'none',
-                background: loading || !pin ? '#cbd5e1' : 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
-                color: 'white',
-                fontWeight: 700,
-                fontSize: 15,
-                cursor: loading || !pin ? 'not-allowed' : 'pointer',
-                boxShadow: loading || !pin ? 'none' : '0 12px 24px -6px rgba(13, 148, 136, 0.45)',
-                transition: 'all 0.2s ease',
-              }}
-            >
+            <input
+              type="password" inputMode="numeric" placeholder="• • • •" maxLength={6}
+              value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} required
+              style={{ width: '100%', padding: '16px', borderRadius: 16, border: '2px solid #cbd5e1', background: '#f8fafc', fontSize: 24, fontWeight: 800, letterSpacing: '12px', textAlign: 'center', outline: 'none' }}
+            />
+            <button type="submit" disabled={loading || !pin} style={{ width: '100%', padding: '16px', borderRadius: 16, border: 'none', background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)', color: 'white', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>
               {loading ? 'Verifying PIN...' : 'Unlock Portal →'}
             </button>
           </form>
-
-          {error && (
-            <p style={{ color: '#ef4444', fontSize: 13, fontWeight: 600, marginTop: 16, background: '#fef2f2', padding: '10px 14px', borderRadius: 12, border: '1px solid #fecaca' }}>
-              {error}
-            </p>
-          )}
-
-          <div style={{ marginTop: 28, paddingTop: 18, borderTop: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#94a3b8', fontSize: 12, fontWeight: 600 }}>
-            <span>🔒</span> 256-Bit Encrypted Healthcare Access
-          </div>
+          {error && <p style={{ color: '#ef4444', fontSize: 13, marginTop: 16, background: '#fef2f2', padding: '10px 14px', borderRadius: 12 }}>{error}</p>}
         </div>
       </div>
     );
   }
 
-  // Live Metrics Calculation
+  // Live Metrics
   const allBookings = Object.values(bookingsByDoctor).flat();
   const totalBookings = allBookings.length;
   const waitingBookings = allBookings.filter(b => b.status === 'waiting').length;
   const completedBookings = allBookings.filter(b => b.status === 'completed' || b.status === 'seen').length;
-
   const todayDateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
   return (
     <div style={{ maxWidth: 600, margin: '0 auto', padding: '20px 16px 100px', background: '#f8fafc', minHeight: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
       
-      {/* ==========================================
-          PHASE 1: COMMAND CENTER HEADER (UNLOCKED)
-          ========================================== */}
+      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
         <div>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#d1fae5', border: '1px solid #a7f3d0', padding: '3px 10px', borderRadius: 20, marginBottom: 6 }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }} />
             <span style={{ fontSize: 11, fontWeight: 700, color: '#065f46', letterSpacing: 0.5 }}>OPERATIONAL · QUEUE ACTIVE</span>
           </div>
           <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '2px 0' }}>Shri Durga Medical Hall</h1>
           <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>{todayDateStr}</p>
         </div>
-        <button
-          onClick={handleLogout}
-          style={{
-            padding: '8px 16px', borderRadius: 12, border: '1px solid #fca5a5',
-            background: 'white', color: '#ef4444', fontSize: 13, fontWeight: 700, cursor: 'pointer',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
-          }}
-        >
+        <button onClick={handleLogout} style={{ padding: '8px 16px', borderRadius: 12, border: '1px solid #fca5a5', background: 'white', color: '#ef4444', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
           Logout ➔
         </button>
       </div>
 
-      {/* Summary Stats Row */}
+      {/* Stats Summary */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 20 }}>
         <div style={{ background: 'white', borderRadius: 16, padding: 12, border: '1px solid #e2e8f0', textAlign: 'center' }}>
           <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>Total Patients</span>
@@ -484,7 +366,7 @@ export default function ClinicPortal() {
         </div>
       </div>
 
-      {/* Location & Payment Quick Setup */}
+      {/* Quick Settings */}
       <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 16, padding: 14, marginBottom: 20 }}>
         <p style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', margin: '0 0 8px 0' }}>📍 Location & Payment Quick Setup</p>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -513,13 +395,16 @@ export default function ClinicPortal() {
 
       <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginBottom: 14 }}>Doctor Roster & Queue Control</h3>
 
+      {/* ==========================================
+          PHASE 2: DOCTOR ROSTER MICRO-DASHBOARDS
+          ========================================== */}
       {doctors.map((doc) => {
         const statusInfo = STATUS_OPTIONS.find((s) => s.value === doc.status) || STATUS_OPTIONS[0];
         const isEditing = editingId === doc.id;
         const docWaitingCount = bookingsByDoctor[doc.id]?.filter(b => b.status === 'waiting').length || 0;
 
         return (
-          <div key={doc.id} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 20, padding: 16, marginBottom: 16, boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+          <div key={doc.id} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 24, padding: 18, marginBottom: 18, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.03)' }}>
             {isEditing ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <input value={editName} onChange={(e) => setEditName(e.target.value)} style={inputStyle} />
@@ -536,78 +421,98 @@ export default function ClinicPortal() {
               </div>
             ) : (
               <>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#ccfbf1', color: '#0d9488', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>🩺</div>
+                {/* 1. Profile Header with Ambient Status Badge */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 46, height: 46, borderRadius: 16, background: '#e6fffa', color: '#0d9488', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 700 }}>
+                      🩺
+                    </div>
                     <div>
-                      <h4 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: '#0f172a' }}>{doc.name}</h4>
-                      <p style={{ fontSize: 13, color: '#64748b', margin: '2px 0 0 0' }}>{doc.specialty}</p>
+                      <h4 style={{ fontSize: 17, fontWeight: 800, margin: 0, color: '#0f172a', letterSpacing: '-0.3px' }}>{doc.name}</h4>
+                      <p style={{ fontSize: 13, color: '#64748b', margin: '2px 0 0 0', fontWeight: 500 }}>{doc.specialty}</p>
                     </div>
                   </div>
+
                   <span style={{
-                    background: statusInfo.color, color: statusInfo.textColor, fontSize: 12, fontWeight: 700,
-                    padding: '6px 12px', borderRadius: 20,
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    background: statusInfo.color, color: statusInfo.textColor, fontSize: 11, fontWeight: 700,
+                    padding: '6px 12px', borderRadius: 20, border: `1px solid ${statusInfo.color}`,
                   }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: statusInfo.dotColor, display: 'inline-block' }} />
                     {statusInfo.label}
                   </span>
                 </div>
 
-                <div style={{ marginBottom: 12 }}>
+                {/* 2. Formatted Fee & Schedule Pills */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
                   {doc.consultation_fee != null && (
-                    <p style={{ fontSize: 13, color: '#0d9488', fontWeight: 700, margin: '0 0 4px 0' }}>
-                      ₹{doc.consultation_fee} consultation fee
-                    </p>
+                    <span style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', fontSize: 12, fontWeight: 700, padding: '4px 10px', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                      💳 ₹{doc.consultation_fee} Fee
+                    </span>
                   )}
                   {(doc.working_days?.length > 0 || doc.start_time) && (
-                    <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>
-                      {doc.working_days?.join(', ')} {doc.start_time && doc.end_time ? `· ${formatTime(doc.start_time)} – ${formatTime(doc.end_time)}` : ''}
-                    </p>
+                    <span style={{ background: '#f8fafc', border: '1px solid #e2e8f0', color: '#475569', fontSize: 12, fontWeight: 600, padding: '4px 10px', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                      🕒 {doc.working_days?.join(', ')} {doc.start_time && doc.end_time ? `· ${formatTime(doc.start_time)} – ${formatTime(doc.end_time)}` : ''}
+                    </span>
                   )}
                 </div>
 
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
-                  {STATUS_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.value}
-                      onClick={() => handleStatusChange(doc.id, opt.value)}
-                      style={{
-                        padding: '5px 10px', borderRadius: 16, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                        border: doc.status === opt.value ? 'none' : '1px solid #e2e8f0',
-                        background: doc.status === opt.value ? opt.color : 'white',
-                        color: doc.status === opt.value ? opt.textColor : '#64748b',
-                      }}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
+                {/* 3. Queue Status Toggles */}
+                <div style={{ background: '#f8fafc', borderRadius: 14, padding: 10, marginBottom: 14, border: '1px solid #f1f5f9' }}>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', margin: '0 0 6px 0', textTransform: 'uppercase', letterSpacing: 0.5 }}>Update Live Queue Status:</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {STATUS_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        onClick={() => handleStatusChange(doc.id, opt.value)}
+                        style={{
+                          padding: '5px 11px', borderRadius: 12, fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                          border: doc.status === opt.value ? 'none' : '1px solid #cbd5e1',
+                          background: doc.status === opt.value ? opt.color : 'white',
+                          color: doc.status === opt.value ? opt.textColor : '#64748b',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => startEdit(doc)} style={{ flex: 1, padding: 8, borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Edit</button>
-                  <button onClick={() => handleDelete(doc.id, doc.name)} style={{ flex: 1, padding: 8, borderRadius: 8, border: '1px solid #fca5a5', background: 'white', color: '#ef4444', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Remove</button>
-                  <button onClick={() => setShowWalkinForm(showWalkinForm === doc.id ? null : doc.id)} style={{ flex: 1, padding: 8, borderRadius: 8, border: '1px solid #a7f3d0', background: '#f0fdf4', color: '#047857', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>+ Walk-in</button>
+                {/* 4. Segmented Action Control Bar */}
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 8 }}>
+                  <button
+                    onClick={() => toggleTodaysPatients(doc.id)}
+                    style={{
+                      padding: '10px 12px', borderRadius: 12, border: 'none',
+                      background: expandedDoctor === doc.id ? '#115e59' : '#0d9488', color: 'white',
+                      fontSize: 12, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px rgba(13, 148, 136, 0.2)',
+                    }}
+                  >
+                    {expandedDoctor === doc.id ? 'Hide Queue' : `👥 Queue (${docWaitingCount})`}
+                  </button>
+                  <button onClick={() => setShowWalkinForm(showWalkinForm === doc.id ? null : doc.id)} style={{ padding: '10px 8px', borderRadius: 12, border: '1px solid #a7f3d0', background: '#f0fdf4', color: '#047857', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                    + Walk-in
+                  </button>
+                  <button onClick={() => startEdit(doc)} style={{ padding: '10px 8px', borderRadius: 12, border: '1px solid #cbd5e1', background: 'white', color: '#334155', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                    ⚙️ Edit
+                  </button>
+                  <button onClick={() => handleDelete(doc.id, doc.name)} style={{ padding: '10px 8px', borderRadius: 12, border: '1px solid #fca5a5', background: '#fff5f5', color: '#ef4444', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                    🗑️
+                  </button>
                 </div>
 
                 {showWalkinForm === doc.id && (
-                  <div style={{ marginTop: 12, background: '#f8fafc', borderRadius: 12, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ marginTop: 12, background: '#f8fafc', borderRadius: 12, padding: 12, display: 'flex', flexDirection: 'column', gap: 8, border: '1px solid #e2e8f0' }}>
                     <input placeholder="Patient name" value={walkinName} onChange={(e) => setWalkinName(e.target.value)} style={inputStyle} />
                     <input placeholder="Phone (optional)" value={walkinPhone} onChange={(e) => setWalkinPhone(e.target.value)} style={inputStyle} />
                     <button onClick={() => handleWalkinSubmit(doc.id)} style={{ padding: 10, borderRadius: 8, border: 'none', background: '#0d9488', color: 'white', fontWeight: 600, cursor: 'pointer' }}>Create Token</button>
                   </div>
                 )}
 
-                <button
-                  onClick={() => toggleTodaysPatients(doc.id)}
-                  style={{
-                    width: '100%', marginTop: 12, padding: 10, borderRadius: 10, border: '1px solid #cbd5e1',
-                    background: expandedDoctor === doc.id ? '#f0fdf4' : 'white', color: '#0d9488', fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                  }}
-                >
-                  {expandedDoctor === doc.id ? 'Hide Today\'s Patients' : `View Today's Patients (${docWaitingCount} Waiting)`}
-                </button>
-
+                {/* Expanded Patient Queue Drawer */}
                 {expandedDoctor === doc.id && (
-                  <div style={{ marginTop: 12 }}>
+                  <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid #f1f5f9' }}>
                     {loadingBookings ? (
                       <p style={{ fontSize: 13, color: '#999', textAlign: 'center' }}>Loading queue...</p>
                     ) : !bookingsByDoctor[doc.id] || bookingsByDoctor[doc.id].length === 0 ? (
