@@ -78,12 +78,12 @@ export default function ClinicPortal() {
   const [showSettingsDrawer, setShowSettingsDrawer] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
 
-  // Add Doctor Form States
+  // Add Doctor States
   const [showAddForm, setShowAddForm] = useState(false);
   const [newName, setNewName] = useState('');
   const [newSpecialty, setNewSpecialty] = useState(SPECIALTIES[0]);
   const [newAvgMinutes, setNewAvgMinutes] = useState('10');
-  const [newWorkingDays, setNewWorkingDays] = useState([]);
+  const [newWorkingDays, setNewWorkingDays] = useState(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']);
   const [newStartTime, setNewStartTime] = useState('10:00');
   const [newEndTime, setNewEndTime] = useState('14:00');
   const [newNotes, setNewNotes] = useState('');
@@ -198,26 +198,44 @@ export default function ClinicPortal() {
 
   const handleAddDoctor = async (e) => {
     e.preventDefault();
-    if (!newName.trim() || !newSpecialty) {
-      setError('Please provide doctor name and specialty.');
+    if (!newName.trim()) {
+      alert('Please enter a doctor name.');
       return;
     }
     setSavingDoctor(true);
-    setError('');
-    const { error } = await addDoctor(
-      pin, newName.trim(), newSpecialty, parseInt(newAvgMinutes) || 10,
-      newWorkingDays, newStartTime, newEndTime, newNotes,
-      newFee ? parseFloat(newFee) : null
-    );
-    setSavingDoctor(false);
-    if (error) {
-      setError('Could not add doctor. Please try again.');
-      return;
+    
+    try {
+      const res = await addDoctor(
+        pin,
+        newName.trim(),
+        newSpecialty,
+        parseInt(newAvgMinutes) || 10,
+        newWorkingDays,
+        newStartTime || '10:00',
+        newEndTime || '14:00',
+        newNotes || '',
+        newFee ? parseFloat(newFee) : 0
+      );
+
+      if (res?.error) {
+        alert('Failed to add doctor: ' + res.error);
+      } else {
+        setNewName('');
+        setNewSpecialty(SPECIALTIES[0]);
+        setNewAvgMinutes('10');
+        setNewWorkingDays(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']);
+        setNewStartTime('10:00');
+        setNewEndTime('14:00');
+        setNewNotes('');
+        setNewFee('');
+        setShowAddForm(false);
+        await loadDoctors(pin);
+      }
+    } catch (err) {
+      alert('Error adding doctor. Please check database connection.');
+    } finally {
+      setSavingDoctor(false);
     }
-    setNewName(''); setNewSpecialty(SPECIALTIES[0]); setNewAvgMinutes('10');
-    setNewWorkingDays([]); setNewStartTime('10:00'); setNewEndTime('14:00'); setNewNotes(''); setNewFee('');
-    setShowAddForm(false);
-    await loadDoctors(pin);
   };
 
   const startEdit = (doc) => {
@@ -300,7 +318,7 @@ export default function ClinicPortal() {
     loadDoctors(pin);
   };
 
-  const inputStyle = { width: '100%', padding: 12, borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 14, boxSizing: 'border-box' };
+  const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 14, boxSizing: 'border-box' };
 
   if (!unlocked) {
     return (
@@ -460,6 +478,13 @@ export default function ClinicPortal() {
                 </select>
                 <input type="number" value={editAvgMinutes} onChange={(e) => setEditAvgMinutes(e.target.value)} style={inputStyle} placeholder="Avg min per patient" />
                 <input placeholder="Consultation fee (₹)" type="number" value={editFee} onChange={(e) => setEditFee(e.target.value)} style={inputStyle} />
+                
+                {/* Doctor Visiting Hours Edit */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <input type="time" value={editStartTime} onChange={(e) => setEditStartTime(e.target.value)} style={inputStyle} />
+                  <input type="time" value={editEndTime} onChange={(e) => setEditEndTime(e.target.value)} style={inputStyle} />
+                </div>
+
                 <DayPicker selectedDays={editWorkingDays} onToggle={toggleEditDay} />
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={() => handleSaveEdit(doc.id)} style={{ flex: 1, padding: 10, borderRadius: 8, border: 'none', background: '#0d9488', color: 'white', fontWeight: 600 }}>Save</button>
@@ -641,7 +666,7 @@ export default function ClinicPortal() {
         );
       })}
 
-      {/* Add New Doctor Button & Form */}
+      {/* Add Doctor Trigger Button */}
       <button
         onClick={() => setShowAddForm(!showAddForm)}
         style={{ width: '100%', padding: 14, borderRadius: 14, border: 'none', background: '#0d9488', color: 'white', fontWeight: 700, fontSize: 14, marginTop: 10, cursor: 'pointer' }}
@@ -649,6 +674,7 @@ export default function ClinicPortal() {
         {showAddForm ? 'Close Form' : '+ Add New Doctor'}
       </button>
 
+      {/* FULL ADD DOCTOR FORM WITH TIMINGS RESTORED */}
       {showAddForm && (
         <form onSubmit={handleAddDoctor} style={{ background: 'white', borderRadius: 20, padding: 20, marginTop: 14, display: 'flex', flexDirection: 'column', gap: 12, border: '1px solid #e2e8f0', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)' }}>
           <h4 style={{ margin: '0 0 4px 0', fontSize: 16, fontWeight: 800, color: '#0f172a' }}>Add Doctor Profile</h4>
@@ -667,7 +693,7 @@ export default function ClinicPortal() {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 4 }}>Fee (₹)</label>
+              <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 4 }}>Consultation Fee (₹)</label>
               <input placeholder="200" type="number" value={newFee} onChange={(e) => setNewFee(e.target.value)} style={inputStyle} />
             </div>
             <div>
@@ -676,19 +702,23 @@ export default function ClinicPortal() {
             </div>
           </div>
 
-          <div>
-            <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 4 }}>Working Days</label>
-            <DayPicker selectedDays={newWorkingDays} onToggle={toggleNewDay} />
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <div>
-              <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 4 }}>Start Time</label>
-              <input type="time" value={newStartTime} onChange={(e) => setNewStartTime(e.target.value)} style={inputStyle} />
+          {/* DOCTOR CLINIC TIMINGS SECTION */}
+          <div style={{ background: '#f8fafc', padding: 12, borderRadius: 12, border: '1px solid #f1f5f9' }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: '#0f172a', margin: '0 0 8px 0' }}>🕒 Doctor Clinic Timings & Schedule</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 2 }}>Clinic Arrival Time</label>
+                <input type="time" value={newStartTime} onChange={(e) => setNewStartTime(e.target.value)} style={inputStyle} required />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 2 }}>Clinic Departure Time</label>
+                <input type="time" value={newEndTime} onChange={(e) => setNewEndTime(e.target.value)} style={inputStyle} required />
+              </div>
             </div>
+
             <div>
-              <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 4 }}>End Time</label>
-              <input type="time" value={newEndTime} onChange={(e) => setNewEndTime(e.target.value)} style={inputStyle} />
+              <label style={{ fontSize: 11, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 4 }}>Visiting Days</label>
+              <DayPicker selectedDays={newWorkingDays} onToggle={toggleNewDay} />
             </div>
           </div>
 
