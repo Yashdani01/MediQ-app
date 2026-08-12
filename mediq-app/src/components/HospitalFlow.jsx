@@ -413,10 +413,10 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                           {hosp.location && (
                             <a
                               href={
-                                hosp.location.startsWith('http')
+                                hosp.location.startsWith('http://') || hosp.location.startsWith('https://')
                                   ? hosp.location
                                   : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
-                                      `${hosp.name}, ${hosp.location}`
+                                      `${hosp.name}, ${hosp.location}, ${hosp.city || ''}`
                                     )}`
                               }
                               target="_blank"
