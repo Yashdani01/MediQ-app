@@ -3,7 +3,7 @@ import {
   checkClinicPin, getDoctorsForClinic, addDoctor, updateDoctor,
   deleteDoctor, updateDoctorStatus, addWalkinBooking,
   getHospitalUpi, updateHospitalUpi, getTodaysBookings, markAppointmentSeen,
-  getHospitalLocation, updateHospitalLocation,
+  getHospitalLocation, updateHospitalLocation, cancelAppointment,
 } from '../hospitalData';
 import './Login.css';
 
@@ -105,12 +105,22 @@ export default function ClinicPortal() {
   const [expandedDoctor, setExpandedDoctor] = useState(null);
   const [bookingsByDoctor, setBookingsByDoctor] = useState({});
   const [loadingBookings, setLoadingBookings] = useState(false);
-  const [markingSeen, setMarkingSeen] = useState(null);
+  const [updatingPatient, setUpdatingPatient] = useState(null);
 
   const loadDoctors = async (currentPin) => {
     setRefreshing(true);
     const data = await getDoctorsForClinic(currentPin);
     setDoctors(data);
+    
+    // Fetch today's bookings for each doctor to keep total metrics accurate
+    if (data && data.length > 0) {
+      const bookingsMap = {};
+      for (const doc of data) {
+        const b = await getTodaysBookings(currentPin, doc.id);
+        bookingsMap[doc.id] = b || [];
+      }
+      setBookingsByDoctor(bookingsMap);
+    }
     setRefreshing(false);
   };
 
@@ -131,7 +141,7 @@ export default function ClinicPortal() {
       loadDoctors(pin);
       loadUpi(pin);
       loadLocation(pin);
-      const interval = setInterval(() => loadDoctors(pin), 60000);
+      const interval = setInterval(() => loadDoctors(pin), 30000);
       return () => clearInterval(interval);
     }
   }, [unlocked]);
@@ -241,11 +251,12 @@ export default function ClinicPortal() {
     if (error) { setError('Could not add booking.'); return; }
     setWalkinResult({ doctorId, token: data });
     setWalkinName(''); setWalkinPhone('');
+    refreshBookings(doctorId);
   };
 
   const refreshBookings = async (doctorId) => {
     const data = await getTodaysBookings(pin, doctorId);
-    setBookingsByDoctor((prev) => ({ ...prev, [doctorId]: data }));
+    setBookingsByDoctor((prev) => ({ ...prev, [doctorId]: data || [] }));
   };
 
   const toggleTodaysPatients = async (doctorId) => {
@@ -260,10 +271,20 @@ export default function ClinicPortal() {
   };
 
   const handleMarkSeen = async (appointmentId, doctorId) => {
-    setMarkingSeen(appointmentId);
+    setUpdatingPatient(appointmentId);
     const { error } = await markAppointmentSeen(pin, appointmentId);
-    setMarkingSeen(null);
+    setUpdatingPatient(null);
     if (error) { setError('Could not update patient status.'); return; }
+    await refreshBookings(doctorId);
+    loadDoctors(pin);
+  };
+
+  const handleNoShowCancel = async (appointmentId, doctorId) => {
+    if (!window.confirm('Mark this patient as "Did Not Show Up / Cancel"?')) return;
+    setUpdatingPatient(appointmentId);
+    const { error } = await cancelAppointment(appointmentId);
+    setUpdatingPatient(null);
+    if (error) { setError('Could not cancel booking.'); return; }
     await refreshBookings(doctorId);
     loadDoctors(pin);
   };
@@ -272,44 +293,45 @@ export default function ClinicPortal() {
 
   if (!unlocked) {
     return (
-      <div className="login-page">
-        <div className="login-card">
-          <div className="login-logo"><span className="login-logo-icon">+</span></div>
-          <h1 className="login-title">Clinic Portal</h1>
-          <p className="login-subtitle">Enter your clinic access PIN</p>
+      <div style={{ background: '#f5f9f8', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+        <div style={{ background: 'white', borderRadius: 24, padding: 24, width: '100%', maxWidth: 380, boxShadow: '0 10px 30px rgba(0,0,0,0.05)', textAlign: 'center' }}>
+          <div style={{ width: 50, height: 50, background: '#ccfbf1', color: '#0d9488', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 24, fontWeight: 700 }}>+</div>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '0 0 4px 0' }}>Clinic Portal</h1>
+          <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 20px 0' }}>Enter your clinic access PIN</p>
 
-          <form onSubmit={handleUnlock} className="login-form">
-            <div className="input-group">
-              <input
-                id="pin" type="password" inputMode="numeric" className="login-input" placeholder=" "
-                value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} required
-              />
-              <label htmlFor="pin" className="input-label">Access PIN</label>
-            </div>
-            <button type="submit" className="login-btn" disabled={loading || !pin}>
-              {loading ? <span className="spinner" /> : 'Unlock'}
+          <form onSubmit={handleUnlock} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <input
+              type="password" inputMode="numeric" placeholder="Access PIN"
+              value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} required
+              style={{ width: '100%', padding: 12, borderRadius: 12, border: '1px solid #cbd5e1', fontSize: 15, textAlign: 'center', boxSizing: 'border-box' }}
+            />
+            <button type="submit" disabled={loading || !pin} style={{ width: '100%', padding: 14, borderRadius: 12, border: 'none', background: '#0d9488', color: 'white', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>
+              {loading ? 'Unlocking...' : 'Unlock'}
             </button>
           </form>
-          {error && <p className="login-error">{error}</p>}
+          {error && <p style={{ color: '#ef4444', fontSize: 13, marginTop: 12 }}>{error}</p>}
         </div>
       </div>
     );
   }
 
-  // Calculate stats summary across today's bookings
-  const totalBookings = Object.values(bookingsByDoctor).flat().length;
-  const waitingBookings = Object.values(bookingsByDoctor).flat().filter(b => b.status === 'waiting').length;
-  const completedBookings = totalBookings - waitingBookings;
+  // Live Metric Calculation from Database Bookings
+  const allBookings = Object.values(bookingsByDoctor).flat();
+  const totalBookings = allBookings.length;
+  const waitingBookings = allBookings.filter(b => b.status === 'waiting').length;
+  const completedBookings = allBookings.filter(b => b.status === 'completed' || b.status === 'seen').length;
+
+  const todayDateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
   return (
-    <div style={{ maxWidth: 600, margin: '0 auto', padding: '20px 16px 100px' }}>
+    <div style={{ maxWidth: 600, margin: '0 auto', padding: '20px 16px 100px', background: '#f5f9f8', minHeight: '100vh' }}>
       
       {/* Top Header Block */}
-      <div className="clinic-portal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <div className="clinic-portal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
         <div>
-          <span className="clinic-subtitle-tag">CLINIC PORTAL</span>
-          <h1 className="clinic-title-main">Shri Durga Medical Hall</h1>
-          <p className="clinic-date-text">Wednesday, August 12, 2026</p>
+          <span className="clinic-subtitle-tag" style={{ color: '#0d9488', fontSize: 11, fontWeight: 700, letterSpacing: 0.8 }}>CLINIC PORTAL</span>
+          <h1 className="clinic-title-main" style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '2px 0' }}>Shri Durga Medical Hall</h1>
+          <p className="clinic-date-text" style={{ fontSize: 13, color: '#64748b', margin: 0 }}>{todayDateStr}</p>
         </div>
         <button
           onClick={handleLogout}
@@ -322,24 +344,24 @@ export default function ClinicPortal() {
         </button>
       </div>
 
-      {/* Summary Stats Row (3 Cards) */}
-      <div className="portal-stats-row">
-        <div className="stat-card">
-          <span className="stat-label">Total Patients</span>
-          <span className="stat-value">{totalBookings || doctors.length * 4}</span>
+      {/* Summary Stats Row (Live Database Metrics) */}
+      <div className="portal-stats-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 20 }}>
+        <div className="stat-card" style={{ background: 'white', borderRadius: 16, padding: 12, border: '1px solid #e2e8f0', textAlign: 'center' }}>
+          <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>Total Patients</span>
+          <p style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '4px 0 0 0' }}>{totalBookings}</p>
         </div>
-        <div className="stat-card highlight">
-          <span className="stat-label">Waiting</span>
-          <span className="stat-value">{waitingBookings || 3}</span>
+        <div className="stat-card highlight" style={{ background: '#ccfbf1', borderRadius: 16, padding: 12, border: '1px solid #99f6e4', textAlign: 'center' }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: '#0f766e' }}>Waiting</span>
+          <p style={{ fontSize: 22, fontWeight: 800, color: '#0f766e', margin: '4px 0 0 0' }}>{waitingBookings}</p>
         </div>
-        <div className="stat-card">
-          <span className="stat-label">Completed</span>
-          <span className="stat-value">{completedBookings || 9}</span>
+        <div className="stat-card" style={{ background: 'white', borderRadius: 16, padding: 12, border: '1px solid #e2e8f0', textAlign: 'center' }}>
+          <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>Completed</span>
+          <p style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '4px 0 0 0' }}>{completedBookings}</p>
         </div>
       </div>
 
-      {/* Settings Options */}
-      <div style={{ background: 'white', border: '1px solid #f1f5f9', borderRadius: 16, padding: 14, marginBottom: 16 }}>
+      {/* Location & Payment Quick Setup */}
+      <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 16, padding: 14, marginBottom: 20 }}>
         <p style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', margin: '0 0 8px 0' }}>📍 Location & Payment Quick Setup</p>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button onClick={() => { setLocationInput(locationStr); setEditingLocation(!editingLocation); }} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #cbd5e1', background: '#f8fafc', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
@@ -365,14 +387,15 @@ export default function ClinicPortal() {
         )}
       </div>
 
-      <h3 className="portal-section-title">Doctor Roster & Queue Control</h3>
+      <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginBottom: 14 }}>Doctor Roster & Queue Control</h3>
 
       {doctors.map((doc) => {
         const statusInfo = STATUS_OPTIONS.find((s) => s.value === doc.status) || STATUS_OPTIONS[0];
         const isEditing = editingId === doc.id;
+        const docWaitingCount = bookingsByDoctor[doc.id]?.filter(b => b.status === 'waiting').length || 0;
 
         return (
-          <div key={doc.id} className="doctor-roster-card">
+          <div key={doc.id} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 20, padding: 16, marginBottom: 16, boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
             {isEditing ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <input value={editName} onChange={(e) => setEditName(e.target.value)} style={inputStyle} />
@@ -389,14 +412,12 @@ export default function ClinicPortal() {
               </div>
             ) : (
               <>
-                <div className="doctor-card-header">
-                  <div className="doctor-profile-info">
-                    <div className="doctor-avatar-circle">
-                      🩺
-                    </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#ccfbf1', color: '#0d9488', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>🩺</div>
                     <div>
-                      <h4 className="doctor-name-text">{doc.name}</h4>
-                      <p className="doctor-spec-text">{doc.specialty}</p>
+                      <h4 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: '#0f172a' }}>{doc.name}</h4>
+                      <p style={{ fontSize: 13, color: '#64748b', margin: '2px 0 0 0' }}>{doc.specialty}</p>
                     </div>
                   </div>
                   <span style={{
@@ -420,21 +441,7 @@ export default function ClinicPortal() {
                   )}
                 </div>
 
-                {doc.status === 'on_leave' || doc.status === 'completed' ? (
-                  <div className="queue-suspended-badge" style={{ background: '#f8fafc', borderRadius: 12 }}>
-                    Queue Suspended ({statusInfo.label})
-                  </div>
-                ) : (
-                  <button
-                    className="manage-queue-btn"
-                    onClick={() => toggleTodaysPatients(doc.id)}
-                  >
-                    {expandedDoctor === doc.id ? 'Hide Today\'s Queue' : `Manage Queue (${bookingsByDoctor[doc.id]?.filter(b => b.status === 'waiting').length || 0})`}
-                  </button>
-                )}
-
-                {/* Status Toggles */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 12 }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
                   {STATUS_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
@@ -451,7 +458,7 @@ export default function ClinicPortal() {
                   ))}
                 </div>
 
-                <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={() => startEdit(doc)} style={{ flex: 1, padding: 8, borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Edit</button>
                   <button onClick={() => handleDelete(doc.id, doc.name)} style={{ flex: 1, padding: 8, borderRadius: 8, border: '1px solid #fca5a5', background: 'white', color: '#ef4444', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Remove</button>
                   <button onClick={() => setShowWalkinForm(showWalkinForm === doc.id ? null : doc.id)} style={{ flex: 1, padding: 8, borderRadius: 8, border: '1px solid #a7f3d0', background: '#f0fdf4', color: '#047857', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>+ Walk-in</button>
@@ -461,13 +468,24 @@ export default function ClinicPortal() {
                   <div style={{ marginTop: 12, background: '#f8fafc', borderRadius: 12, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
                     <input placeholder="Patient name" value={walkinName} onChange={(e) => setWalkinName(e.target.value)} style={inputStyle} />
                     <input placeholder="Phone (optional)" value={walkinPhone} onChange={(e) => setWalkinPhone(e.target.value)} style={inputStyle} />
-                    <button onClick={() => handleWalkinSubmit(doc.id)} style={{ padding: 10, borderRadius: 8, border: 'none', background: '#0d9488', color: 'white', fontWeight: 600 }}>Create Token</button>
+                    <button onClick={() => handleWalkinSubmit(doc.id)} style={{ padding: 10, borderRadius: 8, border: 'none', background: '#0d9488', color: 'white', fontWeight: 600, cursor: 'pointer' }}>Create Token</button>
                   </div>
                 )}
 
-                {/* Expanded Patient List */}
+                {/* View Today's Patients Toggle Button */}
+                <button
+                  onClick={() => toggleTodaysPatients(doc.id)}
+                  style={{
+                    width: '100%', marginTop: 12, padding: 10, borderRadius: 10, border: '1px solid #cbd5e1',
+                    background: expandedDoctor === doc.id ? '#f0fdf4' : 'white', color: '#0d9488', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                  }}
+                >
+                  {expandedDoctor === doc.id ? 'Hide Today\'s Patients' : `View Today's Patients (${docWaitingCount} Waiting)`}
+                </button>
+
+                {/* Expanded Patient List with Mark Seen & Did Not Show Buttons */}
                 {expandedDoctor === doc.id && (
-                  <div style={{ marginTop: 14 }}>
+                  <div style={{ marginTop: 12 }}>
                     {loadingBookings ? (
                       <p style={{ fontSize: 13, color: '#999', textAlign: 'center' }}>Loading queue...</p>
                     ) : !bookingsByDoctor[doc.id] || bookingsByDoctor[doc.id].length === 0 ? (
@@ -476,20 +494,37 @@ export default function ClinicPortal() {
                       bookingsByDoctor[doc.id].map((b) => {
                         const isWaiting = b.status === 'waiting';
                         return (
-                          <div key={b.id} style={{ background: isWaiting ? '#f8fafc' : '#f0fdf4', borderRadius: 12, padding: 12, marginBottom: 8 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <div key={b.id} style={{ background: isWaiting ? '#f8fafc' : '#f0fdf4', border: '1px solid #e2e8f0', borderRadius: 12, padding: 12, marginBottom: 8 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                               <div>
-                                <p style={{ fontWeight: 700, fontSize: 14, margin: 0 }}>{b.patient_name || 'Patient'}</p>
-                                <p style={{ fontSize: 12, color: '#64748b', margin: '2px 0 0' }}>Token #{b.token_number} · {b.patient_phone || 'No phone'}</p>
+                                <p style={{ fontWeight: 700, fontSize: 14, margin: 0, color: '#0f172a' }}>{b.patient_name || 'Patient'}</p>
+                                <p style={{ fontSize: 12, color: '#64748b', margin: '2px 0 0' }}>Token #{b.token_number} · Phone: {b.patient_phone || 'N/A'}</p>
                               </div>
-                              {isWaiting ? (
-                                <button onClick={() => handleMarkSeen(b.id, doc.id)} disabled={markingSeen === b.id} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: '#0d9488', color: 'white', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                                  ✓ Mark Seen
-                                </button>
-                              ) : (
-                                <span style={{ color: '#047857', fontWeight: 700, fontSize: 12 }}>✓ Completed</span>
-                              )}
+                              <span style={{ background: b.payment_method === 'upi' ? '#0d9488' : '#64748b', color: 'white', fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 12 }}>
+                                {b.payment_method === 'upi' ? 'UPI' : 'Cash'}
+                              </span>
                             </div>
+
+                            {isWaiting ? (
+                              <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                                <button
+                                  onClick={() => handleMarkSeen(b.id, doc.id)}
+                                  disabled={updatingPatient === b.id}
+                                  style={{ flex: 2, padding: 8, borderRadius: 8, border: 'none', background: '#0d9488', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                                >
+                                  {updatingPatient === b.id ? 'Updating...' : '✓ Mark as Seen'}
+                                </button>
+                                <button
+                                  onClick={() => handleNoShowCancel(b.id, doc.id)}
+                                  disabled={updatingPatient === b.id}
+                                  style={{ flex: 1, padding: 8, borderRadius: 8, border: '1px solid #fca5a5', background: '#fff5f5', color: '#ef4444', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                                >
+                                  Did Not Show Up
+                                </button>
+                              </div>
+                            ) : (
+                              <p style={{ color: '#047857', fontWeight: 700, fontSize: 12, margin: '8px 0 0 0' }}>✓ Completed / Seen</p>
+                            )}
                           </div>
                         );
                       })
@@ -518,17 +553,6 @@ export default function ClinicPortal() {
           <button type="submit" style={{ padding: 12, borderRadius: 10, border: 'none', background: '#0d9488', color: 'white', fontWeight: 600 }}>Save Doctor</button>
         </form>
       )}
-
-      {/* Walk-In Quick Banner */}
-      <div className="walkin-banner-card" style={{ marginTop: 24 }}>
-        <div>
-          <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#0f172a' }}>Add Offline Patient</h4>
-          <p style={{ margin: '2px 0 0 0', fontSize: 12, color: '#64748b' }}>Instantly assign token to walk-ins</p>
-        </div>
-        <button className="walkin-btn-teal" onClick={() => window.scrollTo({ top: 400, behavior: 'smooth' })}>
-          + Add Walk-in
-        </button>
-      </div>
 
     </div>
   );
