@@ -104,6 +104,9 @@ export default function ClinicPortal() {
   const [loadingBookings, setLoadingBookings] = useState(false);
   const [updatingPatient, setUpdatingPatient] = useState(null);
 
+  // Phase 3 Screenshot Modal State
+  const [viewScreenshotModal, setViewScreenshotModal] = useState(null);
+
   const loadDoctors = async (currentPin) => {
     setRefreshing(true);
     const data = await getDoctorsForClinic(currentPin);
@@ -395,9 +398,7 @@ export default function ClinicPortal() {
 
       <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginBottom: 14 }}>Doctor Roster & Queue Control</h3>
 
-      {/* ==========================================
-          PHASE 2: DOCTOR ROSTER MICRO-DASHBOARDS
-          ========================================== */}
+      {/* Doctor Roster */}
       {doctors.map((doc) => {
         const statusInfo = STATUS_OPTIONS.find((s) => s.value === doc.status) || STATUS_OPTIONS[0];
         const isEditing = editingId === doc.id;
@@ -421,7 +422,6 @@ export default function ClinicPortal() {
               </div>
             ) : (
               <>
-                {/* 1. Profile Header with Ambient Status Badge */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{ width: 46, height: 46, borderRadius: 16, background: '#e6fffa', color: '#0d9488', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 700 }}>
@@ -443,7 +443,6 @@ export default function ClinicPortal() {
                   </span>
                 </div>
 
-                {/* 2. Formatted Fee & Schedule Pills */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
                   {doc.consultation_fee != null && (
                     <span style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', fontSize: 12, fontWeight: 700, padding: '4px 10px', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
@@ -457,7 +456,6 @@ export default function ClinicPortal() {
                   )}
                 </div>
 
-                {/* 3. Queue Status Toggles */}
                 <div style={{ background: '#f8fafc', borderRadius: 14, padding: 10, marginBottom: 14, border: '1px solid #f1f5f9' }}>
                   <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', margin: '0 0 6px 0', textTransform: 'uppercase', letterSpacing: 0.5 }}>Update Live Queue Status:</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -470,7 +468,6 @@ export default function ClinicPortal() {
                           border: doc.status === opt.value ? 'none' : '1px solid #cbd5e1',
                           background: doc.status === opt.value ? opt.color : 'white',
                           color: doc.status === opt.value ? opt.textColor : '#64748b',
-                          transition: 'all 0.15s ease',
                         }}
                       >
                         {opt.label}
@@ -479,7 +476,6 @@ export default function ClinicPortal() {
                   </div>
                 </div>
 
-                {/* 4. Segmented Action Control Bar */}
                 <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 8 }}>
                   <button
                     onClick={() => toggleTodaysPatients(doc.id)}
@@ -510,7 +506,9 @@ export default function ClinicPortal() {
                   </div>
                 )}
 
-                {/* Expanded Patient Queue Drawer */}
+                {/* ==========================================
+                    PHASE 3: PATIENT QUEUE DRAWER & VERIFICATION
+                    ========================================== */}
                 {expandedDoctor === doc.id && (
                   <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid #f1f5f9' }}>
                     {loadingBookings ? (
@@ -520,37 +518,76 @@ export default function ClinicPortal() {
                     ) : (
                       bookingsByDoctor[doc.id].map((b) => {
                         const isWaiting = b.status === 'waiting';
+                        const isUpi = b.payment_method === 'upi';
+                        const isWalkin = b.is_walkin;
+
                         return (
-                          <div key={b.id} style={{ background: isWaiting ? '#f8fafc' : '#f0fdf4', border: '1px solid #e2e8f0', borderRadius: 12, padding: 12, marginBottom: 8 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div key={b.id} style={{ background: isWaiting ? '#ffffff' : '#f0fdf4', border: '1px solid #e2e8f0', borderRadius: 16, padding: 14, marginBottom: 10, boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                               <div>
-                                <p style={{ fontWeight: 700, fontSize: 14, margin: 0, color: '#0f172a' }}>{b.patient_name || 'Patient'}</p>
-                                <p style={{ fontSize: 12, color: '#64748b', margin: '2px 0 0' }}>Token #{b.token_number} · Phone: {b.patient_phone || 'N/A'}</p>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                  <span style={{ fontSize: 16, fontWeight: 800, color: '#0d9488' }}>#{b.token_number}</span>
+                                  <h5 style={{ fontWeight: 800, fontSize: 15, margin: 0, color: '#0f172a' }}>{b.patient_name || 'Patient'}</h5>
+                                </div>
+                                {b.patient_phone && (
+                                  <a href={`tel:${b.patient_phone}`} style={{ fontSize: 12, color: '#0284c7', textDecoration: 'none', fontWeight: 600, display: 'inline-block', marginTop: 4 }}>
+                                    📞 {b.patient_phone}
+                                  </a>
+                                )}
                               </div>
-                              <span style={{ background: b.payment_method === 'upi' ? '#0d9488' : '#64748b', color: 'white', fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 12 }}>
-                                {b.payment_method === 'upi' ? 'UPI' : 'Cash'}
+
+                              {/* Source Badge */}
+                              <span style={{
+                                background: isWalkin ? '#f1f5f9' : '#e0e7ff', color: isWalkin ? '#334155' : '#3730a3',
+                                fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 8,
+                              }}>
+                                {isWalkin ? '🚪 Walk-In' : '📱 App Token'}
                               </span>
                             </div>
 
+                            {/* Payment Method & Screenshot Verification Bar */}
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f8fafc', padding: '8px 10px', borderRadius: 10, margin: '8px 0' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <span style={{
+                                  background: isUpi ? '#d1fae5' : '#fef3c7', color: isUpi ? '#065f46' : '#92400e',
+                                  fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 12,
+                                }}>
+                                  {isUpi ? '🟢 UPI Verified' : '🪙 Cash Pending'}
+                                </span>
+                                {b.utr_id && <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>UTR: {b.utr_id}</span>}
+                              </div>
+
+                              {/* Screenshot Trigger */}
+                              {isUpi && b.payment_screenshot_url && (
+                                <button
+                                  onClick={() => setViewScreenshotModal({ ...b, doctorName: doc.name })}
+                                  style={{ border: 'none', background: '#ccfbf1', color: '#0f766e', fontSize: 11, fontWeight: 700, padding: '4px 8px', borderRadius: 6, cursor: 'pointer' }}
+                                >
+                                  🖼️ Screenshot
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Action Buttons */}
                             {isWaiting ? (
                               <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                                 <button
                                   onClick={() => handleMarkSeen(b.id, doc.id)}
                                   disabled={updatingPatient === b.id}
-                                  style={{ flex: 2, padding: 8, borderRadius: 8, border: 'none', background: '#0d9488', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                                  style={{ flex: 2, padding: '10px', borderRadius: 10, border: 'none', background: '#0d9488', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
                                 >
-                                  {updatingPatient === b.id ? 'Updating...' : '✓ Mark as Seen'}
+                                  {updatingPatient === b.id ? 'Updating...' : '✓ Call & Mark Seen'}
                                 </button>
                                 <button
                                   onClick={() => handleNoShowCancel(b.id, doc.id)}
                                   disabled={updatingPatient === b.id}
-                                  style={{ flex: 1, padding: 8, borderRadius: 8, border: '1px solid #fca5a5', background: '#fff5f5', color: '#ef4444', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                                  style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid #fca5a5', background: '#fff5f5', color: '#ef4444', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
                                 >
-                                  Did Not Show Up
+                                  Did Not Show
                                 </button>
                               </div>
                             ) : (
-                              <p style={{ color: '#047857', fontWeight: 700, fontSize: 12, margin: '8px 0 0 0' }}>✓ Completed / Seen</p>
+                              <p style={{ color: '#047857', fontWeight: 700, fontSize: 12, margin: '6px 0 0 0' }}>✓ Completed / Seen</p>
                             )}
                           </div>
                         );
@@ -579,6 +616,57 @@ export default function ClinicPortal() {
           <DayPicker selectedDays={newWorkingDays} onToggle={toggleNewDay} />
           <button type="submit" style={{ padding: 12, borderRadius: 10, border: 'none', background: '#0d9488', color: 'white', fontWeight: 600 }}>Save Doctor</button>
         </form>
+      )}
+
+      {/* ==========================================
+          PHASE 3: PAYMENT SCREENSHOT VERIFICATION MODAL
+          ========================================== */}
+      {viewScreenshotModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(6px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 1000,
+        }}>
+          <div style={{ background: 'white', borderRadius: 24, padding: 20, width: '100%', maxWidth: 420, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#0f172a' }}>Verify Payment Receipt</h3>
+              <button onClick={() => setViewScreenshotModal(null)} style={{ border: 'none', background: '#f1f5f9', borderRadius: '50%', width: 28, height: 28, fontWeight: 700, cursor: 'pointer' }}>✕</button>
+            </div>
+
+            <div style={{ background: '#f8fafc', borderRadius: 12, padding: 12, marginBottom: 14, border: '1px solid #e2e8f0' }}>
+              <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#0f172a' }}>Patient: {viewScreenshotModal.patient_name || 'N/A'}</p>
+              <p style={{ margin: '2px 0 0 0', fontSize: 12, color: '#64748b' }}>Token #{viewScreenshotModal.token_number} · Doctor: {viewScreenshotModal.doctorName}</p>
+              {viewScreenshotModal.utr_id && (
+                <p style={{ margin: '6px 0 0 0', fontSize: 13, fontWeight: 700, color: '#0d9488' }}>UTR ID: {viewScreenshotModal.utr_id}</p>
+              )}
+            </div>
+
+            <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0', background: '#0f172a', maxHeight: 320, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+              <img
+                src={viewScreenshotModal.payment_screenshot_url}
+                alt="Payment Screenshot"
+                style={{ width: '100%', height: 'auto', maxHeight: 320, objectFit: 'contain' }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: 10 }}>
+              <a
+                href={viewScreenshotModal.payment_screenshot_url}
+                target="_blank"
+                rel="noreferrer"
+                style={{ flex: 1, textCenter: 'center', padding: 12, borderRadius: 12, border: '1px solid #cbd5e1', background: 'white', color: '#0f172a', fontWeight: 700, fontSize: 13, textDecoration: 'none', textAlign: 'center' }}
+              >
+                🔍 Open Full Image
+              </a>
+              <button
+                onClick={() => setViewScreenshotModal(null)}
+                style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: '#0d9488', color: 'white', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+              >
+                ✓ Confirm Verified
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>
