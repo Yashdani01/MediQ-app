@@ -76,6 +76,7 @@ export default function ClinicPortal() {
   const [newStartTime, setNewStartTime] = useState('10:00');
   const [newEndTime, setNewEndTime] = useState('14:00');
   const [newNotes, setNewNotes] = useState('');
+  const [newFee, setNewFee] = useState('');
 
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState('');
@@ -85,6 +86,7 @@ export default function ClinicPortal() {
   const [editStartTime, setEditStartTime] = useState('');
   const [editEndTime, setEditEndTime] = useState('');
   const [editNotes, setEditNotes] = useState('');
+  const [editFee, setEditFee] = useState('');
 
   const [delayInputs, setDelayInputs] = useState({});
 
@@ -163,11 +165,12 @@ export default function ClinicPortal() {
     if (!newName || !newSpecialty) return;
     const { error } = await addDoctor(
       pin, newName, newSpecialty, parseInt(newAvgMinutes) || 10,
-      newWorkingDays, newStartTime, newEndTime, newNotes
+      newWorkingDays, newStartTime, newEndTime, newNotes,
+      newFee ? parseFloat(newFee) : null
     );
     if (error) { setError('Could not add doctor.'); return; }
     setNewName(''); setNewSpecialty(SPECIALTIES[0]); setNewAvgMinutes('10');
-    setNewWorkingDays([]); setNewStartTime('10:00'); setNewEndTime('14:00'); setNewNotes('');
+    setNewWorkingDays([]); setNewStartTime('10:00'); setNewEndTime('14:00'); setNewNotes(''); setNewFee('');
     setShowAddForm(false);
     loadDoctors(pin);
   };
@@ -181,12 +184,14 @@ export default function ClinicPortal() {
     setEditStartTime(doc.start_time || '10:00');
     setEditEndTime(doc.end_time || '14:00');
     setEditNotes(doc.notes || '');
+    setEditFee(doc.consultation_fee != null ? String(doc.consultation_fee) : '');
   };
 
   const handleSaveEdit = async (doctorId) => {
     const { error } = await updateDoctor(
       pin, doctorId, editName, editSpecialty, parseInt(editAvgMinutes) || 10,
-      editWorkingDays, editStartTime, editEndTime, editNotes
+      editWorkingDays, editStartTime, editEndTime, editNotes,
+      editFee ? parseFloat(editFee) : null
     );
     if (error) { setError('Could not save changes.'); return; }
     setEditingId(null);
@@ -349,6 +354,8 @@ export default function ClinicPortal() {
 
           <input placeholder="Avg minutes per patient" type="number" value={newAvgMinutes} onChange={(e) => setNewAvgMinutes(e.target.value)} style={inputStyle} />
 
+          <input placeholder="Consultation fee (₹)" type="number" min="0" value={newFee} onChange={(e) => setNewFee(e.target.value)} style={inputStyle} />
+
           <div>
             <p style={{ fontSize: 13, fontWeight: 600, color: '#555', marginBottom: 6 }}>Working Days</p>
             <DayPicker selectedDays={newWorkingDays} onToggle={toggleNewDay} />
@@ -400,6 +407,8 @@ export default function ClinicPortal() {
 
                 <input type="number" value={editAvgMinutes} onChange={(e) => setEditAvgMinutes(e.target.value)} style={inputStyle} />
 
+                <input placeholder="Consultation fee (₹)" type="number" min="0" value={editFee} onChange={(e) => setEditFee(e.target.value)} style={inputStyle} />
+
                 <div>
                   <p style={{ fontSize: 13, fontWeight: 600, color: '#555', marginBottom: 6 }}>Working Days</p>
                   <DayPicker selectedDays={editWorkingDays} onToggle={toggleEditDay} />
@@ -444,6 +453,11 @@ export default function ClinicPortal() {
                   <p style={{ fontSize: 13, color: '#4f6ef7', margin: '8px 0 0', fontWeight: 600 }}>
                     {doc.working_days?.join(', ')}
                     {doc.start_time && doc.end_time ? ` · ${formatTime(doc.start_time)} – ${formatTime(doc.end_time)}` : ''}
+                  </p>
+                )}
+                {doc.consultation_fee != null && (
+                  <p style={{ fontSize: 13, color: '#22c55e', margin: '4px 0 0', fontWeight: 700 }}>
+                    ₹{doc.consultation_fee} consultation fee
                   </p>
                 )}
                 {doc.notes && (

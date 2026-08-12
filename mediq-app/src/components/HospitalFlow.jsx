@@ -32,10 +32,6 @@ function toMinutes(t) {
 }
 
 function getAvailability(doc) {
-  if (doc.is_paused) {
-    return { label: 'Temporarily Unavailable', color: '#6b7280', textColor: 'white', bookable: false };
-  }
-
   const today = DAY_ABBR[new Date().getDay()];
   const worksToday = !doc.working_days || doc.working_days.length === 0 || doc.working_days.includes(today);
 
@@ -47,27 +43,22 @@ function getAvailability(doc) {
   const startMin = toMinutes(doc.start_time);
   const endMin = toMinutes(doc.end_time);
 
-  if (doc.status === 'completed') {
-    return { label: 'Done for Today', color: '#374151', textColor: 'white', bookable: false };
-  }
-  if (endMin != null && nowMinutes > endMin) {
-    return { label: 'Visiting hours over', color: '#e5e7eb', textColor: '#6b7280', bookable: false };
-  }
-
-  if ((!doc.status || doc.status === 'available' || doc.status === 'not_started') && startMin != null && nowMinutes < startMin) {
-    return { label: `Opens at ${formatTime(doc.start_time)}`, color: '#dbeafe', textColor: '#1d4ed8', bookable: true };
-  }
-
-  if (doc.status === 'not_started' && startMin != null && nowMinutes >= startMin) {
-    return { label: 'Running Late - Not Checked In', color: '#ef4444', textColor: 'white', bookable: true };
+  if ((!doc.status || doc.status === 'available') && startMin != null && endMin != null) {
+    if (nowMinutes < startMin) {
+      return { label: `Opens at ${formatTime(doc.start_time)}`, color: '#e5e7eb', textColor: '#6b7280', bookable: false };
+    }
+    if (nowMinutes > endMin) {
+      return { label: 'Visiting hours over', color: '#e5e7eb', textColor: '#6b7280', bookable: false };
+    }
   }
 
   const statusInfo = STATUS_STYLES[doc.status] || STATUS_STYLES.available;
+  const bookable = doc.status !== 'completed' && doc.status !== 'not_started';
   return {
     label: `${statusInfo.label}${doc.status === 'delayed' && doc.delay_minutes ? ` ${doc.delay_minutes}m` : ''}`,
     color: statusInfo.color,
     textColor: 'white',
-    bookable: true,
+    bookable,
   };
 }
 
@@ -103,6 +94,15 @@ function DoctorSchedule({ doc }) {
     <p style={{ fontSize: 13, color: '#4f6ef7', margin: '6px 0 0', fontWeight: 600 }}>
       {doc.working_days?.join(', ')}
       {doc.start_time && doc.end_time ? ` : ${formatTime(doc.start_time)} - ${formatTime(doc.end_time)}` : ''}
+    </p>
+  );
+}
+
+function DoctorFee({ doc }) {
+  if (doc.consultation_fee == null) return null;
+  return (
+    <p style={{ fontSize: 13, color: '#22c55e', margin: '4px 0 0', fontWeight: 700 }}>
+      ₹{doc.consultation_fee} consultation fee
     </p>
   );
 }
@@ -391,6 +391,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                                 <h4 className="doctor-name">{doc.name}</h4>
                                 <p className="doctor-specialty">{doc.specialty}</p>
                                 <p className="doctor-hospital-tag">{doc.hospital?.name}</p>
+                                <DoctorFee doc={doc} />
                               </div>
                               <DoctorStatusBadge availability={availability} />
                             </div>
@@ -451,6 +452,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                           <h4 className="doctor-name">{doc.name}</h4>
                           <p className="doctor-specialty">{doc.specialty}</p>
                           <DoctorSchedule doc={doc} />
+                          <DoctorFee doc={doc} />
                         </div>
                         <DoctorStatusBadge availability={availability} />
                       </div>
@@ -489,6 +491,12 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
               <h2>Confirm Your Booking</h2>
             </div>
 
+            {pendingBooking.doc.consultation_fee != null && (
+              <p style={{ textAlign: 'center', fontSize: 15, fontWeight: 700, color: '#22c55e', marginBottom: 10 }}>
+                Consultation Fee: ₹{pendingBooking.doc.consultation_fee}
+              </p>
+            )}
+
             <input
               placeholder="Your contact phone number"
               value={contactPhone}
@@ -525,13 +533,17 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
             </div>
             {!hospitalUpi && (
               <p style={{ fontSize: 13, color: '#999', textAlign: 'center' }}>
-                This clinic hasn't set up UPI yet - Cash only.
+                This clinic hasn't set up UPI yet — Cash only.
               </p>
             )}
             {selectedPayment === 'upi' && hospitalUpi && !paymentExpired && (
               <>
                 <p style={{ textAlign: 'center', fontSize: 14, marginBottom: 4 }}>
-                  Pay to: <strong>{hospitalUpi}</strong>
+                  {pendingBooking.doc.consultation_fee != null ? (
+                    <>Pay <strong>₹{pendingBooking.doc.consultation_fee}</strong> to <strong>{hospitalUpi}</strong></>
+                  ) : (
+                    <>Pay to: <strong>{hospitalUpi}</strong></>
+                  )}
                 </p>
                 <p style={{ textAlign: 'center', fontSize: 13, color: timeLeft <= 20 ? '#ef4444' : '#666', fontWeight: 700, marginBottom: 12 }}>
                   Time remaining: {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
