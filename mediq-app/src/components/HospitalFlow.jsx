@@ -39,21 +39,11 @@ function getAvailability(doc) {
     return { label: 'Not available today', color: '#e5e7eb', textColor: '#6b7280', bookable: false };
   }
 
-  const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
-  const startMin = toMinutes(doc.start_time);
-  const endMin = toMinutes(doc.end_time);
-
-  if ((!doc.status || doc.status === 'available') && startMin != null && endMin != null) {
-    if (nowMinutes < startMin) {
-      return { label: `Opens at ${formatTime(doc.start_time)}`, color: '#e5e7eb', textColor: '#6b7280', bookable: false };
-    }
-    if (nowMinutes > endMin) {
-      return { label: 'Visiting hours over', color: '#e5e7eb', textColor: '#6b7280', bookable: false };
-    }
-  }
-
   const statusInfo = STATUS_STYLES[doc.status] || STATUS_STYLES.available;
-  const bookable = doc.status !== 'completed' && doc.status !== 'not_started';
+  
+  // Allow booking for every parameter except 'completed' (Done for Today)
+  const bookable = doc.status !== 'completed';
+
   return {
     label: `${statusInfo.label}${doc.status === 'delayed' && doc.delay_minutes ? ` ${doc.delay_minutes}m` : ''}`,
     color: statusInfo.color,
@@ -77,7 +67,7 @@ function BookButton({ availability, onClick }) {
   if (!availability.bookable) {
     return (
       <button className="book-btn" disabled style={{ background: '#e5e7eb', color: '#9ca3af', cursor: 'not-allowed' }}>
-        Not Available Right Now
+        Done for Today
       </button>
     );
   }
@@ -490,6 +480,25 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
             <div className="ticket-header">
               <h2>Confirm Your Booking</h2>
             </div>
+
+            {/* Helpful doctor status banners */}
+            {pendingBooking.doc.status === 'not_started' && (
+              <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', padding: '8px 12px', borderRadius: 8, marginBottom: 10, fontSize: 13, color: '#991b1b', textAlign: 'left' }}>
+                ℹ️ <strong>Note:</strong> Consultation hasn't started yet today, but you can reserve your advance queue token now!
+              </div>
+            )}
+
+            {pendingBooking.doc.status === 'delayed' && (
+              <div style={{ background: '#fffbeb', border: '1px solid #fde68a', padding: '8px 12px', borderRadius: 8, marginBottom: 10, fontSize: 13, color: '#92400e', textAlign: 'left' }}>
+                ℹ️ <strong>Note:</strong> Dr. {pendingBooking.doc.name} is running ~{pendingBooking.doc.delay_minutes || 10}m delayed, but bookings remain open.
+              </div>
+            )}
+
+            {pendingBooking.doc.status === 'on_break' && (
+              <div style={{ background: '#f3f4f6', border: '1px solid #d1d5db', padding: '8px 12px', borderRadius: 8, marginBottom: 10, fontSize: 13, color: '#374151', textAlign: 'left' }}>
+                ℹ️ <strong>Note:</strong> Dr. {pendingBooking.doc.name} is currently on a break. You can still join the queue.
+              </div>
+            )}
 
             {pendingBooking.doc.consultation_fee != null && (
               <p style={{ textAlign: 'center', fontSize: 15, fontWeight: 700, color: '#22c55e', marginBottom: 10 }}>
