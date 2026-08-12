@@ -1,10 +1,11 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { translations, languages } from '../i18n';
 import { getAllCities } from '../hospitalData';
 import './Login.css';
 
 export default function Login({ onGuestContinue }) {
+  const [mode, setMode] = useState('register');
   const [lang, setLang] = useState('en');
   const [name, setName] = useState(() => sessionStorage.getItem('mediq_name') || '');
   const [city, setCity] = useState(() => sessionStorage.getItem('mediq_city') || '');
@@ -27,21 +28,39 @@ export default function Login({ onGuestContinue }) {
   useEffect(() => { sessionStorage.setItem('mediq_city', city); }, [city]);
   useEffect(() => { sessionStorage.setItem('mediq_email', email); }, [email]);
 
+  const switchMode = (newMode) => {
+    setMode(newMode);
+    setError('');
+    setSent(false);
+  };
+
   const sendMagicLink = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    const redirectUrl = `${window.location.origin}?name=${encodeURIComponent(name)}&city=${encodeURIComponent(city)}`;
+
+    const isRegister = mode === 'register';
+    const redirectUrl = isRegister
+      ? `${window.location.origin}?name=${encodeURIComponent(name)}&city=${encodeURIComponent(city)}`
+      : `${window.location.origin}`;
+
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        shouldCreateUser: true,
+        shouldCreateUser: isRegister,
         emailRedirectTo: redirectUrl,
       },
     });
     setLoading(false);
-    if (error) setError(error.message);
-    else setSent(true);
+    if (error) {
+      if (!isRegister) {
+        setError('No account found with this email. Please use Register to create one.');
+      } else {
+        setError(error.message);
+      }
+    } else {
+      setSent(true);
+    }
   };
 
   const verifyCode = async (e) => {
@@ -60,10 +79,14 @@ export default function Login({ onGuestContinue }) {
       sessionStorage.removeItem('mediq_name');
       sessionStorage.removeItem('mediq_city');
       sessionStorage.removeItem('mediq_email');
-      const url = new URL(window.location.href);
-      url.searchParams.set('name', name);
-      url.searchParams.set('city', city);
-      window.location.href = url.toString();
+      if (mode === 'register') {
+        const url = new URL(window.location.href);
+        url.searchParams.set('name', name);
+        url.searchParams.set('city', city);
+        window.location.href = url.toString();
+      } else {
+        window.location.href = window.location.origin;
+      }
     }
   };
 
@@ -72,47 +95,87 @@ export default function Login({ onGuestContinue }) {
       <div className="login-bg-shape shape-1" />
       <div className="login-bg-shape shape-2" />
 
-      <div className="lang-toggle">
-        {languages.map((l) => (
-          <button
-            key={l.code}
-            className={`lang-pill ${lang === l.code ? 'active' : ''}`}
-            onClick={() => setLang(l.code)}
-          >
-            {l.label}
-          </button>
-        ))}
-      </div>
-
       <div className="login-card">
+        <div className="lang-toggle">
+          {languages.map((l) => (
+            <button
+              key={l.code}
+              className={`lang-pill ${lang === l.code ? 'active' : ''}`}
+              onClick={() => setLang(l.code)}
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
+
         <div className="login-logo"><span className="login-logo-icon">+</span></div>
-        <h1 className="login-title">{t.signInTitle}</h1>
+
+        {!sent && (
+          <div style={{
+            display: 'flex', background: '#f0f2f5', borderRadius: 12, padding: 4, marginBottom: 20,
+          }}>
+            <button
+              onClick={() => switchMode('register')}
+              style={{
+                flex: 1, padding: '10px 0', borderRadius: 9, border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer',
+                background: mode === 'register' ? '#ffffff' : 'transparent',
+                color: mode === 'register' ? '#111827' : '#6b7280',
+                boxShadow: mode === 'register' ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              Register
+            </button>
+            <button
+              onClick={() => switchMode('login')}
+              style={{
+                flex: 1, padding: '10px 0', borderRadius: 9, border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer',
+                background: mode === 'login' ? '#ffffff' : 'transparent',
+                color: mode === 'login' ? '#111827' : '#6b7280',
+                boxShadow: mode === 'login' ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              Login
+            </button>
+          </div>
+        )}
+
+        <h1 className="login-title">
+          {sent ? t.signInTitle : (mode === 'register' ? 'Create your account' : 'Welcome back')}
+        </h1>
 
         {!sent ? (
           <>
-            <p className="login-subtitle">{t.signInSubtitle}</p>
+            <p className="login-subtitle">
+              {mode === 'register' ? t.signInSubtitle : 'Enter your registered email to continue'}
+            </p>
 
             <form onSubmit={sendMagicLink} className="login-form">
-              <div className="input-group">
-                <input
-                  id="name" type="text" className="login-input" placeholder=" "
-                  value={name} onChange={(e) => setName(e.target.value)} required
-                />
-                <label htmlFor="name" className="input-label">{t.nameLabel}</label>
-              </div>
+              {mode === 'register' && (
+                <>
+                  <div className="input-group">
+                    <input
+                      id="name" type="text" className="login-input" placeholder=" "
+                      value={name} onChange={(e) => setName(e.target.value)} required
+                    />
+                    <label htmlFor="name" className="input-label">{t.nameLabel}</label>
+                  </div>
 
-              <div className="input-group">
-                <select
-                  id="city" className="login-input login-select"
-                  value={city} onChange={(e) => setCity(e.target.value)} required
-                >
-                  <option value="" disabled hidden></option>
-                  {cities.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-                <label htmlFor="city" className="input-label input-label-select">Your City</label>
-              </div>
+                  <div className="input-group">
+                    <select
+                      id="city" className="login-input login-select"
+                      value={city} onChange={(e) => setCity(e.target.value)} required
+                    >
+                      <option value="" disabled hidden></option>
+                      {cities.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                    <label htmlFor="city" className="input-label input-label-select">Your City</label>
+                  </div>
+                </>
+              )}
 
               <div className="input-group">
                 <input
@@ -122,8 +185,11 @@ export default function Login({ onGuestContinue }) {
                 <label htmlFor="email" className="input-label">{t.emailLabel}</label>
               </div>
 
-              <button type="submit" className="login-btn" disabled={loading || !email || !name || !city}>
-                {loading ? <span className="spinner" /> : t.continueBtn}
+              <button
+                type="submit" className="login-btn"
+                disabled={loading || !email || (mode === 'register' && (!name || !city))}
+              >
+                {loading ? <span className="spinner" /> : (mode === 'register' ? t.continueBtn : 'Send Login Code')}
               </button>
             </form>
 
@@ -164,3 +230,4 @@ export default function Login({ onGuestContinue }) {
     </div>
   );
 }
+
