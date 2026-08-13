@@ -304,41 +304,45 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
           >
             <div className="flow-avatar">{avatarInitial}</div>
             <div style={{ textAlign: 'left' }}>
-              <p className="flow-greeting">
-                {isGuest ? 'Browsing as Guest' : `Hello, ${nameForAvatar}`}
+              <p className="flow-subtitle" style={{ margin: '0 0 2px' }}>
+                {isGuest ? 'Browsing as' : 'Good Morning,'}
               </p>
-              {!isGuest && <p className="flow-subtitle">{user?.email}</p>}
+              <p className="flow-greeting">
+                {isGuest ? 'Guest' : nameForAvatar}
+              </p>
             </div>
           </button>
-          {isGuest && (
-            <button className="flow-logout-btn" onClick={onLogout}>Logout</button>
-          )}
-        </div>
 
-        <div className="city-switcher-row">
-          <button className="city-pill" onClick={() => setShowCityPicker(!showCityPicker)}>
-            {currentCity || 'All Cities'} <span style={{ opacity: 0.7 }}>&#9662;</span>
-          </button>
-
-          {showCityPicker && (
-            <div className="city-dropdown">
-              <button
-                className={`city-option ${!currentCity ? 'active' : ''}`}
-                onClick={() => { setCurrentCity(''); setShowCityPicker(false); setSelectedHospital(null); }}
-              >
-                All Cities
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+            {isGuest && (
+              <button className="flow-logout-btn" onClick={onLogout}>Logout</button>
+            )}
+            <div className="city-switcher-row" style={{ margin: 0 }}>
+              <button className="city-pill" onClick={() => setShowCityPicker(!showCityPicker)}>
+                {currentCity || 'All Cities'} <span style={{ opacity: 0.7 }}>&#9662;</span>
               </button>
-              {allCities.map((c) => (
-                <button
-                  key={c}
-                  className={`city-option ${currentCity === c ? 'active' : ''}`}
-                  onClick={() => { setCurrentCity(c); setShowCityPicker(false); setSelectedHospital(null); }}
-                >
-                  {c}
-                </button>
-              ))}
+
+              {showCityPicker && (
+                <div className="city-dropdown">
+                  <button
+                    className={`city-option ${!currentCity ? 'active' : ''}`}
+                    onClick={() => { setCurrentCity(''); setShowCityPicker(false); setSelectedHospital(null); }}
+                  >
+                    All Cities
+                  </button>
+                  {allCities.map((c) => (
+                    <button
+                      key={c}
+                      className={`city-option ${currentCity === c ? 'active' : ''}`}
+                      onClick={() => { setCurrentCity(c); setShowCityPicker(false); setSelectedHospital(null); }}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
 
@@ -417,17 +421,17 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                   <div className="hospital-list">
                     {hospitals.map((hosp) => (
                       <div key={hosp.id} className="hospital-card" onClick={() => setSelectedHospital(hosp)}>
-                        <div className="hospital-icon">H</div>
+                        <div className="hospital-icon">{hosp.name.charAt(0).toUpperCase()}</div>
                         <div className="hospital-info" style={{ flex: 1 }}>
                           <h4>{hosp.name}</h4>
                           {hosp.location && <p>{hosp.location}</p>}
                           {availableCounts[hosp.id] > 0 && (
                             <span style={{
-                              display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 6,
-                              padding: '3px 10px', borderRadius: 20, background: '#dcfce7', color: '#15803d',
-                              fontSize: 11.5, fontWeight: 700,
+                              display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 8,
+                              padding: '4px 10px', borderRadius: 6, background: 'rgba(16,185,129,0.1)', color: '#10b981',
+                              fontSize: 11, fontWeight: 700,
                             }}>
-                              🟢 {availableCounts[hosp.id]} Doctor{availableCounts[hosp.id] > 1 ? 's' : ''} Available Today
+                              ● {availableCounts[hosp.id]} Doctor{availableCounts[hosp.id] > 1 ? 's' : ''} Available Today
                             </span>
                           )}
                           {hosp.location && (
@@ -445,19 +449,20 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                               style={{
                                 display: 'inline-flex',
                                 alignItems: 'center',
-                                gap: 4,
-                                marginTop: 6,
+                                gap: 6,
+                                marginTop: 8,
                                 marginLeft: 6,
-                                padding: '4px 10px',
-                                borderRadius: 6,
-                                background: '#eff6ff',
-                                color: '#2563eb',
-                                fontSize: 12,
-                                fontWeight: 600,
+                                padding: '6px 12px',
+                                borderRadius: 100,
+                                background: 'rgba(255,255,255,0.05)',
+                                border: '1px solid rgba(255,255,255,0.06)',
+                                color: '#fff',
+                                fontSize: 11,
+                                fontWeight: 700,
                                 textDecoration: 'none',
                               }}
                             >
-                              📍 Get Directions
+                              📍 Directions
                             </a>
                           )}
                         </div>
