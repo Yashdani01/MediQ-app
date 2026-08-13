@@ -4,7 +4,7 @@ import Profile from './Profile';
 import {
   getHospitals, getAllCities, getDoctorsForHospital, getWaitingCount,
   bookAppointment, searchDoctors, getAllSpecialties, getHospitalPaymentInfo, uploadPaymentScreenshot,
-  getMyCurrentBooking,
+  getMyCurrentBooking, getAvailableDoctorCounts,
 } from '../hospitalData';
 import './HospitalFlow.css';
 
@@ -42,8 +42,6 @@ function getAvailability(doc) {
   }
 
   const statusInfo = STATUS_STYLES[doc.status] || STATUS_STYLES.available;
-  
-  // Disable booking for completed AND on_leave statuses
   const bookable = doc.status !== 'completed' && doc.status !== 'on_leave';
 
   return {
@@ -83,8 +81,8 @@ function BookButton({ availability, onClick }) {
 function DoctorSchedule({ doc }) {
   if (!doc.working_days?.length && !doc.start_time) return null;
   return (
-    <p style={{ fontSize: 13, color: '#4f6ef7', margin: '6px 0 0', fontWeight: 600 }}>
-      {doc.working_days?.join(', ')}
+    <p style={{ fontSize: 13, color: '#0d9488', margin: '6px 0 0', fontWeight: 600 }}>
+      🕒 {doc.working_days?.join(', ')}
       {doc.start_time && doc.end_time ? ` : ${formatTime(doc.start_time)} - ${formatTime(doc.end_time)}` : ''}
     </p>
   );
@@ -93,8 +91,8 @@ function DoctorSchedule({ doc }) {
 function DoctorFee({ doc }) {
   if (doc.consultation_fee == null) return null;
   return (
-    <p style={{ fontSize: 13, color: '#22c55e', margin: '4px 0 0', fontWeight: 700 }}>
-      ₹{doc.consultation_fee} consultation fee
+    <p style={{ fontSize: 13, color: '#166534', margin: '4px 0 0', fontWeight: 700 }}>
+      💳 ₹{doc.consultation_fee} consultation fee
     </p>
   );
 }
@@ -105,6 +103,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
   const [showCityPicker, setShowCityPicker] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [hospitals, setHospitals] = useState([]);
+  const [availableCounts, setAvailableCounts] = useState({});
   const [selectedHospital, setSelectedHospital] = useState(null);
   const [doctors, setDoctors] = useState([]);
   const [loadingHospitals, setLoadingHospitals] = useState(true);
@@ -153,9 +152,12 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
 
   useEffect(() => {
     setLoadingHospitals(true);
-    getHospitals(currentCity).then((data) => {
-      setHospitals(data);
+    getHospitals(currentCity).then(async (data) => {
+      setHospitals(data || []);
       setLoadingHospitals(false);
+      const ids = (data || []).map((h) => h.id);
+      const counts = await getAvailableDoctorCounts(ids);
+      setAvailableCounts(counts || {});
     });
     getAllSpecialties(currentCity).then(setSpecialties);
   }, [currentCity]);
@@ -202,7 +204,6 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
     }
     setBookingError('');
 
-    // Check if patient already has an active booking with this doctor
     const existingBooking = await getMyCurrentBooking(user.id);
     if (existingBooking && existingBooking.doctor_id === doc.id) {
       setBookingError(`Booking Error: You already have an active token (#${existingBooking.queue_number}) with Dr. ${doc.name}.`);
@@ -316,7 +317,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
 
         <div className="city-switcher-row">
           <button className="city-pill" onClick={() => setShowCityPicker(!showCityPicker)}>
-            {currentCity || 'All Cities'} <span style={{ opacity: 0.7 }}>&#9662;</span>
+            📍 {currentCity || 'All Cities'} <span style={{ opacity: 0.7 }}>&#9662;</span>
           </button>
 
           {showCityPicker && (
@@ -416,10 +417,19 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                   <div className="hospital-list">
                     {hospitals.map((hosp) => (
                       <div key={hosp.id} className="hospital-card" onClick={() => setSelectedHospital(hosp)}>
-                        <div className="hospital-icon">H</div>
+                        <div className="hospital-icon">🏥</div>
                         <div className="hospital-info" style={{ flex: 1 }}>
                           <h4>{hosp.name}</h4>
                           {hosp.location && <p>{hosp.location}</p>}
+                          {availableCounts[hosp.id] > 0 && (
+                            <span style={{
+                              display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 6,
+                              padding: '3px 10px', borderRadius: 20, background: '#dcfce7', color: '#15803d',
+                              fontSize: 11.5, fontWeight: 700,
+                            }}>
+                              🟢 {availableCounts[hosp.id]} Doctor{availableCounts[hosp.id] > 1 ? 's' : ''} Available Today
+                            </span>
+                          )}
                           {hosp.location && (
                             <a
                               href={
@@ -437,8 +447,9 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                                 alignItems: 'center',
                                 gap: 4,
                                 marginTop: 6,
+                                marginLeft: 6,
                                 padding: '4px 10px',
-                                borderRadius: 6,
+                                borderRadius: 8,
                                 background: '#eff6ff',
                                 color: '#2563eb',
                                 fontSize: 12,
@@ -462,7 +473,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
         {selectedHospital && (
           <div>
             <button className="flow-back-btn" onClick={() => { setSelectedHospital(null); setDoctors([]); }}>
-              Back to Hospitals
+              ← Back to Hospitals
             </button>
             <h3 className="flow-section-title">Doctors at {selectedHospital.name}</h3>
 
@@ -520,7 +531,6 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
               <h2>Confirm Your Booking</h2>
             </div>
 
-            {/* Helpful doctor status banners */}
             {pendingBooking.doc.status === 'not_started' && (
               <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', padding: '8px 12px', borderRadius: 8, marginBottom: 10, fontSize: 13, color: '#991b1b', textAlign: 'left' }}>
                 ℹ️ <strong>Note:</strong> Consultation hasn't started yet today, but you can reserve your advance queue token now!
@@ -559,7 +569,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                 style={{
                   flex: 1, padding: 14, borderRadius: 10, fontWeight: 600, cursor: 'pointer',
                   border: selectedPayment === 'cash' ? 'none' : '1px solid #ddd',
-                  background: selectedPayment === 'cash' ? '#4f6ef7' : 'white',
+                  background: selectedPayment === 'cash' ? '#0d9488' : 'white',
                   color: selectedPayment === 'cash' ? 'white' : '#333',
                 }}
               >
@@ -572,7 +582,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                   flex: 1, padding: 14, borderRadius: 10, fontWeight: 600,
                   cursor: hospitalUpi ? 'pointer' : 'not-allowed',
                   border: selectedPayment === 'upi' ? 'none' : '1px solid #ddd',
-                  background: selectedPayment === 'upi' ? '#4f6ef7' : 'white',
+                  background: selectedPayment === 'upi' ? '#0d9488' : 'white',
                   color: selectedPayment === 'upi' ? 'white' : (hospitalUpi ? '#333' : '#bbb'),
                 }}
               >

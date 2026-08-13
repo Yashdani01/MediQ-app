@@ -407,3 +407,28 @@ export async function cancelAppointment(appointmentId) {
   }
   return { data };
 }
+const DAY_ABBR_COUNT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+function isAvailableToday(doc) {
+  const today = DAY_ABBR_COUNT[new Date().getDay()];
+  const worksToday = !doc.working_days || doc.working_days.length === 0 || doc.working_days.includes(today);
+  const notBlocked = doc.status !== 'completed' && doc.status !== 'on_leave';
+  return worksToday && notBlocked;
+}
+
+export async function getAvailableDoctorCounts(hospitalIds) {
+  if (!hospitalIds || hospitalIds.length === 0) return {};
+  const { data, error } = await supabase
+    .from('doctors')
+    .select('hospital_id, status, working_days')
+    .in('hospital_id', hospitalIds);
+  if (error) { console.error('Error fetching doctor counts:', error); return {}; }
+
+  const counts = {};
+  data.forEach((doc) => {
+    if (isAvailableToday(doc)) {
+      counts[doc.hospital_id] = (counts[doc.hospital_id] || 0) + 1;
+    }
+  });
+  return counts;
+}

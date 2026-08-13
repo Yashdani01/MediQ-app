@@ -1,3 +1,14 @@
+:root {
+  --portal-bg: #f5f9f8;
+  --portal-primary: #0d9488;
+  --portal-primary-hover: #0f766e;
+  --portal-teal-light: #ccfbf1;
+  --portal-card-bg: #ffffff;
+  --portal-text-main: #0f172a;
+  --portal-text-sub: #64748b;
+  --portal-border: #f1f5f9;
+}
+
 .login-page {
   min-height: 100vh;
   display: flex;
@@ -5,8 +16,8 @@
   justify-content: center;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #1d4ed8 100%);
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: linear-gradient(135deg, #1e293b 0%, #115e59 55%, #14b8a6 100%);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   padding: 20px;
 }
 
@@ -21,7 +32,7 @@
 .shape-1 {
   width: 320px;
   height: 320px;
-  background: #38bdf8;
+  background: #2dd4bf;
   top: -80px;
   left: -80px;
   animation: float1 8s ease-in-out infinite;
@@ -51,8 +62,8 @@
   z-index: 1;
   width: 100%;
   max-width: 400px;
-  background: rgba(255, 255, 255, 0.97);
-  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
   border-radius: 24px;
   padding: 40px 32px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
@@ -70,11 +81,11 @@
   height: 60px;
   margin: 0 auto 20px;
   border-radius: 16px;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  background: linear-gradient(135deg, var(--portal-primary), var(--portal-primary-hover));
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 8px 20px rgba(13, 148, 136, 0.35);
 }
 
 .login-logo-icon {
@@ -85,15 +96,25 @@
 .login-title {
   font-size: 26px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--portal-text-main);
   margin: 0 0 8px;
   letter-spacing: -0.5px;
 }
 
 .login-subtitle {
   font-size: 14px;
-  color: #64748b;
+  color: var(--portal-text-sub);
   margin: 0 0 28px;
+  line-height: 1.5;
+}
+
+.login-value-prop {
+  font-size: 12px;
+  color: var(--portal-primary-hover);
+  background: var(--portal-teal-light);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-top: 14px;
   line-height: 1.5;
 }
 
@@ -121,7 +142,7 @@
 }
 
 .login-input:focus {
-  border-color: #2563eb;
+  border-color: var(--portal-primary);
   background: #fff;
 }
 
@@ -148,13 +169,13 @@
 .login-input:not(:placeholder-shown) + .input-label {
   top: 6px;
   font-size: 11px;
-  color: #2563eb;
+  color: var(--portal-primary);
   font-weight: 600;
 }
 
 .login-btn {
   padding: 14px;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  background: linear-gradient(135deg, var(--portal-primary), var(--portal-primary-hover));
   color: #fff;
   border: none;
   border-radius: 12px;
@@ -162,12 +183,12 @@
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.15s, box-shadow 0.15s, opacity 0.2s;
-  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+  box-shadow: 0 8px 20px rgba(13, 148, 136, 0.3);
 }
 
 .login-btn:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.4);
+  box-shadow: 0 10px 24px rgba(13, 148, 136, 0.4);
 }
 
 .login-btn:disabled {
@@ -178,14 +199,14 @@
 .login-link-btn {
   background: none;
   border: none;
-  color: #64748b;
+  color: var(--portal-text-sub);
   font-size: 13px;
   cursor: pointer;
   padding: 4px;
 }
 
 .login-link-btn:hover {
-  color: #2563eb;
+  color: var(--portal-primary);
 }
 
 .guest-btn {
@@ -194,13 +215,13 @@
   padding: 12px;
   background: none;
   border: none;
-  color: #64748b;
+  color: var(--portal-text-sub);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
 }
 
-.guest-btn:hover { color: #2563eb; }
+.guest-btn:hover { color: var(--portal-primary); }
 
 .spinner {
   display: inline-block;
@@ -235,7 +256,7 @@
   display: flex;
   justify-content: center;
   gap: 4px;
-  background: #f0f2f5;
+  background: var(--portal-teal-light);
   border-radius: 30px;
   padding: 4px;
   margin: 0 auto 20px;
@@ -245,7 +266,7 @@
 .lang-pill {
   border: none;
   background: transparent;
-  color: #6b7280;
+  color: var(--portal-primary-hover);
   font-size: 12px;
   font-weight: 700;
   padding: 6px 14px;
@@ -256,12 +277,12 @@
 
 .lang-pill.active {
   background: #ffffff;
-  color: #1d4ed8;
+  color: var(--portal-primary-hover);
   box-shadow: 0 1px 4px rgba(0,0,0,0.08);
 }
 
 .lang-pill:hover:not(.active) {
-  color: #1d4ed8;
+  color: var(--portal-primary-hover);
 }
 
 .login-select {
@@ -275,31 +296,19 @@
 .input-label-select {
   top: 6px;
   font-size: 11px;
-  color: #2563eb;
+  color: var(--portal-primary);
   font-weight: 600;
 }
+
 /* ==========================================
    CLINIC PORTAL FIGMA REDESIGN STYLES
    ========================================== */
 
-:root {
-  --portal-bg: #f5f9f8;
-  --portal-primary: #0d9488;
-  --portal-primary-hover: #0f766e;
-  --portal-teal-light: #ccfbf1;
-  --portal-card-bg: #ffffff;
-  --portal-text-main: #0f172a;
-  --portal-text-sub: #64748b;
-  --portal-border: #f1f5f9;
+body {
+  background-color: var(--portal-bg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* Page Background */
-body, .login-page {
-  background-color: var(--portal-bg) !important;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-}
-
-/* Top Header Block */
 .clinic-portal-header {
   margin-bottom: 24px;
 }
@@ -325,7 +334,6 @@ body, .login-page {
   margin: 0;
 }
 
-/* Summary Stats Row (3 Cards) */
 .portal-stats-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -369,7 +377,6 @@ body, .login-page {
   color: #047857;
 }
 
-/* Section Titles */
 .portal-section-title {
   font-size: 16px;
   font-weight: 700;
@@ -377,7 +384,6 @@ body, .login-page {
   margin-bottom: 14px;
 }
 
-/* Doctor Roster Cards */
 .doctor-roster-card {
   background: var(--portal-card-bg);
   border-radius: 20px;
@@ -425,7 +431,6 @@ body, .login-page {
   margin: 2px 0 0 0;
 }
 
-/* Primary Action Buttons */
 .manage-queue-btn {
   width: 100%;
   padding: 14px;
@@ -451,7 +456,6 @@ body, .login-page {
   font-size: 14px;
 }
 
-/* Walk-in Action Banner */
 .walkin-banner-card {
   background: #ffffff;
   border-radius: 20px;
@@ -477,3 +481,4 @@ body, .login-page {
   align-items: center;
   gap: 6px;
 }
+

@@ -21,7 +21,14 @@ export default function Login({ onGuestContinue }) {
   const t = translations[lang];
 
   useEffect(() => {
-    getAllCities().then(setCities);
+    getAllCities().then((list) => {
+      setCities(list);
+      setCity((current) => {
+        if (current) return current;
+        if (list.includes('Balgona')) return 'Balgona';
+        return list[0] || '';
+      });
+    });
   }, []);
 
   useEffect(() => { sessionStorage.setItem('mediq_name', name); }, [name]);
@@ -193,6 +200,12 @@ export default function Login({ onGuestContinue }) {
               </button>
             </form>
 
+            {mode === 'register' && (
+              <p className="login-value-prop">
+                Unlock real-time queue tracking, live doctor status, and instant booking updates.
+              </p>
+            )}
+
             <button className="guest-btn" onClick={onGuestContinue}>
               {t.guestBtn}
             </button>
@@ -230,4 +243,3 @@ export default function Login({ onGuestContinue }) {
     </div>
   );
 }
-
