@@ -30,8 +30,8 @@ export default function Profile({ user, displayName, onClose, onLogout, onSelect
   };
 
   // Generate deterministic Patient Code from User ID / Email
-  const patientCode = user?.id 
-    ? `MDQ-${user.id.slice(0, 4).toUpperCase()}` 
+  const patientCode = user?.id
+    ? `MDQ-${user.id.slice(0, 4).toUpperCase()}`
     : 'MDQ-8207';
 
   return (
@@ -45,7 +45,7 @@ export default function Profile({ user, displayName, onClose, onLogout, onSelect
         padding: '24px 20px 32px', width: '100%', maxWidth: 480, maxHeight: '88vh',
         overflowY: 'auto', boxShadow: '0 -20px 50px -10px rgba(0,0,0,0.3)',
       }}>
-        
+
         {/* Drawer Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0f172a' }}>Patient Health Profile</h3>
@@ -87,7 +87,7 @@ export default function Profile({ user, displayName, onClose, onLogout, onSelect
             {bookings.map((b) => {
               const isWaiting = b.status === 'waiting';
               const isCompleted = b.status === 'completed' || b.status === 'seen';
-              
+
               return (
                 <div key={b.id} className="history-card-item">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
@@ -146,17 +146,17 @@ export default function Profile({ user, displayName, onClose, onLogout, onSelect
             }} onClick={(e) => e.stopPropagation()}>
               <h3 style={{ margin: '0 0 4px', fontSize: 17, fontWeight: 800, color: '#0f172a' }}>Consultation Receipt</h3>
               <p style={{ margin: '0 0 16px', fontSize: 12, color: '#64748b' }}>
-                Booking ID: {receiptBooking.booking_code || '—'}
+                Booking ID: {receiptBooking.booking_code || 'N/A'}
               </p>
 
               <div style={{ display: 'grid', gap: 10, fontSize: 13 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: '#94a3b8' }}>Doctor</span>
-                  <strong>{receiptBooking.doctor?.name || '—'}</strong>
+                  <strong>{receiptBooking.doctor?.name || 'N/A'}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: '#94a3b8' }}>Clinic</span>
-                  <strong>{receiptBooking.hospital?.name || '—'}</strong>
+                  <strong>{receiptBooking.hospital?.name || 'N/A'}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: '#94a3b8' }}>Token Number</span>
@@ -169,7 +169,7 @@ export default function Profile({ user, displayName, onClose, onLogout, onSelect
                 {receiptBooking.doctor?.consultation_fee != null && (
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: '#94a3b8' }}>Consultation Fee</span>
-                    <strong>?{receiptBooking.doctor.consultation_fee}</strong>
+                    <strong>â‚¹{receiptBooking.doctor.consultation_fee}</strong>
                   </div>
                 )}
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -185,7 +185,7 @@ export default function Profile({ user, displayName, onClose, onLogout, onSelect
               </div>
 
               {receiptBooking.payment_screenshot_url && (
-                
+                <a
                   href={receiptBooking.payment_screenshot_url} target="_blank" rel="noopener noreferrer"
                   style={{ display: 'block', textAlign: 'center', marginTop: 14, fontSize: 12, color: '#0d9488', fontWeight: 700 }}
                 >
@@ -218,5 +218,3 @@ export default function Profile({ user, displayName, onClose, onLogout, onSelect
     </div>
   );
 }
-
-
