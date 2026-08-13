@@ -4,6 +4,7 @@ import './Profile.css';
 
 export default function Profile({ user, displayName, onClose, onLogout, onSelectBooking }) {
   const [bookings, setBookings] = useState([]);
+  const [receiptBooking, setReceiptBooking] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const loadHistory = async () => {
@@ -134,6 +135,74 @@ export default function Profile({ user, displayName, onClose, onLogout, onSelect
           </div>
         )}
 
+        {receiptBooking && (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(15,23,42,0.75)', display: 'flex', alignItems: 'center',
+            justifyContent: 'center', zIndex: 1100, padding: 20,
+          }} onClick={() => setReceiptBooking(null)}>
+            <div style={{
+              background: '#fff', borderRadius: 20, padding: 24, maxWidth: 360, width: '100%',
+            }} onClick={(e) => e.stopPropagation()}>
+              <h3 style={{ margin: '0 0 4px', fontSize: 17, fontWeight: 800, color: '#0f172a' }}>Consultation Receipt</h3>
+              <p style={{ margin: '0 0 16px', fontSize: 12, color: '#64748b' }}>
+                Booking ID: {receiptBooking.booking_code || '—'}
+              </p>
+
+              <div style={{ display: 'grid', gap: 10, fontSize: 13 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#94a3b8' }}>Doctor</span>
+                  <strong>{receiptBooking.doctor?.name || '—'}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#94a3b8' }}>Clinic</span>
+                  <strong>{receiptBooking.hospital?.name || '—'}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#94a3b8' }}>Token Number</span>
+                  <strong>#{receiptBooking.queue_number}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#94a3b8' }}>Date</span>
+                  <strong>{new Date(receiptBooking.created_at).toLocaleDateString()}</strong>
+                </div>
+                {receiptBooking.doctor?.consultation_fee != null && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#94a3b8' }}>Consultation Fee</span>
+                    <strong>?{receiptBooking.doctor.consultation_fee}</strong>
+                  </div>
+                )}
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#94a3b8' }}>Payment Method</span>
+                  <strong>{receiptBooking.payment_method === 'upi' ? 'UPI' : 'Cash'}</strong>
+                </div>
+                {receiptBooking.payment_method === 'upi' && receiptBooking.transaction_id && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#94a3b8' }}>Transaction ID</span>
+                    <strong>{receiptBooking.transaction_id}</strong>
+                  </div>
+                )}
+              </div>
+
+              {receiptBooking.payment_screenshot_url && (
+                
+                  href={receiptBooking.payment_screenshot_url} target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'block', textAlign: 'center', marginTop: 14, fontSize: 12, color: '#0d9488', fontWeight: 700 }}
+                >
+                  View Payment Screenshot
+                </a>
+              )}
+
+              <button
+                onClick={() => setReceiptBooking(null)}
+                style={{ width: '100%', marginTop: 18, padding: 12, borderRadius: 12, border: 'none', background: '#f1f5f9', color: '#334155', fontWeight: 700, cursor: 'pointer' }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* 3. LOGOUT BUTTON */}
         <button
           onClick={onLogout}
@@ -149,3 +218,5 @@ export default function Profile({ user, displayName, onClose, onLogout, onSelect
     </div>
   );
 }
+
+
