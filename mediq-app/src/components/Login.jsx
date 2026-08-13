@@ -99,104 +99,98 @@ export default function Login({ onGuestContinue }) {
 
   return (
     <div className="login-page">
-      <div className="login-bg-shape shape-1" />
-      <div className="login-bg-shape shape-2" />
-
-      <div className="login-card">
-        <div className="lang-toggle">
-          {languages.map((l) => (
-            <button
-              key={l.code}
-              className={`lang-pill ${lang === l.code ? 'active' : ''}`}
-              onClick={() => setLang(l.code)}
-            >
-              {l.label}
-            </button>
-          ))}
+      <div className="login-content">
+        {/* Top bar: brand mark + language pills */}
+        <div className="login-topbar">
+          <p className="login-brand-mini">MediQ</p>
+          <div className="lang-toggle">
+            {languages.map((l) => (
+              <button
+                key={l.code}
+                className={`lang-pill ${lang === l.code ? 'active' : ''}`}
+                onClick={() => setLang(l.code)}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="login-logo"><span className="login-logo-icon">+</span></div>
+        {/* Hero: logo mark + tagline */}
+        <div className="login-hero">
+          <div className="login-logo-ring">
+            {/* NOTE: placeholder icon — swap with the exported Figma badge-alert asset if desired */}
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 8v5M12 16h.01" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M10.29 3.86l-8.18 14.18A1.5 1.5 0 0 0 3.5 20.5h17a1.5 1.5 0 0 0 1.39-2.46L13.71 3.86a1.5 1.5 0 0 0-2.6 0Z" stroke="#10b981" strokeWidth="1.6" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <p className="login-brand-title">MediQ</p>
+          <p className="login-tagline">Smart healthcare queue at your fingertips</p>
+        </div>
 
         {!sent && (
-          <div style={{
-            display: 'flex', background: '#f0f2f5', borderRadius: 12, padding: 4, marginBottom: 20,
-          }}>
+          <div className="segmented-toggle">
             <button
+              className={`segment-btn ${mode === 'register' ? 'active' : ''}`}
               onClick={() => switchMode('register')}
-              style={{
-                flex: 1, padding: '10px 0', borderRadius: 9, border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer',
-                background: mode === 'register' ? '#ffffff' : 'transparent',
-                color: mode === 'register' ? '#111827' : '#6b7280',
-                boxShadow: mode === 'register' ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
-                transition: 'all 0.15s ease',
-              }}
             >
               Register
             </button>
             <button
+              className={`segment-btn ${mode === 'login' ? 'active' : ''}`}
               onClick={() => switchMode('login')}
-              style={{
-                flex: 1, padding: '10px 0', borderRadius: 9, border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer',
-                background: mode === 'login' ? '#ffffff' : 'transparent',
-                color: mode === 'login' ? '#111827' : '#6b7280',
-                boxShadow: mode === 'login' ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
-                transition: 'all 0.15s ease',
-              }}
             >
-              Login
+              Log In
             </button>
           </div>
         )}
 
-        <h1 className="login-title">
-          {sent ? t.signInTitle : (mode === 'register' ? 'Create your account' : 'Welcome back')}
-        </h1>
+        {sent && <h1 className="login-title">{t.signInTitle}</h1>}
 
         {!sent ? (
           <>
-            <p className="login-subtitle">
-              {mode === 'register' ? t.signInSubtitle : 'Enter your registered email to continue'}
-            </p>
-
             <form onSubmit={sendMagicLink} className="login-form">
               {mode === 'register' && (
                 <>
                   <div className="input-group">
+                    <label htmlFor="name" className="input-label-static">{t.nameLabel}</label>
                     <input
-                      id="name" type="text" className="login-input" placeholder=" "
+                      id="name" type="text" className="login-input"
                       value={name} onChange={(e) => setName(e.target.value)} required
                     />
-                    <label htmlFor="name" className="input-label">{t.nameLabel}</label>
                   </div>
 
                   <div className="input-group">
-                    <select
-                      id="city" className="login-input login-select"
-                      value={city} onChange={(e) => setCity(e.target.value)} required
-                    >
-                      <option value="" disabled hidden></option>
-                      {cities.map((c) => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                    </select>
-                    <label htmlFor="city" className="input-label input-label-select">Your City</label>
+                    <label htmlFor="city" className="input-label-static">Your City</label>
+                    <div className="select-wrapper">
+                      <select
+                        id="city" className="login-input login-select"
+                        value={city} onChange={(e) => setCity(e.target.value)} required
+                      >
+                        <option value="" disabled hidden></option>
+                        {cities.map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 </>
               )}
 
               <div className="input-group">
+                <label htmlFor="email" className="input-label-static">{t.emailLabel}</label>
                 <input
-                  id="email" type="email" className="login-input" placeholder=" "
+                  id="email" type="email" className="login-input"
                   value={email} onChange={(e) => setEmail(e.target.value)} required
                 />
-                <label htmlFor="email" className="input-label">{t.emailLabel}</label>
               </div>
 
               <button
                 type="submit" className="login-btn"
                 disabled={loading || !email || (mode === 'register' && (!name || !city))}
               >
-                {loading ? <span className="spinner" /> : (mode === 'register' ? t.continueBtn : 'Send Login Code')}
+                {loading ? <span className="spinner" /> : (mode === 'register' ? 'Continue with Email' : 'Send Login Code')}
               </button>
             </form>
 
@@ -207,7 +201,7 @@ export default function Login({ onGuestContinue }) {
             )}
 
             <button className="guest-btn" onClick={onGuestContinue}>
-              {t.guestBtn}
+              Continue as Guest →
             </button>
           </>
         ) : (
@@ -216,14 +210,14 @@ export default function Login({ onGuestContinue }) {
 
             <form onSubmit={verifyCode} className="login-form">
               <div className="input-group">
+                <label htmlFor="otp" className="input-label-static">Enter 6-digit code</label>
                 <input
                   id="otp" type="text" inputMode="numeric" maxLength={6}
-                  className="login-input" placeholder=" "
+                  className="login-input otp-input"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                   required
                 />
-                <label htmlFor="otp" className="input-label">Enter 6-digit code</label>
               </div>
 
               <button type="submit" className="login-btn" disabled={verifying || otp.length !== 6}>
@@ -238,7 +232,7 @@ export default function Login({ onGuestContinue }) {
         )}
 
         {error && <p className="login-error">{error}</p>}
-        <p className="login-footer">{t.terms}</p>
+        <p className="login-footer">By registering, you agree to our Terms and Privacy Policy.</p>
       </div>
     </div>
   );
