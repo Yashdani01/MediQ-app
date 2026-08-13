@@ -27,6 +27,12 @@ function formatTime(t) {
   return `${hour12}:${String(m).padStart(2, '0')} ${period}`;
 }
 
+function toMinutes(t) {
+  if (!t) return null;
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+}
+
 function getAvailability(doc) {
   const today = DAY_ABBR[new Date().getDay()];
   const worksToday = !doc.working_days || doc.working_days.length === 0 || doc.working_days.includes(today);
@@ -75,8 +81,8 @@ function BookButton({ availability, onClick }) {
 function DoctorSchedule({ doc }) {
   if (!doc.working_days?.length && !doc.start_time) return null;
   return (
-    <p style={{ fontSize: 13, color: '#0d9488', margin: '6px 0 0', fontWeight: 600 }}>
-      🕒 {doc.working_days?.join(', ')}
+    <p style={{ fontSize: 13, color: '#4f6ef7', margin: '6px 0 0', fontWeight: 600 }}>
+      {doc.working_days?.join(', ')}
       {doc.start_time && doc.end_time ? ` : ${formatTime(doc.start_time)} - ${formatTime(doc.end_time)}` : ''}
     </p>
   );
@@ -85,8 +91,8 @@ function DoctorSchedule({ doc }) {
 function DoctorFee({ doc }) {
   if (doc.consultation_fee == null) return null;
   return (
-    <p style={{ fontSize: 13, color: '#166534', margin: '4px 0 0', fontWeight: 700 }}>
-      💳 ₹{doc.consultation_fee} consultation fee
+    <p style={{ fontSize: 13, color: '#22c55e', margin: '4px 0 0', fontWeight: 700 }}>
+      ?{doc.consultation_fee} consultation fee
     </p>
   );
 }
@@ -147,11 +153,11 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
   useEffect(() => {
     setLoadingHospitals(true);
     getHospitals(currentCity).then(async (data) => {
-      setHospitals(data || []);
+      setHospitals(data);
       setLoadingHospitals(false);
-      const ids = (data || []).map((h) => h.id);
+      const ids = data.map((h) => h.id);
       const counts = await getAvailableDoctorCounts(ids);
-      setAvailableCounts(counts || {});
+      setAvailableCounts(counts);
     });
     getAllSpecialties(currentCity).then(setSpecialties);
   }, [currentCity]);
@@ -289,7 +295,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
 
   return (
     <div className="flow-page">
-      <div className="flow-topbar flow-topbar-sticky">
+      <div className="flow-topbar">
         <div className="flow-topbar-inner">
           <button
             className="flow-user-badge"
@@ -311,7 +317,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
 
         <div className="city-switcher-row">
           <button className="city-pill" onClick={() => setShowCityPicker(!showCityPicker)}>
-            📍 {currentCity || 'All Cities'} <span style={{ opacity: 0.7 }}>&#9662;</span>
+            {currentCity || 'All Cities'} <span style={{ opacity: 0.7 }}>&#9662;</span>
           </button>
 
           {showCityPicker && (
@@ -339,10 +345,10 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
       <div className="flow-content">
         {!selectedHospital && (
           <div>
-            <div className="search-bar-wrap" style={{ position: 'relative' }}>
+            <div className="search-bar-wrap">
               <input
                 type="text"
-                className="search-bar search-glass-input"
+                className="search-bar"
                 placeholder="Search doctor or specialty..."
                 value={searchTerm}
                 onChange={(e) => { setSearchTerm(e.target.value); setActiveSpecialty(''); }}
@@ -353,11 +359,11 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
             </div>
 
             {specialties.length > 0 && (
-              <div className="specialty-chips specialty-scroll-row">
-                {specialties.link?.length > 0 || specialties.map((s) => (
+              <div className="specialty-chips">
+                {specialties.map((s) => (
                   <button
                     key={s}
-                    className={`specialty-chip specialty-chip-pill ${activeSpecialty === s ? 'active' : ''}`}
+                    className={`specialty-chip ${activeSpecialty === s ? 'active' : ''}`}
                     onClick={() => { setActiveSpecialty(activeSpecialty === s ? '' : s); setSearchTerm(''); }}
                   >
                     {s}
@@ -410,20 +416,22 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                 ) : (
                   <div className="hospital-list">
                     {hospitals.map((hosp) => (
-                      <div key={hosp.id} className="hospital-card hospital-card-redesign" onClick={() => setSelectedHospital(hosp)}>
-                        <div className="hospital-icon">🏥</div>
+                      <div key={hosp.id} className="hospital-card" onClick={() => setSelectedHospital(hosp)}>
+                        <div className="hospital-icon">H</div>
                         <div className="hospital-info" style={{ flex: 1 }}>
                           <h4>{hosp.name}</h4>
                           {hosp.location && <p>{hosp.location}</p>}
-
                           {availableCounts[hosp.id] > 0 && (
-                            <span className="doctor-count-pill" style={{ marginTop: 6 }}>
-                              🟢 {availableCounts[hosp.id]} Doctor{availableCounts[hosp.id] > 1 ? 's' : ''} Available Today
+                            <span style={{
+                              display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 6,
+                              padding: '3px 10px', borderRadius: 20, background: '#dcfce7', color: '#15803d',
+                              fontSize: 11.5, fontWeight: 700,
+                            }}>
+                              ? {availableCounts[hosp.id]} Doctor{availableCounts[hosp.id] > 1 ? 's' : ''} Available Today
                             </span>
                           )}
-
                           {hosp.location && (
-                            <a
+                            
                               href={
                                 hosp.location.startsWith('http://') || hosp.location.startsWith('https://')
                                   ? hosp.location
@@ -434,10 +442,22 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
-                              className="directions-btn-link"
-                              style={{ marginTop: 6, marginLeft: 6 }}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 4,
+                                marginTop: 6,
+                                marginLeft: 6,
+                                padding: '4px 10px',
+                                borderRadius: 6,
+                                background: '#eff6ff',
+                                color: '#2563eb',
+                                fontSize: 12,
+                                fontWeight: 600,
+                                textDecoration: 'none',
+                              }}
                             >
-                              📍 Get Directions
+                              ?? Get Directions
                             </a>
                           )}
                         </div>
@@ -453,7 +473,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
         {selectedHospital && (
           <div>
             <button className="flow-back-btn" onClick={() => { setSelectedHospital(null); setDoctors([]); }}>
-              ← Back to Hospitals
+              Back to Hospitals
             </button>
             <h3 className="flow-section-title">Doctors at {selectedHospital.name}</h3>
 
@@ -513,25 +533,25 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
 
             {pendingBooking.doc.status === 'not_started' && (
               <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', padding: '8px 12px', borderRadius: 8, marginBottom: 10, fontSize: 13, color: '#991b1b', textAlign: 'left' }}>
-                ℹ️ <strong>Note:</strong> Consultation hasn't started yet today, but you can reserve your advance queue token now!
+                ?? <strong>Note:</strong> Consultation hasn't started yet today, but you can reserve your advance queue token now!
               </div>
             )}
 
             {pendingBooking.doc.status === 'delayed' && (
               <div style={{ background: '#fffbeb', border: '1px solid #fde68a', padding: '8px 12px', borderRadius: 8, marginBottom: 10, fontSize: 13, color: '#92400e', textAlign: 'left' }}>
-                ℹ️ <strong>Note:</strong> Dr. {pendingBooking.doc.name} is running ~{pendingBooking.doc.delay_minutes || 10}m delayed, but bookings remain open.
+                ?? <strong>Note:</strong> Dr. {pendingBooking.doc.name} is running ~{pendingBooking.doc.delay_minutes || 10}m delayed, but bookings remain open.
               </div>
             )}
 
             {pendingBooking.doc.status === 'on_break' && (
               <div style={{ background: '#f3f4f6', border: '1px solid #d1d5db', padding: '8px 12px', borderRadius: 8, marginBottom: 10, fontSize: 13, color: '#374151', textAlign: 'left' }}>
-                ℹ️ <strong>Note:</strong> Dr. {pendingBooking.doc.name} is currently on a break. You can still join the queue.
+                ?? <strong>Note:</strong> Dr. {pendingBooking.doc.name} is currently on a break. You can still join the queue.
               </div>
             )}
 
             {pendingBooking.doc.consultation_fee != null && (
               <p style={{ textAlign: 'center', fontSize: 15, fontWeight: 700, color: '#22c55e', marginBottom: 10 }}>
-                Consultation Fee: ₹{pendingBooking.doc.consultation_fee}
+                Consultation Fee: ?{pendingBooking.doc.consultation_fee}
               </p>
             )}
 
@@ -549,7 +569,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                 style={{
                   flex: 1, padding: 14, borderRadius: 10, fontWeight: 600, cursor: 'pointer',
                   border: selectedPayment === 'cash' ? 'none' : '1px solid #ddd',
-                  background: selectedPayment === 'cash' ? '#0d9488' : 'white',
+                  background: selectedPayment === 'cash' ? '#4f6ef7' : 'white',
                   color: selectedPayment === 'cash' ? 'white' : '#333',
                 }}
               >
@@ -562,7 +582,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                   flex: 1, padding: 14, borderRadius: 10, fontWeight: 600,
                   cursor: hospitalUpi ? 'pointer' : 'not-allowed',
                   border: selectedPayment === 'upi' ? 'none' : '1px solid #ddd',
-                  background: selectedPayment === 'upi' ? '#0d9488' : 'white',
+                  background: selectedPayment === 'upi' ? '#4f6ef7' : 'white',
                   color: selectedPayment === 'upi' ? 'white' : (hospitalUpi ? '#333' : '#bbb'),
                 }}
               >
@@ -571,14 +591,14 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
             </div>
             {!hospitalUpi && (
               <p style={{ fontSize: 13, color: '#999', textAlign: 'center' }}>
-                This clinic hasn't set up UPI yet — Cash only.
+                This clinic hasn't set up UPI yet � Cash only.
               </p>
             )}
             {selectedPayment === 'upi' && hospitalUpi && !paymentExpired && (
               <>
                 <p style={{ textAlign: 'center', fontSize: 14, marginBottom: 4 }}>
                   {pendingBooking.doc.consultation_fee != null ? (
-                    <>Pay <strong>₹{pendingBooking.doc.consultation_fee}</strong> to <strong>{hospitalUpi}</strong></>
+                    <>Pay <strong>?{pendingBooking.doc.consultation_fee}</strong> to <strong>{hospitalUpi}</strong></>
                   ) : (
                     <>Pay to: <strong>{hospitalUpi}</strong></>
                   )}
