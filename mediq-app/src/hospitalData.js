@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+﻿import { supabase } from './supabaseClient';
 
 export async function getHospitals(city) {
   let query = supabase.from('hospitals').select('id, name, location, city');
@@ -433,29 +433,39 @@ export async function getAvailableDoctorCounts(hospitalIds) {
   return counts;
 }
 
-const DAY_ABBR_COUNT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+export async function getMyBookings(patientUserId) {
+  const { data: patient, error: patientError } = await supabase
+    .from('patients')
+    .select('id')
+    .eq('user_id', patientUserId)
+    .single();
 
-function isAvailableToday(doc) {
-  const today = DAY_ABBR_COUNT[new Date().getDay()];
-  const worksToday = !doc.working_days || doc.working_days.length === 0 || doc.working_days.includes(today);
-  const notBlocked = doc.status !== 'completed' && doc.status !== 'on_leave';
-  return worksToday && notBlocked;
+  if (patientError || !patient) return [];
+
+  const { data: appointments, error } = await supabase
+    .from('appointments')
+    .select('id, queue_number, status, created_at, booked_at, doctor_id, hospital_id, booking_code, payment_method, transaction_id, payment_screenshot_url, contact_phone')
+    .eq('patient_id', patient.id)
+    .order('booked_at', { ascending: false })
+    .limit(20);
+
+  if (error || !appointments) return [];
+
+  const enriched = await Promise.all(
+    appointments.map(async (appt) => {
+      const { data: doctor } = await supabase
+        .from('doctors')
+        .select('name, specialty, consultation_fee')
+        .eq('id', appt.doctor_id)
+        .single();
+      const { data: hospital } = await supabase
+        .from('hospitals')
+        .select('name')
+        .eq('id', appt.hospital_id)
+        .single();
+      return { ...appt, doctor, hospital };
+    })
+  );
+
+  return enriched;
 }
-
-export async function getAvailableDoctorCounts(hospitalIds) {
-  if (!hospitalIds || hospitalIds.length === 0) return {};
-  const { data, error } = await supabase
-    .from('doctors')
-    .select('hospital_id, status, working_days')
-    .in('hospital_id', hospitalIds);
-  if (error) { console.error('Error fetching doctor counts:', error); return {}; }
-
-  const counts = {};
-  data.forEach((doc) => {
-    if (isAvailableToday(doc)) {
-      counts[doc.hospital_id] = (counts[doc.hospital_id] || 0) + 1;
-    }
-  });
-  return counts;
-}
-
