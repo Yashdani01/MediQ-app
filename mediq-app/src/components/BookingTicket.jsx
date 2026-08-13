@@ -1,152 +1,151 @@
 import { useState, useEffect } from 'react';
-import { cancelAppointment } from '../hospitalData';
+import { cancelAppointment, getWaitingCount } from '../hospitalData';
 import './BookingTicket.css';
 
 export default function BookingTicket({ appointment, doctor, patientsAheadOverride, paymentMethod, upiInfo, onClose }) {
+  const [patientsAhead, setPatientsAhead] = useState(patientsAheadOverride ?? 0);
+  const [currentlyServing, setCurrentlyServing] = useState(0);
   const [cancelling, setCancelling] = useState(false);
-  const [isCancelled, setIsCancelled] = useState(appointment?.status === 'cancelled');
-  const [error, setError] = useState('');
 
-  const patientsAhead = patientsAheadOverride ?? 0;
-  const estWaitMinutes = patientsAhead * (doctor.avg_minutes_per_patient || 10);
-
-  // Request Web Notification permission on ticket view
   useEffect(() => {
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
-  }, []);
+    if (!doctor?.id) return;
+    let isMounted = true;
 
-  // Trigger Browser Notification if queue drops to <= 3
-  useEffect(() => {
-    if (patientsAhead > 0 && patientsAhead <= 3 && !isCancelled) {
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification('MediQ - Turn Approaching!', {
-          body: `Dr. ${doctor.name}: Only ${patientsAhead} patient(s) ahead of you. Please head to the clinic!`,
-          icon: '/favicon.ico',
-        });
+    const refreshQueue = async () => {
+      const waiting = await getWaitingCount(doctor.id);
+      if (isMounted) {
+        setPatientsAhead(waiting);
+        // Estimate current serving token
+        const tokenNum = appointment?.queue_number || 1;
+        const serving = Math.max(0, tokenNum - waiting);
+        setCurrentlyServing(serving);
       }
-    }
-  }, [patientsAhead, isCancelled, doctor.name]);
+    };
 
-  const handleCancel = async () => {
+    refreshQueue();
+    const interval = setInterval(refreshQueue, 15000);
+    return () => { isMounted = false; clearInterval(interval); };
+  }, [doctor, appointment]);
+
+  const handleCancelBooking = async () => {
     if (!window.confirm('Are you sure you want to cancel this token?')) return;
-    
     setCancelling(true);
-    setError('');
-    const { error: cancelErr } = await cancelAppointment(appointment.id);
+    const { error } = await cancelAppointment(appointment.id);
     setCancelling(false);
-
-    if (cancelErr) {
-      setError('Could not cancel booking. Please try again.');
-      return;
+    if (error) {
+      alert('Could not cancel booking. Please try again.');
+    } else {
+      alert('Your token has been cancelled.');
+      if (onClose) onClose();
     }
-
-    setIsCancelled(true);
   };
 
+  const tokenNum = appointment?.queue_number || 1;
+  const isNext = patientsAhead === 0 || patientsAhead === 1;
+  const avgMins = doctor?.avg_minutes_per_patient || 10;
+  const estimatedWaitMins = patientsAhead * avgMins;
+
   return (
-    <div className="ticket-overlay">
-      <div className="ticket-card">
-        {/* Real-time In-App Alert Banner */}
-        {!isCancelled && patientsAhead > 0 && patientsAhead <= 3 && (
-          <div style={{
-            background: '#fef2f2',
-            border: '1px solid #fca5a5',
-            color: '#991b1b',
-            borderRadius: 8,
-            padding: '8px 12px',
-            marginBottom: 12,
-            fontSize: 13,
-            fontWeight: 600,
-            textAlign: 'center',
-          }}>
-            🚨 <strong>Turn Approaching!</strong> Only {patientsAhead} patient(s) ahead of you.
-          </div>
-        )}
-
-        <div className="ticket-header">
-          <span className="ticket-check" style={{ background: isCancelled ? '#ef4444' : '#22c55e' }}>
-            {isCancelled ? 'Cancelled' : 'Confirmed'}
-          </span>
-          <h2>{isCancelled ? 'Booking Cancelled' : 'Booking Confirmed'}</h2>
+    <div style={{ maxWidth: 480, margin: '0 auto', padding: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+      
+      <div className="token-dashboard-card">
+        
+        {/* Live Operational Status Pulse */}
+        <div className="token-live-pulse-badge">
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
+          LIVE QUEUE SYNC ACTIVE
         </div>
 
-        <div className="ticket-token" style={{ opacity: isCancelled ? 0.5 : 1 }}>
-          <span className="ticket-token-label">Your Token Number</span>
-          <span className="ticket-token-number">#{appointment.queue_number}</span>
-        </div>
+        {/* Dynamic Progress Ring */}
+        <div className="token-ring-container">
+          <svg className="token-ring-svg" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="42" stroke="#e2e8f0" strokeWidth="8" fill="none" />
+            <circle
+              cx="50" cy="50" r="42"
+              stroke={isNext ? '#10b981' : '#0d9488'}
+              strokeWidth="8"
+              strokeDasharray="264"
+              strokeDashoffset={Math.max(0, 264 - (264 * (currentlyServing / tokenNum)))}
+              strokeLinecap="round"
+              fill="none"
+              style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+            />
+          </svg>
 
-        {appointment.booking_code && (
-          <p style={{ textAlign: 'center', fontSize: 13, color: '#666', margin: '4px 0 0' }}>
-            Booking ID: <strong>{appointment.booking_code}</strong>
-          </p>
-        )}
-
-        <div className="ticket-divider" />
-
-        <div className="ticket-rows" style={{ opacity: isCancelled ? 0.6 : 1 }}>
-          <div className="ticket-row">
-            <span>Doctor</span>
-            <strong>{doctor.name}</strong>
-          </div>
-          <div className="ticket-row">
-            <span>Specialty</span>
-            <strong>{doctor.specialty}</strong>
-          </div>
-          <div className="ticket-row">
-            <span>Patients ahead of you</span>
-            <strong>{isCancelled ? '—' : patientsAhead}</strong>
-          </div>
-          <div className="ticket-row highlight">
-            <span>Estimated wait</span>
-            <strong>{isCancelled ? 'Cancelled' : `${estWaitMinutes} mins`}</strong>
-          </div>
-          <div className="ticket-row">
-            <span>Payment</span>
-            <strong>{paymentMethod === 'upi' ? 'UPI (Online)' : 'Cash on visit'}</strong>
+          <div className="token-number-display">
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Your Token</span>
+            <div className="token-number-big">#{tokenNum}</div>
+            {isNext && <div className="token-next-badge">🎉 You're Next!</div>}
           </div>
         </div>
 
-        {paymentMethod === 'upi' && upiInfo?.upiId && (
-          <p style={{ textAlign: 'center', fontSize: 13, color: '#4f6ef7', fontWeight: 600, margin: '8px 0 0' }}>
-            Paid to: {upiInfo.upiId}
-          </p>
-        )}
+        {/* Real-Time Queue Metrics */}
+        <div className="queue-metrics-grid">
+          <div className="metric-box">
+            <div className="metric-box-label">Currently Serving</div>
+            <div className="metric-box-value">#{currentlyServing}</div>
+          </div>
+          <div className="metric-box">
+            <div className="metric-box-label">Patients Ahead</div>
+            <div className="metric-box-value">{patientsAhead}</div>
+          </div>
+          <div className="metric-box">
+            <div className="metric-box-label">Estimated Wait</div>
+            <div className="metric-box-value">{estimatedWaitMins} min</div>
+          </div>
+          <div className="metric-box">
+            <div className="metric-box-label">Payment Status</div>
+            <div className="metric-box-value" style={{ fontSize: 13, color: paymentMethod === 'upi' ? '#047857' : '#b45309' }}>
+              {paymentMethod === 'upi' ? '🟢 UPI Paid' : '🪙 Cash Pending'}
+            </div>
+          </div>
+        </div>
 
-        <p className="ticket-note">
-          {isCancelled
-            ? 'This appointment token has been cancelled.'
-            : "We'll show live updates as your queue moves — no need to keep refreshing."}
-        </p>
+        {/* Doctor & Clinic Info Card */}
+        <div style={{ background: '#f8fafc', borderRadius: 16, padding: 14, border: '1px solid #e2e8f0', textAlign: 'left', marginBottom: 16 }}>
+          <h4 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#0f172a' }}>{doctor?.name || 'Doctor'}</h4>
+          <p style={{ margin: '2px 0 0', fontSize: 13, color: '#64748b' }}>{doctor?.specialty || 'General'}</p>
+          {appointment?.hospital?.name && (
+            <p style={{ margin: '6px 0 0', fontSize: 12, fontWeight: 700, color: '#0d9488' }}>
+              🏥 {appointment.hospital.name}
+            </p>
+          )}
+        </div>
 
-        {error && <p style={{ color: '#ef4444', fontSize: 13, textAlign: 'center', margin: '6px 0' }}>{error}</p>}
-
-        <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
-          <button className="ticket-close-btn" onClick={onClose} style={{ flex: 1, margin: 0 }}>
-            Done
-          </button>
-
-          {!isCancelled && (
-            <button
-              onClick={handleCancel}
-              disabled={cancelling}
+        {/* Actions: Get Directions & Cancel Token */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {appointment?.hospital?.google_maps_url && (
+            <a
+              href={appointment.hospital.google_maps_url}
+              target="_blank"
+              rel="noreferrer"
               style={{
-                flex: 1,
-                padding: '12px',
-                borderRadius: '10px',
-                border: '1px solid #fca5a5',
-                background: '#fff5f5',
-                color: '#ef4444',
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: 'pointer',
+                display: 'block', padding: 12, borderRadius: 12, background: '#0d9488',
+                color: 'white', fontWeight: 700, fontSize: 13, textDecoration: 'none', textAlign: 'center',
               }}
             >
-              {cancelling ? 'Cancelling...' : 'Cancel Token'}
+              📍 Open Directions in Google Maps
+            </a>
+          )}
+
+          <button
+            onClick={handleCancelBooking}
+            disabled={cancelling}
+            className="cancel-token-btn"
+          >
+            {cancelling ? 'Cancelling Token...' : '✕ Cancel Token / Leave Queue'}
+          </button>
+
+          {onClose && (
+            <button
+              onClick={onClose}
+              style={{ padding: 10, borderRadius: 12, border: 'none', background: 'none', color: '#64748b', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+            >
+              Close Ticket
             </button>
           )}
         </div>
+
       </div>
     </div>
   );
