@@ -92,7 +92,7 @@ function DoctorFee({ doc }) {
   if (doc.consultation_fee == null) return null;
   return (
     <p style={{ fontSize: 13, color: '#22c55e', margin: '4px 0 0', fontWeight: 700 }}>
-      ?{doc.consultation_fee} consultation fee
+      ₹{doc.consultation_fee} consultation fee
     </p>
   );
 }
@@ -427,11 +427,11 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                               padding: '3px 10px', borderRadius: 20, background: '#dcfce7', color: '#15803d',
                               fontSize: 11.5, fontWeight: 700,
                             }}>
-                              ? {availableCounts[hosp.id]} Doctor{availableCounts[hosp.id] > 1 ? 's' : ''} Available Today
+                              🟢 {availableCounts[hosp.id]} Doctor{availableCounts[hosp.id] > 1 ? 's' : ''} Available Today
                             </span>
                           )}
                           {hosp.location && (
-                            
+                            <a
                               href={
                                 hosp.location.startsWith('http://') || hosp.location.startsWith('https://')
                                   ? hosp.location
@@ -457,7 +457,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                                 textDecoration: 'none',
                               }}
                             >
-                              ?? Get Directions
+                              📍 Get Directions
                             </a>
                           )}
                         </div>
@@ -533,25 +533,25 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
 
             {pendingBooking.doc.status === 'not_started' && (
               <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', padding: '8px 12px', borderRadius: 8, marginBottom: 10, fontSize: 13, color: '#991b1b', textAlign: 'left' }}>
-                ?? <strong>Note:</strong> Consultation hasn't started yet today, but you can reserve your advance queue token now!
+                ℹ️ <strong>Note:</strong> Consultation hasn't started yet today, but you can reserve your advance queue token now!
               </div>
             )}
 
             {pendingBooking.doc.status === 'delayed' && (
               <div style={{ background: '#fffbeb', border: '1px solid #fde68a', padding: '8px 12px', borderRadius: 8, marginBottom: 10, fontSize: 13, color: '#92400e', textAlign: 'left' }}>
-                ?? <strong>Note:</strong> Dr. {pendingBooking.doc.name} is running ~{pendingBooking.doc.delay_minutes || 10}m delayed, but bookings remain open.
+                ℹ️ <strong>Note:</strong> Dr. {pendingBooking.doc.name} is running ~{pendingBooking.doc.delay_minutes || 10}m delayed, but bookings remain open.
               </div>
             )}
 
             {pendingBooking.doc.status === 'on_break' && (
               <div style={{ background: '#f3f4f6', border: '1px solid #d1d5db', padding: '8px 12px', borderRadius: 8, marginBottom: 10, fontSize: 13, color: '#374151', textAlign: 'left' }}>
-                ?? <strong>Note:</strong> Dr. {pendingBooking.doc.name} is currently on a break. You can still join the queue.
+                ℹ️ <strong>Note:</strong> Dr. {pendingBooking.doc.name} is currently on a break. You can still join the queue.
               </div>
             )}
 
             {pendingBooking.doc.consultation_fee != null && (
               <p style={{ textAlign: 'center', fontSize: 15, fontWeight: 700, color: '#22c55e', marginBottom: 10 }}>
-                Consultation Fee: ?{pendingBooking.doc.consultation_fee}
+                Consultation Fee: ₹{pendingBooking.doc.consultation_fee}
               </p>
             )}
 
@@ -591,14 +591,14 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
             </div>
             {!hospitalUpi && (
               <p style={{ fontSize: 13, color: '#999', textAlign: 'center' }}>
-                This clinic hasn't set up UPI yet � Cash only.
+                This clinic hasn't set up UPI yet — Cash only.
               </p>
             )}
             {selectedPayment === 'upi' && hospitalUpi && !paymentExpired && (
               <>
                 <p style={{ textAlign: 'center', fontSize: 14, marginBottom: 4 }}>
                   {pendingBooking.doc.consultation_fee != null ? (
-                    <>Pay <strong>?{pendingBooking.doc.consultation_fee}</strong> to <strong>{hospitalUpi}</strong></>
+                    <>Pay <strong>₹{pendingBooking.doc.consultation_fee}</strong> to <strong>{hospitalUpi}</strong></>
                   ) : (
                     <>Pay to: <strong>{hospitalUpi}</strong></>
                   )}
