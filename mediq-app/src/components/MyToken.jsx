@@ -2,16 +2,34 @@ import { useState, useEffect } from 'react';
 import { getMyCurrentBooking } from '../hospitalData';
 import './MyToken.css';
 
+const STATUS_STYLES = {
+  available: { label: 'Available', color: '#22c55e' },
+  delayed: { label: 'Delayed', color: '#f59e0b' },
+  on_break: { label: 'On Break', color: '#6b7280' },
+  not_started: { label: 'Not Started', color: '#ef4444' },
+  on_leave: { label: 'On Leave / Holiday', color: '#dc2626' },
+  completed: { label: 'Done for Today', color: '#374151' },
+};
+
 export default function MyToken({ user }) {
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
+  const load = (silent) => {
     if (!user) { setLoading(false); return; }
+    if (silent) setRefreshing(true);
     getMyCurrentBooking(user.id).then((data) => {
       setBooking(data);
       setLoading(false);
+      setRefreshing(false);
     });
+  };
+
+  useEffect(() => {
+    load(false);
+    const interval = setInterval(() => load(true), 60000);
+    return () => clearInterval(interval);
   }, [user]);
 
   if (loading) {
@@ -22,7 +40,7 @@ export default function MyToken({ user }) {
     return (
       <div className="token-page">
         <div className="token-empty-state">
-          <div className="token-empty-icon">🎟️</div>
+          <div className="token-empty-icon">???</div>
           <h3 style={{ color: '#0f172a', margin: '0 0 6px' }}>No active token</h3>
           <p style={{ margin: 0 }}>You haven't booked a queue token yet.</p>
         </div>
@@ -37,6 +55,14 @@ export default function MyToken({ user }) {
     : Math.min(95, Math.max(5, ((booking.queue_number - currentServing - booking.patientsAhead) / (booking.queue_number - currentServing || 1)) * 100));
 
   const doctorInitial = booking.doctor?.name?.replace('Dr. ', '').charAt(0) || 'D';
+  const statusInfo = STATUS_STYLES[booking.doctor?.status] || STATUS_STYLES.available;
+  const isNext = booking.patientsAhead === 0;
+
+  const mapsUrl = booking.hospital?.location
+    ? (booking.hospital.location.startsWith('http')
+        ? booking.hospital.location
+        : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${booking.hospital.name}, ${booking.hospital.location}`)}`)
+    : null;
 
   return (
     <div className="token-page">
@@ -45,19 +71,31 @@ export default function MyToken({ user }) {
           <p className="token-hospital-name">{booking.hospital?.name}</p>
           <span className="token-live-badge">
             <span className="token-live-dot" />
-            Live Queue
+            {refreshing ? 'Refreshing...' : 'Live Queue'}
           </span>
         </div>
       </div>
 
       <div className="token-content">
+        <div className="token-activity-banner" style={{ borderLeftColor: statusInfo.color }}>
+          <span className="token-activity-dot" style={{ background: statusInfo.color }} />
+          <span>
+            Dr. {booking.doctor?.name?.replace('Dr. ', '')} is currently <strong style={{ color: statusInfo.color }}>{statusInfo.label}</strong>
+            {booking.doctor?.status === 'delayed' && booking.doctor?.delay_minutes ? ` (~${booking.doctor.delay_minutes}m)` : ''}
+          </span>
+        </div>
+
         <div className="token-circle-wrap">
-          <div className="token-circle">
-            <span className="token-circle-label">Your Token Number</span>
-            <span className="token-circle-number">{booking.queue_number}</span>
-            <span className="token-circle-sub">
-              {booking.patientsAhead === 0 ? "You're next!" : 'You are in queue'}
-            </span>
+          <div className="token-circle" style={{
+            background: `conic-gradient(#0d9488 ${progressPercent}%, #e2e8f0 ${progressPercent}%)`,
+          }}>
+            <div className="token-circle-inner">
+              <span className="token-circle-label">Your Token Number</span>
+              <span className="token-circle-number">{booking.queue_number}</span>
+              <span className="token-circle-sub">
+                {isNext ? "You're next!" : 'You are in queue'}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -76,7 +114,7 @@ export default function MyToken({ user }) {
           </div>
           <div className="token-stat-card">
             <div className="token-stat-label">Queue Status</div>
-            <div className="token-stat-value" style={{ fontSize: 15, color: '#16a34a' }}>Moving</div>
+            <div className="token-stat-value" style={{ fontSize: 15, color: '#0d9488' }}>Moving</div>
           </div>
         </div>
 
@@ -93,10 +131,15 @@ export default function MyToken({ user }) {
 
         <div className="token-doctor-card">
           <div className="token-doctor-avatar">{doctorInitial}</div>
-          <div>
+          <div style={{ flex: 1 }}>
             <p className="token-doctor-name">{booking.doctor?.name}</p>
             <p className="token-doctor-specialty">{booking.doctor?.specialty}</p>
           </div>
+          {mapsUrl && (
+            <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="token-directions-btn">
+              ?? Directions
+            </a>
+          )}
         </div>
       </div>
     </div>

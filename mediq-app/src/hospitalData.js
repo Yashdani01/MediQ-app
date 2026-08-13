@@ -458,3 +458,4 @@ export async function getAvailableDoctorCounts(hospitalIds) {
   });
   return counts;
 }
+
