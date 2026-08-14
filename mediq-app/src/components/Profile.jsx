@@ -1,11 +1,17 @@
 import { useState, useEffect } from 'react';
-import { getMyBookings, cancelAppointment } from '../hospitalData';
+import { getMyBookings, cancelAppointment, getPatientProfileDetails } from '../hospitalData';
 import './Profile.css';
+
+function formatMemberSince(ts) {
+  if (!ts) return '';
+  return new Date(ts).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
 
 export default function Profile({ user, displayName, onClose, onLogout, onSelectBooking }) {
   const [bookings, setBookings] = useState([]);
   const [receiptBooking, setReceiptBooking] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [patientDetails, setPatientDetails] = useState(null);
 
   const loadHistory = async () => {
     if (!user?.id) return;
@@ -15,8 +21,15 @@ export default function Profile({ user, displayName, onClose, onLogout, onSelect
     setLoading(false);
   };
 
+  const loadPatientDetails = async () => {
+    if (!user?.id) return;
+    const details = await getPatientProfileDetails(user.id);
+    setPatientDetails(details);
+  };
+
   useEffect(() => {
     loadHistory();
+    loadPatientDetails();
   }, [user]);
 
   const handleCancel = async (bookingId) => {
@@ -29,105 +42,104 @@ export default function Profile({ user, displayName, onClose, onLogout, onSelect
     }
   };
 
-  // Generate deterministic Patient Code from User ID / Email
-  const patientCode = user?.id
-    ? `MDQ-${user.id.slice(0, 4).toUpperCase()}`
-    : 'MDQ-8207';
+  const patientCode = patientDetails?.patient_code || 'Loading...';
+  const memberSince = formatMemberSince(patientDetails?.created_at);
+  const nameForAvatar = displayName || user?.name || 'Patient';
+  const avatarInitial = nameForAvatar.charAt(0).toUpperCase();
 
   return (
-    <div style={{
-      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(8px)',
-      display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 1000,
-    }}>
-      <div style={{
-        background: '#f8fafc', borderTopLeftRadius: 32, borderTopRightRadius: 32,
-        padding: '24px 20px 32px', width: '100%', maxWidth: 480, maxHeight: '88vh',
-        overflowY: 'auto', boxShadow: '0 -20px 50px -10px rgba(0,0,0,0.3)',
-      }}>
+    <div className="profile-overlay">
+      <div className="profile-sheet">
+        <div className="profile-handle" />
 
         {/* Drawer Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0f172a' }}>Patient Health Profile</h3>
-          <button onClick={onClose} style={{ border: 'none', background: '#e2e8f0', borderRadius: '50%', width: 32, height: 32, fontWeight: 700, cursor: 'pointer' }}>✕</button>
+        <div className="profile-drawer-header">
+          <h3 className="profile-drawer-title">Patient Health Profile</h3>
+          <button onClick={onClose} className="profile-x-btn">✕</button>
         </div>
 
-        {/* 1. DIGITAL HEALTH PASS CARD */}
-        <div className="patient-pass-card">
-          <div className="patient-pass-header">
-            <div>
-              <p style={{ margin: 0, fontSize: 11, color: '#99f6e4', fontWeight: 700, letterSpacing: 0.5 }}>MEDIQ DIGITAL HEALTH PASS</p>
-              <h2 style={{ margin: '2px 0 0', fontSize: 20, fontWeight: 800 }}>{displayName || user?.name || 'Patient'}</h2>
-            </div>
-            <span className="patient-pass-badge">Member Active</span>
-          </div>
-
-          <p style={{ margin: '0 0 14px', fontSize: 12, opacity: 0.8 }}>{user?.email}</p>
-
-          <div className="patient-code-box">
-            <div>
-              <span style={{ fontSize: 10, opacity: 0.7, display: 'block', textTransform: 'uppercase' }}>Patient ID Code</span>
-              <strong style={{ fontSize: 16, letterSpacing: 1.5 }}>{patientCode}</strong>
-            </div>
-            <span style={{ fontSize: 22 }}>💳</span>
+        {/* Avatar + name + email */}
+        <div className="profile-header">
+          <div className="profile-avatar-large">{avatarInitial}</div>
+          <div>
+            <p className="profile-name">{nameForAvatar}</p>
+            <p className="profile-email">{user?.email}</p>
           </div>
         </div>
 
-        {/* 2. RECENT BOOKING HISTORY */}
-        <h4 style={{ fontSize: 15, fontWeight: 800, color: '#0f172a', margin: '0 0 12px' }}>Consultation History</h4>
+        {/* Account section */}
+        <p className="profile-section-label">Account</p>
+        <div className="profile-info-list">
+          <div className="profile-info-row">
+            <span className="profile-info-label">Patient Code</span>
+            <span className="profile-info-value accent">{patientCode}</span>
+          </div>
+          {memberSince && (
+            <div className="profile-info-row">
+              <span className="profile-info-label">Member Since</span>
+              <span className="profile-info-value">{memberSince}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Booking History */}
+        <p className="profile-section-label">Booking History</p>
 
         {loading ? (
-          <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>Loading booking history...</p>
+          <p className="profile-empty">Loading booking history...</p>
         ) : bookings.length === 0 ? (
-          <div style={{ background: 'white', borderRadius: 16, padding: 20, textAlign: 'center', border: '1px solid #e2e8f0', marginBottom: 20 }}>
-            <p style={{ margin: 0, fontSize: 13, color: '#64748b' }}>No bookings found yet.</p>
+          <div className="profile-empty-card">
+            <p>No bookings found yet.</p>
           </div>
         ) : (
-          <div style={{ marginBottom: 20 }}>
+          <div className="history-list">
             {bookings.map((b) => {
               const isWaiting = b.status === 'waiting';
               const isCompleted = b.status === 'completed' || b.status === 'seen';
+              const statusClass = isWaiting ? 'waiting' : isCompleted ? 'completed' : 'cancelled';
+              const statusLabel = isWaiting ? 'Waiting' : isCompleted ? 'Completed' : 'Cancelled';
 
               return (
-                <div key={b.id} className="history-card-item">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                <div key={b.id} className="history-card">
+                  <div className="history-card-top">
                     <div>
-                      <h5 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#0f172a' }}>
+                      <p className="history-doctor">
                         {b.doctor?.name ? `Dr. ${b.doctor.name}` : 'Doctor Consultation'}
-                      </h5>
-                      <p style={{ margin: '2px 0 0', fontSize: 12, color: '#64748b' }}>{b.hospital?.name || 'Clinic'}</p>
+                      </p>
+                      <p className="history-hospital">{b.hospital?.name || 'Clinic'}</p>
                     </div>
-
-                    <span className={`history-status-badge ${
-                      isWaiting ? 'history-status-waiting' : isCompleted ? 'history-status-completed' : 'history-status-cancelled'
-                    }`}>
-                      {isWaiting ? '⏱️ Waiting' : isCompleted ? '🟢 Completed' : '✕ Cancelled'}
-                    </span>
+                    <span className={`history-status ${statusClass}`}>{statusLabel}</span>
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, paddingTop: 10, borderTop: '1px solid #f1f5f9' }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: '#0d9488' }}>
+                  <div className="history-card-bottom">
+                    <span className="history-meta">
                       Token #{b.queue_number} · {new Date(b.created_at).toLocaleDateString()}
                     </span>
 
-                    {isWaiting && (
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        {onSelectBooking && (
-                          <button
-                            onClick={() => { onSelectBooking(b); onClose(); }}
-                            style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: '#0d9488', color: 'white', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
-                          >
-                            🎟️ Track Queue
-                          </button>
-                        )}
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      {isWaiting && onSelectBooking && (
+                        <button
+                          onClick={() => { onSelectBooking(b); onClose(); }}
+                          className="history-track-btn"
+                        >
+                          Track Queue
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setReceiptBooking(b)}
+                        className="history-receipt-btn"
+                      >
+                        Receipt
+                      </button>
+                      {isWaiting && (
                         <button
                           onClick={() => handleCancel(b.id)}
-                          style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #fca5a5', background: '#fff5f5', color: '#ef4444', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                          className="history-cancel-btn"
                         >
                           ✕
                         </button>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -136,49 +148,43 @@ export default function Profile({ user, displayName, onClose, onLogout, onSelect
         )}
 
         {receiptBooking && (
-          <div style={{
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            background: 'rgba(15,23,42,0.75)', display: 'flex', alignItems: 'center',
-            justifyContent: 'center', zIndex: 1100, padding: 20,
-          }} onClick={() => setReceiptBooking(null)}>
-            <div style={{
-              background: '#fff', borderRadius: 20, padding: 24, maxWidth: 360, width: '100%',
-            }} onClick={(e) => e.stopPropagation()}>
-              <h3 style={{ margin: '0 0 4px', fontSize: 17, fontWeight: 800, color: '#0f172a' }}>Consultation Receipt</h3>
-              <p style={{ margin: '0 0 16px', fontSize: 12, color: '#64748b' }}>
+          <div className="receipt-overlay" onClick={() => setReceiptBooking(null)}>
+            <div className="receipt-card" onClick={(e) => e.stopPropagation()}>
+              <h3 className="receipt-title">Consultation Receipt</h3>
+              <p className="receipt-subtitle">
                 Booking ID: {receiptBooking.booking_code || 'N/A'}
               </p>
 
-              <div style={{ display: 'grid', gap: 10, fontSize: 13 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#94a3b8' }}>Doctor</span>
+              <div className="receipt-rows">
+                <div className="receipt-row">
+                  <span>Doctor</span>
                   <strong>{receiptBooking.doctor?.name || 'N/A'}</strong>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#94a3b8' }}>Clinic</span>
+                <div className="receipt-row">
+                  <span>Clinic</span>
                   <strong>{receiptBooking.hospital?.name || 'N/A'}</strong>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#94a3b8' }}>Token Number</span>
+                <div className="receipt-row">
+                  <span>Token Number</span>
                   <strong>#{receiptBooking.queue_number}</strong>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#94a3b8' }}>Date</span>
+                <div className="receipt-row">
+                  <span>Date</span>
                   <strong>{new Date(receiptBooking.created_at).toLocaleDateString()}</strong>
                 </div>
                 {receiptBooking.doctor?.consultation_fee != null && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#94a3b8' }}>Consultation Fee</span>
+                  <div className="receipt-row">
+                    <span>Consultation Fee</span>
                     <strong>₹{receiptBooking.doctor.consultation_fee}</strong>
                   </div>
                 )}
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#94a3b8' }}>Payment Method</span>
+                <div className="receipt-row">
+                  <span>Payment Method</span>
                   <strong>{receiptBooking.payment_method === 'upi' ? 'UPI' : 'Cash'}</strong>
                 </div>
                 {receiptBooking.payment_method === 'upi' && receiptBooking.transaction_id && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#94a3b8' }}>Transaction ID</span>
+                  <div className="receipt-row">
+                    <span>Transaction ID</span>
                     <strong>{receiptBooking.transaction_id}</strong>
                   </div>
                 )}
@@ -187,32 +193,28 @@ export default function Profile({ user, displayName, onClose, onLogout, onSelect
               {receiptBooking.payment_screenshot_url && (
                 <a
                   href={receiptBooking.payment_screenshot_url} target="_blank" rel="noopener noreferrer"
-                  style={{ display: 'block', textAlign: 'center', marginTop: 14, fontSize: 12, color: '#0d9488', fontWeight: 700 }}
+                  className="receipt-screenshot-link"
                 >
                   View Payment Screenshot
                 </a>
               )}
 
-              <button
-                onClick={() => setReceiptBooking(null)}
-                style={{ width: '100%', marginTop: 18, padding: 12, borderRadius: 12, border: 'none', background: '#f1f5f9', color: '#334155', fontWeight: 700, cursor: 'pointer' }}
-              >
+              <button onClick={() => setReceiptBooking(null)} className="receipt-close-btn">
                 Close
               </button>
             </div>
           </div>
         )}
 
-        {/* 3. LOGOUT BUTTON */}
-        <button
-          onClick={onLogout}
-          style={{
-            width: '100%', padding: 14, borderRadius: 16, border: '1px solid #fca5a5',
-            background: '#fff5f5', color: '#ef4444', fontSize: 14, fontWeight: 700, cursor: 'pointer',
-          }}
-        >
-          Sign Out of Account
-        </button>
+        {/* Bottom actions */}
+        <div className="profile-actions">
+          <button onClick={onClose} className="profile-close-btn">
+            Close
+          </button>
+          <button onClick={onLogout} className="profile-logout-btn">
+            Sign Out of Account
+          </button>
+        </div>
 
       </div>
     </div>
