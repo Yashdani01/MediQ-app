@@ -9,12 +9,12 @@ import {
 import './HospitalFlow.css';
 
 const STATUS_STYLES = {
-  available: { label: 'Available', color: '#22c55e' },
-  delayed: { label: 'Delayed', color: '#f59e0b' },
-  on_break: { label: 'On Break', color: '#6b7280' },
-  not_started: { label: 'Not Started', color: '#ef4444' },
-  on_leave: { label: 'On Leave / Holiday', color: '#dc2626' },
-  completed: { label: 'Done for Today', color: '#374151' },
+  available: { label: 'Available', tone: 'green' },
+  delayed: { label: 'Delayed', tone: 'amber' },
+  on_break: { label: 'On Break', tone: 'gray' },
+  not_started: { label: 'Not Started', tone: 'red' },
+  on_leave: { label: 'On Leave / Holiday', tone: 'red' },
+  completed: { label: 'Done for Today', tone: 'red' },
 };
 
 const DAY_ABBR = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -38,7 +38,7 @@ function getAvailability(doc) {
   const worksToday = !doc.working_days || doc.working_days.length === 0 || doc.working_days.includes(today);
 
   if (!worksToday) {
-    return { label: 'Not available today', color: '#e5e7eb', textColor: '#6b7280', bookable: false };
+    return { label: 'Not available today', tone: 'gray', bookable: false };
   }
 
   const statusInfo = STATUS_STYLES[doc.status] || STATUS_STYLES.available;
@@ -46,18 +46,14 @@ function getAvailability(doc) {
 
   return {
     label: `${statusInfo.label}${doc.status === 'delayed' && doc.delay_minutes ? ` ${doc.delay_minutes}m` : ''}`,
-    color: statusInfo.color,
-    textColor: 'white',
+    tone: statusInfo.tone,
     bookable,
   };
 }
 
 function DoctorStatusBadge({ availability }) {
   return (
-    <span style={{
-      background: availability.color, color: availability.textColor, fontSize: 12, fontWeight: 600,
-      padding: '4px 10px', borderRadius: 20, whiteSpace: 'nowrap',
-    }}>
+    <span className={`status-pill ${availability.tone}`}>
       {availability.label}
     </span>
   );
@@ -66,14 +62,14 @@ function DoctorStatusBadge({ availability }) {
 function BookButton({ availability, onClick }) {
   if (!availability.bookable) {
     return (
-      <button className="book-btn" disabled style={{ background: '#e5e7eb', color: '#9ca3af', cursor: 'not-allowed' }}>
+      <button className="book-btn book-btn-disabled" disabled>
         {availability.label.includes('Leave') ? 'Booking Unavailable (On Leave)' : 'Done for Today'}
       </button>
     );
   }
   return (
     <button className="book-btn" onClick={onClick}>
-      Book Token / Join Queue
+      Book Token
     </button>
   );
 }
@@ -81,7 +77,7 @@ function BookButton({ availability, onClick }) {
 function DoctorSchedule({ doc }) {
   if (!doc.working_days?.length && !doc.start_time) return null;
   return (
-    <p style={{ fontSize: 13, color: '#4f6ef7', margin: '6px 0 0', fontWeight: 600 }}>
+    <p className="doc-schedule-value">
       {doc.working_days?.join(', ')}
       {doc.start_time && doc.end_time ? ` : ${formatTime(doc.start_time)} - ${formatTime(doc.end_time)}` : ''}
     </p>
@@ -90,10 +86,17 @@ function DoctorSchedule({ doc }) {
 
 function DoctorFee({ doc }) {
   if (doc.consultation_fee == null) return null;
+  return <p className="doc-fee-value">₹{doc.consultation_fee}</p>;
+}
+
+function DoctorAvatar({ bookable }) {
   return (
-    <p style={{ fontSize: 13, color: '#22c55e', margin: '4px 0 0', fontWeight: 700 }}>
-      ₹{doc.consultation_fee} consultation fee
-    </p>
+    <div className={`doctor-avatar ${bookable ? '' : 'muted'}`}>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Z" stroke={bookable ? '#10b981' : '#64748b'} strokeWidth="1.6" />
+        <path d="M4 20.5c1.4-3.6 4.6-5.5 8-5.5s6.6 1.9 8 5.5" stroke={bookable ? '#10b981' : '#64748b'} strokeWidth="1.6" strokeLinecap="round" />
+      </svg>
+    </div>
   );
 }
 
@@ -390,20 +393,35 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                       .map((doc) => {
                         const availability = getAvailability(doc);
                         return (
-                          <div key={doc.id} className="doctor-card">
-                            <div className="doctor-card-top">
-                              <div>
-                                <h4 className="doctor-name">{doc.name}</h4>
+                          <div key={doc.id} className={`doctor-card ${availability.bookable ? '' : 'muted'}`}>
+                            <div className="doctor-info">
+                              <DoctorAvatar bookable={availability.bookable} />
+                              <div className="doctor-details">
+                                <div className="doctor-details-top">
+                                  <p className="doctor-name">{doc.name}</p>
+                                  <DoctorStatusBadge availability={availability} />
+                                </div>
                                 <p className="doctor-specialty">{doc.specialty}</p>
                                 <p className="doctor-hospital-tag">{doc.hospital?.name}</p>
+                              </div>
+                            </div>
+
+                            <div className="doctor-card-divider" />
+
+                            <div className="doc-stats">
+                              <div>
+                                <p className="doc-stats-label">Waiting</p>
+                                <p className="doc-stats-value green">{doc.liveQueue} Patients</p>
+                              </div>
+                            </div>
+
+                            <div className="doc-footer">
+                              <div>
+                                <p className="doc-fee-label">Consultation Fee</p>
                                 <DoctorFee doc={doc} />
                               </div>
-                              <DoctorStatusBadge availability={availability} />
+                              <BookButton availability={availability} onClick={() => openPaymentChoice(doc, doc.hospital_id)} />
                             </div>
-                            <div className="doctor-queue-row">
-                              Currently waiting: <strong>{doc.liveQueue} Patients</strong>
-                            </div>
-                            <BookButton availability={availability} onClick={() => openPaymentChoice(doc, doc.hospital_id)} />
                           </div>
                         );
                       })}
@@ -478,7 +496,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
         {selectedHospital && (
           <div>
             <button className="flow-back-btn" onClick={() => { setSelectedHospital(null); setDoctors([]); }}>
-              Back to Hospitals
+              ← Back to Hospitals
             </button>
             <h3 className="flow-section-title">Doctors at {selectedHospital.name}</h3>
 
@@ -491,22 +509,40 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                 {doctors.map((doc) => {
                   const availability = getAvailability(doc);
                   return (
-                    <div key={doc.id} className="doctor-card">
-                      <div className="doctor-card-top">
-                        <div>
-                          <h4 className="doctor-name">{doc.name}</h4>
+                    <div key={doc.id} className={`doctor-card ${availability.bookable ? '' : 'muted'}`}>
+                      <div className="doctor-info">
+                        <DoctorAvatar bookable={availability.bookable} />
+                        <div className="doctor-details">
+                          <div className="doctor-details-top">
+                            <p className="doctor-name">{doc.name}</p>
+                            <DoctorStatusBadge availability={availability} />
+                          </div>
                           <p className="doctor-specialty">{doc.specialty}</p>
+                        </div>
+                      </div>
+
+                      <div className="doctor-card-divider" />
+
+                      <div className="doc-stats">
+                        <div>
+                          <p className="doc-stats-label">Schedule</p>
                           <DoctorSchedule doc={doc} />
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <p className="doc-stats-label">Waiting</p>
+                          <p className={`doc-stats-value ${availability.bookable ? 'green' : ''}`}>
+                            {availability.bookable ? `${doc.liveQueue} Patients` : 'Closed'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="doc-footer">
+                        <div>
+                          <p className="doc-fee-label">Consultation Fee</p>
                           <DoctorFee doc={doc} />
                         </div>
-                        <DoctorStatusBadge availability={availability} />
+                        <BookButton availability={availability} onClick={() => openPaymentChoice(doc, selectedHospital.id)} />
                       </div>
-
-                      <div className="doctor-queue-row">
-                        Currently waiting: <strong>{doc.liveQueue} Patients</strong>
-                      </div>
-
-                      <BookButton availability={availability} onClick={() => openPaymentChoice(doc, selectedHospital.id)} />
                     </div>
                   );
                 })}
