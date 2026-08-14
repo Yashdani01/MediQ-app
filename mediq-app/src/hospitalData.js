@@ -362,6 +362,13 @@ export async function markAppointmentSeen(pin, appointmentId) {
   if (error) { console.error('Error marking appointment seen:', error); return { error }; }
   return { success: true };
 }
+export async function checkInAppointment(pin, appointmentId) {
+  const { error } = await supabase.rpc('check_in_appointment', {
+    input_pin: pin, input_appointment_id: appointmentId,
+  });
+  if (error) { console.error('Error checking in appointment:', error); return { error }; }
+  return { success: true };
+}
 
 export async function setDoctorPause(pin, doctorId, paused) {
   const { error } = await supabase.rpc('set_doctor_pause', {
