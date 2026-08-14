@@ -128,10 +128,9 @@ export default function BookingTicket({ appointment, doctor, patientsAheadOverri
               rel="noreferrer"
               className="ticket-action-btn"
             >
-              📍 View on Map
+              View on Map
             </a>
           )}
-
           <button
             onClick={handleCancelBooking}
             disabled={cancelling}
