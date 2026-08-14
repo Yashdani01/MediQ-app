@@ -1,9 +1,9 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   checkClinicPin, getDoctorsForClinic, addDoctor, updateDoctor,
   deleteDoctor, updateDoctorStatus, addWalkinBooking,
   getHospitalUpi, updateHospitalUpi, getTodaysBookings, markAppointmentSeen,
-  getHospitalLocation, updateHospitalLocation, cancelAppointment,
+  getHospitalLocation, updateHospitalLocation, cancelAppointment, checkInAppointment,
 } from '../hospitalData';
 import './Login.css';
 
@@ -317,6 +317,14 @@ export default function ClinicPortal() {
     loadDoctors(unlockedPin);
   };
 
+  const handleCheckIn = async (appointmentId, doctorId) => {
+    setUpdatingPatient(appointmentId);
+    const { error } = await checkInAppointment(unlockedPin, appointmentId);
+    setUpdatingPatient(null);
+    if (error) { setError('Could not check in patient.'); return; }
+    await refreshBookings(doctorId);
+  };
+
   const handleNoShowCancel = async (appointmentId, doctorId) => {
     if (!window.confirm('Mark this patient as "Did Not Show Up / Cancel"?')) return;
     setUpdatingPatient(appointmentId);
@@ -597,6 +605,7 @@ export default function ClinicPortal() {
                         const isWaiting = b.status === 'waiting';
                         const isUpi = b.payment_method === 'upi';
                         const isWalkin = b.is_walkin;
+                        const isCheckedIn = !!b.checked_in_at;
 
                         return (
                           <div key={b.id} style={{ background: isWaiting ? '#ffffff' : '#f0fdf4', border: '1px solid #e2e8f0', borderRadius: 16, padding: 14, marginBottom: 10, boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
@@ -641,6 +650,24 @@ export default function ClinicPortal() {
                                 </button>
                               )}
                             </div>
+
+                            {isWaiting && (
+                              <div style={{ margin: '8px 0' }}>
+                                {isCheckedIn ? (
+                                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#d1fae5', color: '#065f46', fontSize: 12, fontWeight: 700, padding: '5px 10px', borderRadius: 10 }}>
+                                    ✓ Checked In
+                                  </span>
+                                ) : (
+                                  <button
+                                    onClick={() => handleCheckIn(b.id, doc.id)}
+                                    disabled={updatingPatient === b.id}
+                                    style={{ padding: '8px 14px', borderRadius: 10, border: '1px solid #a7f3d0', background: '#f0fdf4', color: '#047857', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                                  >
+                                    {updatingPatient === b.id ? 'Checking In...' : '📍 Check In Patient'}
+                                  </button>
+                                )}
+                              </div>
+                            )}
 
                             {isWaiting ? (
                               <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
