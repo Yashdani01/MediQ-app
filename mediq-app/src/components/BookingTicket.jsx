@@ -15,7 +15,6 @@ export default function BookingTicket({ appointment, doctor, patientsAheadOverri
       const waiting = await getWaitingCount(doctor.id);
       if (isMounted) {
         setPatientsAhead(waiting);
-        // Estimate current serving token
         const tokenNum = appointment?.queue_number || 1;
         const serving = Math.max(0, tokenNum - waiting);
         setCurrentlyServing(serving);
@@ -48,15 +47,13 @@ export default function BookingTicket({ appointment, doctor, patientsAheadOverri
   return (
     <div className="ticket-page-wrap">
 
-      {/* Confirmed banner */}
       <div className="confirmed-banner">
-        <span className="confirmed-check">✓</span>
+        <span className="confirmed-check">CHECK</span>
         Token Booked Successfully
       </div>
 
       <div className="token-dashboard-card">
 
-        {/* Dynamic Progress Ring */}
         <div className="token-ring-container">
           <svg className="token-ring-svg" viewBox="0 0 100 100">
             <circle cx="50" cy="50" r="42" stroke="rgba(255,255,255,0.08)" strokeWidth="8" fill="none" />
@@ -82,7 +79,6 @@ export default function BookingTicket({ appointment, doctor, patientsAheadOverri
           </div>
         </div>
 
-        {/* Spec rows: doctor, hospital, schedule, live queue */}
         <div className="specs-list">
           <div className="specs-row">
             <span className="specs-label">Doctor</span>
@@ -114,14 +110,13 @@ export default function BookingTicket({ appointment, doctor, patientsAheadOverri
           <div className="specs-row">
             <span className="specs-label">Payment Status</span>
             <span className="specs-value">
-              {paymentMethod === 'upi' ? '🟢 UPI Paid' : '🪙 Cash Pending'}
+              {paymentMethod === 'upi' ? 'UPI Paid' : 'Cash Pending'}
             </span>
           </div>
         </div>
 
-        {/* Actions: Get Directions & Cancel Token */}
         <div className="ticket-actions">
-        {appointment?.hospital?.google_maps_url && (
+          {appointment?.hospital?.google_maps_url && (
             
               href={appointment.hospital.google_maps_url}
               target="_blank"
@@ -131,6 +126,7 @@ export default function BookingTicket({ appointment, doctor, patientsAheadOverri
               View on Map
             </a>
           )}
+
           <button
             onClick={handleCancelBooking}
             disabled={cancelling}
