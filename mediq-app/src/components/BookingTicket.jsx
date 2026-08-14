@@ -121,7 +121,7 @@ export default function BookingTicket({ appointment, doctor, patientsAheadOverri
 
         {/* Actions: Get Directions & Cancel Token */}
         <div className="ticket-actions">
-          {appointment?.hospital?.google_maps_url && (
+        {appointment?.hospital?.google_maps_url && (
             
               href={appointment.hospital.google_maps_url}
               target="_blank"
