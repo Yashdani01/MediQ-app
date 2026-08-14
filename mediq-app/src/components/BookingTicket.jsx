@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { cancelAppointment, getWaitingCount } from '../hospitalData';
+import { cancelAppointment, getWaitingCount } from './hospitalData';
 import './BookingTicket.css';
 
 export default function BookingTicket({ appointment, doctor, patientsAheadOverride, paymentMethod, upiInfo, onClose }) {
@@ -48,7 +48,7 @@ export default function BookingTicket({ appointment, doctor, patientsAheadOverri
     <div className="ticket-page-wrap">
 
       <div className="confirmed-banner">
-        <span className="confirmed-check">CHECK</span>
+        <span className="confirmed-check">✓</span>
         Token Booked Successfully
       </div>
 
@@ -117,7 +117,7 @@ export default function BookingTicket({ appointment, doctor, patientsAheadOverri
 
         <div className="ticket-actions">
           {appointment?.hospital?.google_maps_url && (
-            
+            <a
               href={appointment.hospital.google_maps_url}
               target="_blank"
               rel="noreferrer"
