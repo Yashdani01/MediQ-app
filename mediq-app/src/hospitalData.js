@@ -1,4 +1,4 @@
-﻿import { supabase } from './supabaseClient';
+import { supabase } from './supabaseClient';
 
 export async function getHospitals(city) {
   let query = supabase.from('hospitals').select('id, name, location, city');
@@ -362,12 +362,24 @@ export async function markAppointmentSeen(pin, appointmentId) {
   if (error) { console.error('Error marking appointment seen:', error); return { error }; }
   return { success: true };
 }
+
 export async function checkInAppointment(pin, appointmentId) {
   const { error } = await supabase.rpc('check_in_appointment', {
     input_pin: pin, input_appointment_id: appointmentId,
   });
   if (error) { console.error('Error checking in appointment:', error); return { error }; }
   return { success: true };
+}
+
+// Patient-side: poll for status/check-in updates on a single appointment
+export async function getAppointmentStatus(appointmentId) {
+  const { data, error } = await supabase
+    .from('appointments')
+    .select('id, status, booked_at, checked_in_at')
+    .eq('id', appointmentId)
+    .single();
+  if (error) { console.error('Error fetching appointment status:', error); return null; }
+  return data;
 }
 
 export async function setDoctorPause(pin, doctorId, paused) {
