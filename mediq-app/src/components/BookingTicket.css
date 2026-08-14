@@ -112,38 +112,56 @@
   font-weight: 600;
   cursor: pointer;
 }
+
 /* ==========================================
-   PHASE 3: LIVE QUEUE & TOKEN DASHBOARD STYLES
+   TOKEN / LIVE QUEUE TRACKER (dark theme redesign)
    ========================================== */
 
+.ticket-page-wrap {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px 20px 40px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(15, 118, 110, 0.35) 0%, rgba(9, 10, 15, 0) 55%),
+    linear-gradient(180deg, #090a0f 0%, #090a0f 100%);
+  box-sizing: border-box;
+}
+
+.confirmed-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 100px;
+  background: linear-gradient(90deg, #10b981 25%, #059669 75%);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.2);
+  margin-bottom: 20px;
+}
+
+.confirmed-check {
+  font-size: 13px;
+}
+
 .token-dashboard-card {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 28px;
   padding: 24px 20px;
-  box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.08);
-  border: 1px solid #e2e8f0;
   text-align: center;
   position: relative;
   overflow: hidden;
 }
 
-.token-live-pulse-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: #d1fae5;
-  color: #065f46;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 4px 12px;
-  border-radius: 20px;
-  margin-bottom: 16px;
-}
-
 .token-ring-container {
   width: 180px;
   height: 180px;
-  margin: 0 auto 20px;
+  margin: 0 auto 24px;
   position: relative;
   display: flex;
   align-items: center;
@@ -164,64 +182,134 @@
   text-align: center;
 }
 
-.token-number-big {
-  font-size: 42px;
-  font-weight: 800;
-  color: #0f172a;
-  line-height: 1;
-}
-
-.token-next-badge {
-  font-size: 12px;
-  font-weight: 800;
-  color: #0d9488;
-  margin-top: 4px;
-}
-
-.queue-metrics-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.metric-box {
-  background: #f8fafc;
-  border-radius: 16px;
-  padding: 12px;
-  border: 1px solid #f1f5f9;
-  text-align: center;
-}
-
-.metric-box-label {
+.token-number-label {
   font-size: 11px;
   font-weight: 700;
-  color: #64748b;
+  color: #10b981;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-.metric-box-value {
-  font-size: 20px;
+.token-number-big {
+  font-size: 48px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+  margin: 4px 0;
+}
+
+.token-status-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 100px;
+  background: linear-gradient(90deg, #10b981 25%, #059669 75%);
+  color: #fff;
+  font-size: 11px;
   font-weight: 800;
-  color: #0f172a;
-  margin-top: 2px;
+}
+
+.token-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+  display: inline-block;
+}
+
+.specs-list {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.specs-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.specs-label {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.specs-value {
+  color: #fff;
+  font-weight: 700;
+  text-align: right;
+}
+
+.specs-value.accent {
+  color: #10b981;
+  font-weight: 800;
+}
+
+.specs-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 2px 0;
+}
+
+.ticket-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ticket-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 48px;
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  cursor: pointer;
 }
 
 .cancel-token-btn {
-  width: 100%;
-  padding: 12px;
-  border-radius: 12px;
-  border: 1px solid #fca5a5;
-  background: #fff5f5;
+  height: 48px;
+  border-radius: 100px;
+  border: 1px solid rgba(239, 68, 68, 0.13);
+  background: rgba(239, 68, 68, 0.06);
   color: #ef4444;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  margin-top: 10px;
-  transition: all 0.15s ease;
+  transition: background 0.15s ease;
 }
 
-.cancel-token-btn:hover {
-  background: #fef2f2;
+.cancel-token-btn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.cancel-token-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ticket-close-link {
+  padding: 10px;
+  border-radius: 12px;
+  border: none;
+  background: none;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
 }
