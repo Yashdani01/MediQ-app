@@ -46,23 +46,23 @@ export default function BookingTicket({ appointment, doctor, patientsAheadOverri
   const estimatedWaitMins = patientsAhead * avgMins;
 
   return (
-    <div style={{ maxWidth: 480, margin: '0 auto', padding: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
-      
+    <div className="ticket-page-wrap">
+
+      {/* Confirmed banner */}
+      <div className="confirmed-banner">
+        <span className="confirmed-check">✓</span>
+        Token Booked Successfully
+      </div>
+
       <div className="token-dashboard-card">
-        
-        {/* Live Operational Status Pulse */}
-        <div className="token-live-pulse-badge">
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
-          LIVE QUEUE SYNC ACTIVE
-        </div>
 
         {/* Dynamic Progress Ring */}
         <div className="token-ring-container">
           <svg className="token-ring-svg" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="42" stroke="#e2e8f0" strokeWidth="8" fill="none" />
+            <circle cx="50" cy="50" r="42" stroke="rgba(255,255,255,0.08)" strokeWidth="8" fill="none" />
             <circle
               cx="50" cy="50" r="42"
-              stroke={isNext ? '#10b981' : '#0d9488'}
+              stroke={isNext ? '#10b981' : '#059669'}
               strokeWidth="8"
               strokeDasharray="264"
               strokeDashoffset={Math.max(0, 264 - (264 * (currentlyServing / tokenNum)))}
@@ -73,58 +73,62 @@ export default function BookingTicket({ appointment, doctor, patientsAheadOverri
           </svg>
 
           <div className="token-number-display">
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Your Token</span>
+            <span className="token-number-label">Your Ticket Token</span>
             <div className="token-number-big">#{tokenNum}</div>
-            {isNext && <div className="token-next-badge">🎉 You're Next!</div>}
-          </div>
-        </div>
-
-        {/* Real-Time Queue Metrics */}
-        <div className="queue-metrics-grid">
-          <div className="metric-box">
-            <div className="metric-box-label">Currently Serving</div>
-            <div className="metric-box-value">#{currentlyServing}</div>
-          </div>
-          <div className="metric-box">
-            <div className="metric-box-label">Patients Ahead</div>
-            <div className="metric-box-value">{patientsAhead}</div>
-          </div>
-          <div className="metric-box">
-            <div className="metric-box-label">Estimated Wait</div>
-            <div className="metric-box-value">{estimatedWaitMins} min</div>
-          </div>
-          <div className="metric-box">
-            <div className="metric-box-label">Payment Status</div>
-            <div className="metric-box-value" style={{ fontSize: 13, color: paymentMethod === 'upi' ? '#047857' : '#b45309' }}>
-              {paymentMethod === 'upi' ? '🟢 UPI Paid' : '🪙 Cash Pending'}
+            <div className="token-status-tag">
+              <span className="token-status-dot" />
+              {isNext ? 'Your Turn!' : 'In Queue'}
             </div>
           </div>
         </div>
 
-        {/* Doctor & Clinic Info Card */}
-        <div style={{ background: '#f8fafc', borderRadius: 16, padding: 14, border: '1px solid #e2e8f0', textAlign: 'left', marginBottom: 16 }}>
-          <h4 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#0f172a' }}>{doctor?.name || 'Doctor'}</h4>
-          <p style={{ margin: '2px 0 0', fontSize: 13, color: '#64748b' }}>{doctor?.specialty || 'General'}</p>
+        {/* Spec rows: doctor, hospital, schedule, live queue */}
+        <div className="specs-list">
+          <div className="specs-row">
+            <span className="specs-label">Doctor</span>
+            <span className="specs-value">{doctor?.name || 'Doctor'}</span>
+          </div>
+          <div className="specs-row">
+            <span className="specs-label">Specialty</span>
+            <span className="specs-value">{doctor?.specialty || 'General'}</span>
+          </div>
           {appointment?.hospital?.name && (
-            <p style={{ margin: '6px 0 0', fontSize: 12, fontWeight: 700, color: '#0d9488' }}>
-              🏥 {appointment.hospital.name}
-            </p>
+            <div className="specs-row">
+              <span className="specs-label">Hospital</span>
+              <span className="specs-value">{appointment.hospital.name}</span>
+            </div>
           )}
+          <div className="specs-divider" />
+          <div className="specs-row">
+            <span className="specs-label">Currently Serving</span>
+            <span className="specs-value accent">#{currentlyServing}</span>
+          </div>
+          <div className="specs-row">
+            <span className="specs-label">Live Queue Position</span>
+            <span className="specs-value accent">{patientsAhead} ahead of you</span>
+          </div>
+          <div className="specs-row">
+            <span className="specs-label">Estimated Wait Time</span>
+            <span className="specs-value accent">{estimatedWaitMins} mins</span>
+          </div>
+          <div className="specs-row">
+            <span className="specs-label">Payment Status</span>
+            <span className="specs-value">
+              {paymentMethod === 'upi' ? '🟢 UPI Paid' : '🪙 Cash Pending'}
+            </span>
+          </div>
         </div>
 
         {/* Actions: Get Directions & Cancel Token */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div className="ticket-actions">
           {appointment?.hospital?.google_maps_url && (
-            <a
+            
               href={appointment.hospital.google_maps_url}
               target="_blank"
               rel="noreferrer"
-              style={{
-                display: 'block', padding: 12, borderRadius: 12, background: '#0d9488',
-                color: 'white', fontWeight: 700, fontSize: 13, textDecoration: 'none', textAlign: 'center',
-              }}
+              className="ticket-action-btn"
             >
-              📍 Open Directions in Google Maps
+              📍 View on Map
             </a>
           )}
 
@@ -133,15 +137,12 @@ export default function BookingTicket({ appointment, doctor, patientsAheadOverri
             disabled={cancelling}
             className="cancel-token-btn"
           >
-            {cancelling ? 'Cancelling Token...' : '✕ Cancel Token / Leave Queue'}
+            {cancelling ? 'Cancelling Token...' : 'Cancel Booking'}
           </button>
 
           {onClose && (
-            <button
-              onClick={onClose}
-              style={{ padding: 10, borderRadius: 12, border: 'none', background: 'none', color: '#64748b', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
-            >
-              Close Ticket
+            <button onClick={onClose} className="ticket-close-link">
+              Close
             </button>
           )}
         </div>
