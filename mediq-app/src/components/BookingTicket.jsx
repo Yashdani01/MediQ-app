@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { cancelAppointment, getWaitingCount } from './hospitalData';
+import { cancelAppointment, getWaitingCount } from '../hospitalData';
 import './BookingTicket.css';
 
 export default function BookingTicket({ appointment, doctor, patientsAheadOverride, paymentMethod, upiInfo, onClose }) {
