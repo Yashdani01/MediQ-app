@@ -1,11 +1,18 @@
 import { useState, useEffect } from 'react';
-import { cancelAppointment, getWaitingCount } from '../hospitalData';
+import { cancelAppointment, getWaitingCount, getAppointmentStatus } from '../hospitalData';
 import './BookingTicket.css';
+
+function formatTimestamp(ts) {
+  if (!ts) return '';
+  return new Date(ts).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
 
 export default function BookingTicket({ appointment, doctor, patientsAheadOverride, paymentMethod, upiInfo, onClose }) {
   const [patientsAhead, setPatientsAhead] = useState(patientsAheadOverride ?? 0);
   const [currentlyServing, setCurrentlyServing] = useState(0);
   const [cancelling, setCancelling] = useState(false);
+  const [checkedInAt, setCheckedInAt] = useState(appointment?.checked_in_at ?? null);
+  const [bookedAt, setBookedAt] = useState(appointment?.booked_at ?? appointment?.created_at ?? null);
 
   useEffect(() => {
     if (!doctor?.id) return;
@@ -26,6 +33,23 @@ export default function BookingTicket({ appointment, doctor, patientsAheadOverri
     return () => { isMounted = false; clearInterval(interval); };
   }, [doctor, appointment]);
 
+  useEffect(() => {
+    if (!appointment?.id) return;
+    let isMounted = true;
+
+    const refreshStatus = async () => {
+      const status = await getAppointmentStatus(appointment.id);
+      if (isMounted && status) {
+        setCheckedInAt(status.checked_in_at);
+        setBookedAt(status.booked_at);
+      }
+    };
+
+    refreshStatus();
+    const interval = setInterval(refreshStatus, 15000);
+    return () => { isMounted = false; clearInterval(interval); };
+  }, [appointment]);
+
   const handleCancelBooking = async () => {
     if (!window.confirm('Are you sure you want to cancel this token?')) return;
     setCancelling(true);
@@ -43,6 +67,28 @@ export default function BookingTicket({ appointment, doctor, patientsAheadOverri
   const isNext = patientsAhead === 0 || patientsAhead === 1;
   const avgMins = doctor?.avg_minutes_per_patient || 10;
   const estimatedWaitMins = patientsAhead * avgMins;
+  const isCheckedIn = !!checkedInAt;
+
+  const timelineSteps = [
+    {
+      key: 'booked',
+      label: 'Booked',
+      detail: bookedAt ? `Registered in queue at ${formatTimestamp(bookedAt)}` : 'Registered in queue',
+      done: true,
+    },
+    {
+      key: 'checked_in',
+      label: 'Checked In',
+      detail: isCheckedIn ? `Clinic confirmed your arrival at ${formatTimestamp(checkedInAt)}` : 'Waiting for clinic to confirm your arrival',
+      done: isCheckedIn,
+    },
+    {
+      key: 'your_turn',
+      label: 'Your Turn',
+      detail: isNext ? 'Please head to the consultation room now' : "Enter doctor's chamber for consultation",
+      done: isNext,
+    },
+  ];
 
   return (
     <div className="ticket-page-wrap">
@@ -100,11 +146,11 @@ export default function BookingTicket({ appointment, doctor, patientsAheadOverri
             <span className="specs-value accent">#{currentlyServing}</span>
           </div>
           <div className="specs-row">
-            <span className="specs-label">Live Queue Position</span>
-            <span className="specs-value accent">{patientsAhead} ahead of you</span>
+            <span className="specs-label">Ahead of You</span>
+            <span className="specs-value accent">{patientsAhead}</span>
           </div>
           <div className="specs-row">
-            <span className="specs-label">Estimated Wait Time</span>
+            <span className="specs-label">Estimated Wait</span>
             <span className="specs-value accent">{estimatedWaitMins} mins</span>
           </div>
           <div className="specs-row">
@@ -113,6 +159,22 @@ export default function BookingTicket({ appointment, doctor, patientsAheadOverri
               {paymentMethod === 'upi' ? 'UPI Paid' : 'Cash Pending'}
             </span>
           </div>
+        </div>
+
+        <div className="queue-timeline">
+          <p className="timeline-title">Queue Timeline</p>
+          {timelineSteps.map((step, i) => (
+            <div key={step.key} className="timeline-item">
+              <div className="timeline-marker-col">
+                <span className={`timeline-dot ${step.done ? 'done' : ''}`} />
+                {i < timelineSteps.length - 1 && <span className={`timeline-line ${step.done ? 'done' : ''}`} />}
+              </div>
+              <div className="timeline-content">
+                <p className={`timeline-label ${step.done ? 'done' : ''}`}>{step.label}</p>
+                <p className="timeline-detail">{step.detail}</p>
+              </div>
+            </div>
+          ))}
         </div>
 
         <div className="ticket-actions">
