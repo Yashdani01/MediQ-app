@@ -251,6 +251,52 @@ export async function getPatientReports(patientUserId) {
   return data;
 }
 
+export async function uploadPatientReport(patientUserId, reportName, reportType, file) {
+  const { data: patient, error: patientError } = await supabase
+    .from('patients')
+    .select('id')
+    .eq('user_id', patientUserId)
+    .single();
+
+  if (patientError || !patient) {
+    return { error: patientError || new Error('Patient record not found') };
+  }
+
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${patient.id}-${Date.now()}.${fileExt}`;
+  
+  const { error: uploadError } = await supabase.storage
+    .from('patient-reports')
+    .upload(fileName, file);
+
+  if (uploadError) {
+    console.error('Error uploading report file:', uploadError);
+    return { error: uploadError };
+  }
+
+  const { data: urlData } = supabase.storage
+    .from('patient-reports')
+    .getPublicUrl(fileName);
+
+  const { data, error: insertError } = await supabase
+    .from('reports')
+    .insert({
+      patient_id: patient.id,
+      name: reportName,
+      report_type: reportType,
+      file_url: urlData.publicUrl,
+    })
+    .select()
+    .single();
+
+  if (insertError) {
+    console.error('Error saving report record:', insertError);
+    return { error: insertError };
+  }
+
+  return { data };
+}
+
 // ---- Clinic Portal functions ----
 
 export async function checkClinicPin(pin) {
@@ -371,7 +417,6 @@ export async function checkInAppointment(pin, appointmentId) {
   return { success: true };
 }
 
-// Patient-side: poll for status/check-in updates on a single appointment
 export async function getAppointmentStatus(appointmentId) {
   const { data, error } = await supabase
     .from('appointments')
@@ -426,6 +471,7 @@ export async function cancelAppointment(appointmentId) {
   }
   return { data };
 }
+
 const DAY_ABBR_COUNT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 function isAvailableToday(doc) {
