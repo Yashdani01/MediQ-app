@@ -207,8 +207,76 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
     recognition.maxAlternatives = 1;
     recognition.onstart = () => setIsListening(true);
     recognition.onresult = (event) => {
-      setSearchTerm(event.results[0][0].transcript);
-      setActiveSpecialty('');
+      let spokenText = event.results[0][0].transcript.toLowerCase();
+
+      if (
+        spokenText.includes('kan') || spokenText.includes('ear') || spokenText.includes('kane') || 
+        spokenText.includes('gala') || spokenText.includes('throat') || spokenText.includes('neck') || 
+        spokenText.includes('naak') || spokenText.includes('nose') || spokenText.includes('sardi') || 
+        spokenText.includes('cough') || spokenText.includes('cold') || spokenText.includes('khasi') || 
+        spokenText.includes('kaner betha') || spokenText.includes('kan dard') || spokenText.includes('gala batha')
+      ) {
+        setActiveSpecialty('ENT Specialist');
+        setSearchTerm('');
+      } 
+      else if (
+        spokenText.includes('daant') || spokenText.includes('dant') || spokenText.includes('tooth') || 
+        spokenText.includes('teeth') || spokenText.includes('gum') || spokenText.includes('mouri') || 
+        spokenText.includes('mouth') || spokenText.includes('toothache') || spokenText.includes('dather betha') || 
+        spokenText.includes('danther betha')
+      ) {
+        setActiveSpecialty('Dentist');
+        setSearchTerm('');
+      } 
+      else if (
+        spokenText.includes('skin') || spokenText.includes('rash') || spokenText.includes('itch') || 
+        spokenText.includes('chandi') || spokenText.includes('charmrog') || spokenText.includes('allergy') || 
+        spokenText.includes('pimple') || spokenText.includes('acne') || spokenText.includes('dad') || 
+        spokenText.includes('kachu') || spokenText.includes('chuler samasya')
+      ) {
+        setActiveSpecialty('Dermatologist');
+        setSearchTerm('');
+      } 
+      else if (
+        spokenText.includes('child') || spokenText.includes('baby') || spokenText.includes('kid') || 
+        spokenText.includes('baccha') || spokenText.includes('bacha') || spokenText.includes('sishu') || 
+        spokenText.includes('son') || spokenText.includes('daughter')
+      ) {
+        setActiveSpecialty('Pediatrician');
+        setSearchTerm('');
+      } 
+      else if (
+        spokenText.includes('bone') || spokenText.includes('joint') || spokenText.includes('knee') || 
+        spokenText.includes('back pain') || spokenText.includes('qamar') || spokenText.includes('haad') || 
+        spokenText.includes('haddi') || spokenText.includes('hath') || spokenText.includes('paa') || 
+        spokenText.includes('leg') || spokenText.includes('arm') || spokenText.includes('ghutor betha') || 
+        spokenText.includes('qamare betha')
+      ) {
+        setActiveSpecialty('Orthopedic');
+        setSearchTerm('');
+      } 
+      else if (
+        spokenText.includes('pregnancy') || spokenText.includes('periods') || spokenText.includes('mahila') || 
+        spokenText.includes('strirog') || spokenText.includes('women') || spokenText.includes('gyno') || 
+        spokenText.includes('pet e betha')
+      ) {
+        setActiveSpecialty('Gynecologist');
+        setSearchTerm('');
+      } 
+      else if (
+        spokenText.includes('fever') || spokenText.includes('bukhar') || spokenText.includes('jhor') || 
+        spokenText.includes('jwar') || spokenText.includes('headache') || spokenText.includes('matha betha') || 
+        spokenText.includes('weakness') || spokenText.includes('durbalta') || spokenText.includes('gas') || 
+        spokenText.includes('stomach') || spokenText.includes('pet kharab') || spokenText.includes('diarrhea')
+      ) {
+        setActiveSpecialty('General Physician');
+        setSearchTerm('');
+      } 
+      else {
+        setSearchTerm(spokenText);
+        setActiveSpecialty('');
+      }
+
       setIsListening(false);
     };
     recognition.onerror = () => setIsListening(false);
