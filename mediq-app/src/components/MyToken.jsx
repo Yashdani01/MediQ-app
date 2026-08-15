@@ -1,26 +1,32 @@
 import { useState, useEffect } from 'react';
-import { getMyCurrentBooking } from '../hospitalData';
+import { getMyCurrentBooking, cancelAppointment, getAppointmentStatus } from '../hospitalData';
 import './MyToken.css';
 
 const STATUS_STYLES = {
-  available: { label: 'Available', color: '#22c55e' },
+  available: { label: 'Available', color: '#10b981' },
   delayed: { label: 'Delayed', color: '#f59e0b' },
-  on_break: { label: 'On Break', color: '#6b7280' },
+  on_break: { label: 'On Break', color: '#94a3b8' },
   not_started: { label: 'Not Started', color: '#ef4444' },
-  on_leave: { label: 'On Leave / Holiday', color: '#dc2626' },
-  completed: { label: 'Done for Today', color: '#374151' },
+  on_leave: { label: 'On Leave / Holiday', color: '#ef4444' },
+  completed: { label: 'Done for Today', color: '#64748b' },
 };
 
 export default function MyToken({ user }) {
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [apptStatus, setApptStatus] = useState(null);
+  const [cancelling, setCancelling] = useState(false);
 
   const load = (silent) => {
     if (!user) { setLoading(false); return; }
     if (silent) setRefreshing(true);
-    getMyCurrentBooking(user.id).then((data) => {
+    getMyCurrentBooking(user.id).then(async (data) => {
       setBooking(data);
+      if (data) {
+        const statusData = await getAppointmentStatus(data.id);
+        setApptStatus(statusData);
+      }
       setLoading(false);
       setRefreshing(false);
     });
@@ -28,21 +34,38 @@ export default function MyToken({ user }) {
 
   useEffect(() => {
     load(false);
-    const interval = setInterval(() => load(true), 60000);
+    const interval = setInterval(() => load(true), 30000);
     return () => clearInterval(interval);
   }, [user]);
 
+  const handleCancel = async () => {
+    if (!booking) return;
+    if (!window.confirm('Are you sure you want to cancel this token?')) return;
+    setCancelling(true);
+    const { error } = await cancelAppointment(booking.id);
+    setCancelling(false);
+    if (!error) {
+      setBooking(null);
+    } else {
+      alert('Could not cancel appointment. Please try again.');
+    }
+  };
+
   if (loading) {
-    return <div className="token-page"><p style={{ textAlign: 'center', padding: 60, color: '#64748b' }}>Loading your token...</p></div>;
+    return (
+      <div style={{ minHeight: '100vh', background: '#0b0f0e', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        Loading Live Tracker...
+      </div>
+    );
   }
 
   if (!booking) {
     return (
-      <div className="token-page">
-        <div className="token-empty-state">
-          <div className="token-empty-icon">🎟️</div>
-          <h3 style={{ color: '#0f172a', margin: '0 0 6px' }}>No active token</h3>
-          <p style={{ margin: 0 }}>You haven't booked a queue token yet.</p>
+      <div style={{ minHeight: '100vh', background: '#0b0f0e', color: '#fff', padding: '40px 20px', textAlign: 'center', boxSizing: 'border-box' }}>
+        <div style={{ maxWidth: '420px', margin: '80px auto', background: '#131b18', border: '1px solid #1f2f29', borderRadius: '24px', padding: '32px' }}>
+          <div style={{ fontSize: '36px', marginBottom: '12px' }}>🎟️</div>
+          <h3 style={{ margin: '0 0 6px', color: '#fff', fontSize: '18px' }}>No Active Token</h3>
+          <p style={{ margin: 0, color: '#94a3b8', fontSize: '13.5px' }}>You do not have any active queue tokens right now.</p>
         </div>
       </div>
     );
@@ -50,122 +73,110 @@ export default function MyToken({ user }) {
 
   const currentServing = Math.max(booking.queue_number - booking.patientsAhead - 1, 0);
   const estWaitMinutes = booking.patientsAhead * (booking.doctor?.avg_minutes_per_patient || 10);
-  const progressPercent = booking.patientsAhead === 0
-    ? 100
-    : Math.min(95, Math.max(5, ((booking.queue_number - currentServing - booking.patientsAhead) / (booking.queue_number - currentServing || 1)) * 100));
-
-  const doctorInitial = booking.doctor?.name?.replace('Dr. ', '').charAt(0) || 'D';
   const statusInfo = STATUS_STYLES[booking.doctor?.status] || STATUS_STYLES.available;
-  const isNext = booking.patientsAhead === 0;
 
-  const mapsUrl = booking.hospital?.location
-    ? (booking.hospital.location.startsWith('http')
-        ? booking.hospital.location
-        : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${booking.hospital.name}, ${booking.hospital.location}`)}`)
-    : null;
+  // Timeline check milestones
+  const isCheckedIn = apptStatus?.checked_in_at || booking.status === 'checked_in' || booking.status === 'serving';
+  const isTurn = booking.status === 'serving';
 
   return (
-    <div className="token-page">
-      <div className="token-topbar">
-        <div className="token-topbar-inner">
-          <div>
-            <p className="token-hospital-name">{booking.hospital?.name}</p>
-            <h2 style={{ margin: '2px 0 0', fontSize: '18px', color: '#fff' }}>Live Queue Command Center</h2>
-          </div>
-          <span className="token-live-badge">
-            <span className="token-live-dot" />
-            {refreshing ? 'Refreshing...' : 'Live'}
-          </span>
-        </div>
+    <div style={{ minHeight: '100vh', background: '#0b0f0e', color: '#fff', paddingBottom: '100px', fontFamily: 'Inter, sans-serif' }}>
+      {/* Top Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 20px 10px', maxWidth: '480px', margin: '0 auto' }}>
+        <h2 style={{ fontSize: '16px', fontWeight: 600, color: '#fff', margin: 0 }}>Live Queue Tracker</h2>
+        <button 
+          onClick={() => load(true)} 
+          style={{ background: '#131b18', border: '1px solid #1f2f29', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981', cursor: 'pointer' }}
+          title="Refresh Queue"
+        >
+          🔄
+        </button>
       </div>
 
-      <div className="token-content">
-        <div className="token-activity-banner" style={{ borderLeftColor: statusInfo.color }}>
-          <span className="token-activity-dot" style={{ background: statusInfo.color }} />
-          <span>
-            Dr. {booking.doctor?.name?.replace('Dr. ', '')} is currently <strong style={{ color: statusInfo.color }}>{statusInfo.label}</strong>
-            {booking.doctor?.status === 'delayed' && booking.doctor?.delay_minutes ? ` (~${booking.doctor.delay_minutes}m)` : ''}
-          </span>
-        </div>
+      <div style={{ maxWidth: '480px', margin: '0 auto', padding: '0 16px', boxSizing: 'border-box' }}>
+        
+        {/* Main Tracker Ring Card */}
+        <div style={{ background: '#131b18', border: '1px solid #1f2f29', borderRadius: '24px', padding: '24px', textAlign: 'center', marginBottom: '16px', position: 'relative', overflow: 'hidden' }}>
+          
+          {/* Circular Token Display */}
+          <div style={{ width: '150px', height: '150px', borderRadius: '50%', border: '4px solid #10b981', margin: '0 auto 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 25px rgba(16, 185, 129, 0.15)' }}>
+            <span style={{ fontSize: '11px', fontWeight: 700, color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Current Token</span>
+            <span style={{ fontSize: '42px', fontWeight: 800, color: '#fff', lineHeight: '1.1' }}>#{currentServing > 0 ? currentServing : booking.queue_number}</span>
+            <span style={{ fontSize: '10px', color: '#94a3b8', marginTop: '2px' }}>Active Now</span>
+          </div>
 
-        <div className="token-circle-wrap">
-          <div className="token-circle" style={{
-            background: `conic-gradient(#0d9488 ${progressPercent}%, #e2e8f0 ${progressPercent}%)`,
-          }}>
-            <div className="token-circle-inner">
-              <span className="token-circle-label">Your Token Number</span>
-              <span className="token-circle-number">{booking.queue_number}</span>
-              <span className="token-circle-sub">
-                {isNext ? "You're next!" : 'You are in queue'}
-              </span>
+          <h3 style={{ margin: '0 0 2px', fontSize: '16px', fontWeight: 700, color: '#fff' }}>{booking.doctor?.name}</h3>
+          <p style={{ margin: 0, fontSize: '12.5px', color: '#94a3b8' }}>{booking.hospital?.name}</p>
+
+          {/* Stats Bar Inside Card */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '20px', background: '#0b0f0e', padding: '12px', borderRadius: '14px', border: '1px solid #1f2f29' }}>
+            <div>
+              <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '2px' }}>Ahead of You</div>
+              <div style={{ fontSize: '15px', fontWeight: 700, color: '#10b981' }}>{booking.patientsAhead} Patients</div>
+            </div>
+            <div style={{ borderLeft: '1px solid #1f2f29' }}>
+              <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '2px' }}>Est. Wait Time</div>
+              <div style={{ fontSize: '15px', fontWeight: 700, color: '#fff' }}>{estWaitMinutes} mins</div>
             </div>
           </div>
         </div>
 
-        <div className="token-stats-grid">
-          <div className="token-stat-card">
-            <div className="token-stat-label">Currently Serving</div>
-            <div className="token-stat-value">{currentServing}</div>
-          </div>
-          <div className="token-stat-card">
-            <div className="token-stat-label">Patients Before You</div>
-            <div className="token-stat-value">{booking.patientsAhead}</div>
-          </div>
-          <div className="token-stat-card">
-            <div className="token-stat-label">Estimated Wait</div>
-            <div className="token-stat-value">{estWaitMinutes} min</div>
-          </div>
-          <div className="token-stat-card">
-            <div className="token-stat-label">Queue Status</div>
-            <div className="token-stat-value" style={{ fontSize: 15, color: '#0d9488' }}>Moving</div>
+        {/* Queue Timeline Section */}
+        <div style={{ background: '#131b18', border: '1px solid #1f2f29', borderRadius: '24px', padding: '20px', marginBottom: '16px' }}>
+          <h4 style={{ margin: '0 0 16px', fontSize: '14px', fontWeight: 600, color: '#fff' }}>Queue Timeline</h4>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'relative' }}>
+            
+            {/* Step 1: Booked */}
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#10b981', color: '#0b0f0e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, flexShrink: 0 }}>✓</div>
+              <div>
+                <p style={{ margin: '0 0 2px', fontSize: '13.5px', fontWeight: 600, color: '#fff' }}>Booked</p>
+                <p style={{ margin: 0, fontSize: '11.5px', color: '#94a3b8' }}>Successfully registered in queue at token #{booking.queue_number}</p>
+              </div>
+            </div>
+
+            {/* Step 2: Checked In */}
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: isCheckedIn ? '#10b981' : '#1f2f29', color: isCheckedIn ? '#0b0f0e' : '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, flexShrink: 0 }}>{isCheckedIn ? '✓' : '•'}</div>
+              <div>
+                <p style={{ margin: '0 0 2px', fontSize: '13.5px', fontWeight: 600, color: isCheckedIn ? '#fff' : '#94a3b8' }}>Checked In</p>
+                <p style={{ margin: 0, fontSize: '11.5px', color: '#94a3b8' }}>Clinic verified your presence in queue</p>
+              </div>
+            </div>
+
+            {/* Step 3: Your Turn */}
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: isTurn ? '#10b981' : '#1f2f29', color: isTurn ? '#0b0f0e' : '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, flexShrink: 0 }}>{isTurn ? '✓' : '○'}</div>
+              <div>
+                <p style={{ margin: '0 0 2px', fontSize: '13.5px', fontWeight: 600, color: isTurn ? '#fff' : '#94a3b8' }}>Your Turn</p>
+                <p style={{ margin: 0, fontSize: '11.5px', color: '#94a3b8' }}>Enter doctor's chamber for consultation</p>
+              </div>
+            </div>
+
           </div>
         </div>
 
-        <div className="token-progress-card">
-          <div className="token-progress-labels">
-            <div>Current Token<br /><strong>{currentServing}</strong></div>
-            <div style={{ textAlign: 'right' }}>Your Token<br /><strong>{booking.queue_number}</strong></div>
-          </div>
-          <div className="token-progress-track">
-            <div className="token-progress-fill" style={{ width: `${progressPercent}%` }} />
-            <div className="token-progress-dot" style={{ left: `${progressPercent}%` }} />
-          </div>
-        </div>
+        {/* Cancel Ticket Button */}
+        <button
+          onClick={handleCancel}
+          disabled={cancelling}
+          style={{
+            width: '100%',
+            padding: '14px',
+            background: 'rgba(239, 68, 68, 0.1)',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            borderRadius: '14px',
+            color: '#ef4444',
+            fontWeight: 600,
+            fontSize: '13.5px',
+            cursor: 'pointer',
+            textAlign: 'center'
+          }}
+        >
+          {cancelling ? 'Cancelling...' : 'Cancel Ticket'}
+        </button>
 
-        <div className="token-doctor-card">
-          <div className="token-doctor-avatar">{doctorInitial}</div>
-          <div style={{ flex: 1 }}>
-            <p className="token-doctor-name">{booking.doctor?.name}</p>
-            <p className="token-doctor-specialty">{booking.doctor?.specialty}</p>
-          </div>
-          {mapsUrl && (
-            <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="token-directions-btn">
-              📍 Directions
-            </a>
-          )}
-        </div>
-
-        {/* Quick Action Strip */}
-        <div style={{ display: 'flex', gap: '10px', marginTop: '4px', marginBottom: '30px' }}>
-          <button 
-            onClick={() => alert(`Contact phone for clinic: ${booking.contact_phone || 'Available at clinic reception'}`)}
-            style={{
-              flex: 1, padding: '12px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px',
-              fontWeight: 600, fontSize: '13px', color: '#0f172a', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
-            }}
-          >
-            📞 Clinic Info
-          </button>
-          <button 
-            onClick={() => window.location.reload()}
-            style={{
-              flex: 1, padding: '12px', background: '#0d9488', border: 'none', borderRadius: '12px',
-              fontWeight: 600, fontSize: '13px', color: '#fff', cursor: 'pointer', boxShadow: '0 4px 12px rgba(13, 148, 136, 0.2)'
-            }}
-          >
-            🔄 Refresh Status
-          </button>
-        </div>
       </div>
     </div>
   );
