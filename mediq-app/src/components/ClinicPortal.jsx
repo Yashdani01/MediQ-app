@@ -8,6 +8,15 @@ import {
 import { supabase } from '../supabaseClient';
 import './Login.css';
 
+const STATUS_OPTIONS = [
+  { value: 'available', label: 'Available', color: 'rgba(16,185,129,0.1)', border: 'rgba(16,185,129,0.2)', textColor: '#10b981' },
+  { value: 'delayed', label: 'Delayed', color: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.25)', textColor: '#f59e0b' },
+  { value: 'on_break', label: 'On Break', color: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.2)', textColor: '#94a3b8' },
+  { value: 'not_started', label: 'Not Started', color: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.2)', textColor: '#ef4444' },
+  { value: 'on_leave', label: 'On Leave / Holiday', color: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.25)', textColor: '#ef4444' },
+  { value: 'completed', label: 'Done for Today', color: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.2)', textColor: '#94a3b8' },
+];
+
 const SPECIALTIES = [
   'General Physician', 'Gynecologist', 'Orthopedic', 'ENT Specialist', 'Dermatologist',
   'Pediatrician', 'Cardiologist', 'Dentist', 'Ophthalmologist', 'Psychiatrist',
@@ -16,6 +25,14 @@ const SPECIALTIES = [
 ];
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+function formatTime(t) {
+  if (!t) return '';
+  const [h, m] = t.split(':').map(Number);
+  const period = h >= 12 ? 'PM' : 'AM';
+  const hour12 = h % 12 === 0 ? 12 : h % 12;
+  return `${hour12}:${String(m).padStart(2, '0')} ${period}`;
+}
 
 const cardStyle = { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 24, padding: 16, boxShadow: '0 8px 24px 0 rgba(0,0,0,0.25)' };
 const panelInputStyle = { width: '100%', padding: '10px 12px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 14, boxSizing: 'border-box', outline: 'none' };
@@ -200,7 +217,7 @@ export default function ClinicPortal() {
     const activeDays = Object.keys(daySchedules).filter(d => daySchedules[d].active);
 
     try {
-      const res = await addDoctor(
+      await addDoctor(
         unlockedPin,
         newName.trim(),
         newSpecialties.join(', '),
@@ -352,7 +369,7 @@ export default function ClinicPortal() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
         <div>
           <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: '#10b981', textTransform: 'uppercase', letterSpacing: 0.5 }}>Clinic Portal</p>
-          <h1 style={{ fontSize: 18, fontWeight: 800, color: '#fff', margin: '4px 0 2px' }}>{clinicName}</h1>
+          <h1 style={{ fontSize: 18, fontWeight: 800, color: '#fff', margin: '4px 0 2px' }}>{clinicName} - Portal</h1>
           <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>{todayDateStr}</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -438,13 +455,14 @@ export default function ClinicPortal() {
         </div>
       )}
 
-      <h3 style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 14 }}>Doctor Roster & Queue Control</h3>
+      <h3 style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 14 }}>Doctor Roster & Advanced Management</h3>
 
       {/* Doctor Roster */}
       {doctors.map((doc) => {
         const isEditing = editingId === doc.id;
         const docWaitingCount = bookingsByDoctor[doc.id]?.filter(b => b.status === 'waiting').length || 0;
         const specs = doc.specialties || [doc.specialty || 'General Physician'];
+        const scheduleObj = doc.custom_schedule || {};
 
         return (
           <div key={doc.id} style={{ ...cardStyle, marginBottom: 18 }}>
@@ -478,7 +496,7 @@ export default function ClinicPortal() {
                 ))}
 
                 <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                  <button onClick={() => handleSaveEdit(doc.id)} style={{ ...pillPrimaryBtn, flex: 1, padding: 10 }}>Save</button>
+                  <button onClick={() => handleSaveEdit(doc.id)} style={{ ...pillPrimaryBtn, flex: 1, padding: 10 }}>Save Changes</button>
                   <button onClick={() => setEditingId(null)} style={{ ...pillGhostBtn, flex: 1, padding: 10 }}>Cancel</button>
                 </div>
               </div>
@@ -492,9 +510,25 @@ export default function ClinicPortal() {
                     <div>
                       <h4 style={{ fontSize: 15, fontWeight: 800, margin: 0, color: '#fff' }}>{doc.name}</h4>
                       <p style={{ fontSize: 12, color: '#10b981', margin: '2px 0 0 0', fontWeight: 700 }}>{doc.degrees || 'MBBS, General Practitioner'}</p>
-                      <p style={{ fontSize: 11, color: '#94a3b8', margin: '2px 0 0 0' }}>{specs.join(', ')}</p>
+                      <p style={{ fontSize: 11, color: '#94a3b8', margin: '2px 0 0 0' }}>Specialties: {specs.join(', ')}</p>
                       <p style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, margin: '3px 0 0' }}>⭐ PTR Trust Score: {doc.ptr_score || '99.0'}%</p>
                     </div>
+                  </div>
+                </div>
+
+                {/* Day-wise Timings Display */}
+                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 10, marginBottom: 14 }}>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', margin: '0 0 6px 0', textTransform: 'uppercase' }}>🕒 Schedule & Timings</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {DAYS.map(day => {
+                      const daySlot = scheduleObj[day];
+                      if (!daySlot || !daySlot.active) return null;
+                      return (
+                        <span key={day} style={{ fontSize: 11, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#10b981', padding: '3px 8px', borderRadius: 8, fontWeight: 600 }}>
+                          {day}: {formatTime(daySlot.start)} – {formatTime(daySlot.end)}
+                        </span>
+                      );
+                    })}
                   </div>
                 </div>
 
