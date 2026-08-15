@@ -318,7 +318,11 @@ export default function ClinicPortal() {
     setUpdatingPatient(appointmentId);
     const { error } = await markAppointmentSeen(unlockedPin, appointmentId);
     setUpdatingPatient(null);
-    if (error) { setError('Could not update patient status.'); return; }
+    if (error) { 
+      console.error("Mark seen error:", error);
+      setError('Could not update patient status.'); 
+      return; 
+    }
     await refreshBookings(doctorId);
     loadDoctors(unlockedPin);
   };
