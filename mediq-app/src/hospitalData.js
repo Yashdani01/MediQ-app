@@ -179,7 +179,7 @@ export async function getBookingHistory(patientUserId) {
   return enriched;
 }
 
-// Search doctors by name/specialty or smart symptom mapping across all hospitals in a city
+// Enhanced search with multi-lingual symptom & keyword intelligence (English, Hindi, Bengali)
 export async function searchDoctors(city, searchTerm) {
   let hospitalQuery = supabase.from('hospitals').select('id, name, location, city');
   if (city) {
@@ -194,14 +194,28 @@ export async function searchDoctors(city, searchTerm) {
   let refinedTerm = searchTerm.trim();
   const lowerTerm = refinedTerm.toLowerCase();
 
-  // Smart keyword mapping for conversational queries & symptoms
-  if (lowerTerm.includes('dant') || lowerTerm.includes('teeth') || lowerTerm.includes('tooth') || lowerTerm.includes('dental')) {
+  // Comprehensive Multi-Lingual Symptom & Keyword Dictionary
+  if (
+    lowerTerm.includes('dant') || lowerTerm.includes('teeth') || lowerTerm.includes('tooth') || 
+    lowerTerm.includes('dental') || lowerTerm.includes('danto') || lowerTerm.includes('daant')
+  ) {
     refinedTerm = 'Dentist';
-  } else if (lowerTerm.includes('heart') || lowerTerm.includes('chest') || lowerTerm.includes('seene')) {
+  } else if (
+    lowerTerm.includes('heart') || lowerTerm.includes('chest') || lowerTerm.includes('seene') || 
+    lowerTerm.includes('cardiologist') || lowerTerm.includes('bp') || lowerTerm.includes('blood pressure')
+  ) {
     refinedTerm = 'Cardiologist';
-  } else if (lowerTerm.includes('sugar') || lowerTerm.includes('diabetes')) {
+  } else if (
+    lowerTerm.includes('sugar') || lowerTerm.includes('diabetes') || lowerTerm.includes('diabetic') || 
+    lowerTerm.includes('madhumeh')
+  ) {
     refinedTerm = 'Diabetologist';
-  } else if (lowerTerm.includes('fever') || lowerTerm.includes('cold') || lowerTerm.includes('cough')) {
+  } else if (
+    lowerTerm.includes('fever') || lowerTerm.includes('cold') || lowerTerm.includes('cough') || 
+    lowerTerm.includes('bukhar') || lowerTerm.includes('jhor') || lowerTerm.includes('thanda') || 
+    lowerTerm.includes('sardi') || lowerTerm.includes('headache') || lowerTerm.includes('matha') || 
+    lowerTerm.includes('general') || lowerTerm.includes('physician')
+  ) {
     refinedTerm = 'General Physician';
   }
 
