@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import BookingTicket from './BookingTicket';
 import Profile from './Profile';
-import SymptomTriage from './SymptomTriage';
 import {
   getHospitals, getAllCities, getDoctorsForHospital, getWaitingCount,
   bookAppointment, searchDoctors, getAllSpecialties, getHospitalPaymentInfo, uploadPaymentScreenshot,
@@ -100,7 +99,6 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
   const [allCities, setAllCities] = useState([]);
   const [showCityPicker, setShowCityPicker] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const [showTriage, setShowTriage] = useState(false); // Smart Triage Modal State
   const [hospitals, setHospitals] = useState([]);
   const [availableCounts, setAvailableCounts] = useState({});
   const [selectedHospital, setSelectedHospital] = useState(null);
@@ -537,34 +535,6 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                 )}
               </>
             )}
-
-            {/* Smart Triage Trigger Banner placed right above the bottom tabbar area */}
-            <div style={{ marginTop: '24px' }}>
-              <button
-                onClick={() => setShowTriage(true)}
-                style={{
-                  width: '100%',
-                  background: 'linear-gradient(135deg, #0b332c 0%, #134e4a 100%)',
-                  color: '#fff',
-                  border: 'none',
-                  padding: '14px 16px',
-                  borderRadius: '16px',
-                  fontWeight: '600',
-                  fontSize: '13.5px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  cursor: 'pointer',
-                  boxShadow: '0 8px 20px rgba(11, 51, 44, 0.15)'
-                }}
-              >
-                <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span style={{ fontSize: '18px' }}>🩺</span>
-                  <span>Unsure which doctor to visit? <strong>Check Symptoms</strong></span>
-                </span>
-                <span style={{ fontSize: '16px' }}>→</span>
-              </button>
-            </div>
           </div>
         )}
 
@@ -628,17 +598,6 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
           </div>
         )}
       </div>
-
-      {/* Smart Triage Modal Popup */}
-      {showTriage && (
-        <SymptomTriage
-          onClose={() => setShowTriage(false)}
-          onSelectSpecialty={(specialty) => {
-            setActiveSpecialty(specialty);
-            setSearchTerm('');
-          }}
-        />
-      )}
 
       {ticketData && (
         <BookingTicket
