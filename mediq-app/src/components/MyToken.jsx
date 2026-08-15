@@ -5,7 +5,7 @@ import './MyToken.css';
 const STATUS_STYLES = {
   available: { label: 'Available', color: '#10b981' },
   delayed: { label: 'Delayed', color: '#f59e0b' },
-  on_break: { label: 'On Break', color: '#94a3b8' },
+  on_break: { label: 'On Break', color: '#64748b' },
   not_started: { label: 'Not Started', color: '#ef4444' },
   on_leave: { label: 'On Leave / Holiday', color: '#ef4444' },
   completed: { label: 'Done for Today', color: '#64748b' },
@@ -55,7 +55,7 @@ export default function MyToken({ user }) {
 
   if (loading) {
     return (
-      <div style={{ position: 'fixed', inset: 0, background: '#0b0f0e', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, sans-serif', zIndex: 100 }}>
+      <div style={{ padding: '60px', textAlign: 'center', color: '#0b332c', fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
         Loading Live Tracker...
       </div>
     );
@@ -63,11 +63,26 @@ export default function MyToken({ user }) {
 
   if (!booking) {
     return (
-      <div style={{ position: 'fixed', inset: 0, background: '#0b0f0e', color: '#fff', padding: '40px 20px', textAlign: 'center', boxSizing: 'border-box', fontFamily: 'Inter, sans-serif', zIndex: 10, overflowY: 'auto' }}>
-        <div style={{ maxWidth: '420px', margin: '100px auto', background: '#131b18', border: '1px solid #1f2f29', borderRadius: '24px', padding: '32px' }}>
-          <div style={{ fontSize: '36px', marginBottom: '12px' }}>🎟️</div>
-          <h3 style={{ margin: '0 0 6px', color: '#fff', fontSize: '18px' }}>No Active Token</h3>
-          <p style={{ margin: 0, color: '#94a3b8', fontSize: '13.5px' }}>You do not have any active queue tokens for today.</p>
+      <div style={{ maxWidth: '640px', margin: '40px auto 100px', padding: '0 20px', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' }}>
+        {/* Top Header Card Matching Reports & Home */}
+        <div style={{ background: '#0b332c', borderRadius: '20px', padding: '24px', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', boxShadow: '0 10px 25px rgba(11, 51, 44, 0.15)' }}>
+          <div>
+            <h2 style={{ margin: '0 0 4px', fontSize: '20px', fontFamily: 'Fraunces, serif' }}>Live Queue Tracker</h2>
+            <p style={{ margin: 0, fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>Active appointment and queue status</p>
+          </div>
+          <button 
+            onClick={() => load(true)} 
+            style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '12px', padding: '8px 12px', color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
+          >
+            🔄 Refresh
+          </button>
+        </div>
+
+        {/* Empty State Card */}
+        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '24px', padding: '48px 24px', textAlign: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
+          <div style={{ fontSize: '42px', marginBottom: '12px' }}>🎟️</div>
+          <h3 style={{ margin: '0 0 6px', color: '#0b332c', fontSize: '18px', fontFamily: 'Fraunces, serif' }}>No Active Token</h3>
+          <p style={{ margin: 0, color: '#64748b', fontSize: '13.5px' }}>You do not have any active queue tokens for today.</p>
         </div>
       </div>
     );
@@ -81,91 +96,99 @@ export default function MyToken({ user }) {
   const isTurn = booking.status === 'serving';
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: '#0b0f0e', color: '#fff', overflowY: 'auto', paddingBottom: '100px', fontFamily: 'Inter, sans-serif', zIndex: 10 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 20px 10px', maxWidth: '480px', margin: '0 auto' }}>
-        <h2 style={{ fontSize: '16px', fontWeight: 600, color: '#fff', margin: 0 }}>Live Queue Tracker</h2>
-        <button 
-          onClick={() => load(true)} 
-          style={{ background: '#131b18', border: '1px solid #1f2f29', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981', cursor: 'pointer' }}
-          title="Refresh Queue"
-        >
-          🔄
-        </button>
+    <div style={{ maxWidth: '640px', margin: '40px auto 100px', padding: '0 20px', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' }}>
+      
+      {/* Top Header Card */}
+      <div style={{ background: '#0b332c', borderRadius: '20px', padding: '24px', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', boxShadow: '0 10px 25px rgba(11, 51, 44, 0.15)' }}>
+        <div>
+          <h2 style={{ margin: '0 0 4px', fontSize: '20px', fontFamily: 'Fraunces, serif' }}>Live Queue Tracker</h2>
+          <p style={{ margin: 0, fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>{booking.hospital?.name}</p>
+        </div>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700, background: 'rgba(16, 185, 129, 0.2)', color: '#34d399', padding: '6px 12px', borderRadius: '20px' }}>
+          ● {refreshing ? 'Refreshing...' : 'Live'}
+        </span>
       </div>
 
-      <div style={{ maxWidth: '480px', margin: '0 auto', padding: '0 16px', boxSizing: 'border-box' }}>
-        <div style={{ background: '#131b18', border: '1px solid #1f2f29', borderRadius: '24px', padding: '24px', textAlign: 'center', marginBottom: '16px', position: 'relative', overflow: 'hidden' }}>
+      {/* Main Tracker Card */}
+      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '24px', padding: '24px', textAlign: 'center', marginBottom: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
+        
+        {/* Token Circular Badge */}
+        <div style={{ width: '140px', height: '140px', borderRadius: '50%', border: '4px solid #0b332c', margin: '0 auto 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
+          <span style={{ fontSize: '10px', fontWeight: 700, color: '#0b332c', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Current Token</span>
+          <span style={{ fontSize: '38px', fontWeight: 800, color: '#0b332c', lineHeight: '1.1' }}>#{currentServing > 0 ? currentServing : booking.queue_number}</span>
+          <span style={{ fontSize: '10px', color: '#64748b', marginTop: '2px' }}>Active Now</span>
+        </div>
+
+        <h3 style={{ margin: '0 0 2px', fontSize: '18px', fontWeight: 700, color: '#0b332c', fontFamily: 'Fraunces, serif' }}>{booking.doctor?.name}</h3>
+        <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>{booking.doctor?.specialty}</p>
+
+        {/* Stats Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '20px', background: '#f8fafc', padding: '14px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+          <div>
+            <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '2px', fontWeight: 600 }}>Ahead of You</div>
+            <div style={{ fontSize: '16px', fontWeight: 700, color: '#0b332c' }}>{booking.patientsAhead} Patients</div>
+          </div>
+          <div style={{ borderLeft: '1px solid #e2e8f0' }}>
+            <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '2px', fontWeight: 600 }}>Est. Wait Time</div>
+            <div style={{ fontSize: '16px', fontWeight: 700, color: '#0b332c' }}>{estWaitMinutes} mins</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Queue Timeline Card */}
+      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '24px', padding: '24px', marginBottom: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
+        <h4 style={{ margin: '0 0 16px', fontSize: '15px', fontWeight: 700, color: '#0b332c', fontFamily: 'Fraunces, serif' }}>Queue Timeline</h4>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           
-          <div style={{ width: '150px', height: '150px', borderRadius: '50%', border: '4px solid #10b981', margin: '0 auto 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 25px rgba(16, 185, 129, 0.15)' }}>
-            <span style={{ fontSize: '11px', fontWeight: 700, color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Current Token</span>
-            <span style={{ fontSize: '42px', fontWeight: 800, color: '#fff', lineHeight: '1.1' }}>#{currentServing > 0 ? currentServing : booking.queue_number}</span>
-            <span style={{ fontSize: '10px', color: '#94a3b8', marginTop: '2px' }}>Active Now</span>
-          </div>
-
-          <h3 style={{ margin: '0 0 2px', fontSize: '16px', fontWeight: 700, color: '#fff' }}>{booking.doctor?.name}</h3>
-          <p style={{ margin: 0, fontSize: '12.5px', color: '#94a3b8' }}>{booking.hospital?.name}</p>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '20px', background: '#0b0f0e', padding: '12px', borderRadius: '14px', border: '1px solid #1f2f29' }}>
+          <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+            <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: '#0b332c', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, flexShrink: 0 }}>✓</div>
             <div>
-              <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '2px' }}>Ahead of You</div>
-              <div style={{ fontSize: '15px', fontWeight: 700, color: '#10b981' }}>{booking.patientsAhead} Patients</div>
-            </div>
-            <div style={{ borderLeft: '1px solid #1f2f29' }}>
-              <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '2px' }}>Est. Wait Time</div>
-              <div style={{ fontSize: '15px', fontWeight: 700, color: '#fff' }}>{estWaitMinutes} mins</div>
+              <p style={{ margin: '0 0 2px', fontSize: '13.5px', fontWeight: 600, color: '#0b332c' }}>Booked</p>
+              <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>Successfully registered in queue at token #{booking.queue_number}</p>
             </div>
           </div>
-        </div>
 
-        <div style={{ background: '#131b18', border: '1px solid #1f2f29', borderRadius: '24px', padding: '20px', marginBottom: '16px' }}>
-          <h4 style={{ margin: '0 0 16px', fontSize: '14px', fontWeight: 600, color: '#fff' }}>Queue Timeline</h4>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'relative' }}>
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#10b981', color: '#0b0f0e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, flexShrink: 0 }}>✓</div>
-              <div>
-                <p style={{ margin: '0 0 2px', fontSize: '13.5px', fontWeight: 600, color: '#fff' }}>Booked</p>
-                <p style={{ margin: 0, fontSize: '11.5px', color: '#94a3b8' }}>Successfully registered in queue at token #{booking.queue_number}</p>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: isCheckedIn ? '#10b981' : '#1f2f29', color: isCheckedIn ? '#0b0f0e' : '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, flexShrink: 0 }}>{isCheckedIn ? '✓' : '•'}</div>
-              <div>
-                <p style={{ margin: '0 0 2px', fontSize: '13.5px', fontWeight: 600, color: isCheckedIn ? '#fff' : '#94a3b8' }}>Checked In</p>
-                <p style={{ margin: 0, fontSize: '11.5px', color: '#94a3b8' }}>Clinic verified your presence in queue</p>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: isTurn ? '#10b981' : '#1f2f29', color: isTurn ? '#0b0f0e' : '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, flexShrink: 0 }}>{isTurn ? '✓' : '○'}</div>
-              <div>
-                <p style={{ margin: '0 0 2px', fontSize: '13.5px', fontWeight: 600, color: isTurn ? '#fff' : '#94a3b8' }}>Your Turn</p>
-                <p style={{ margin: 0, fontSize: '11.5px', color: '#94a3b8' }}>Enter doctor's chamber for consultation</p>
-              </div>
+          <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+            <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: isCheckedIn ? '#0b332c' : '#e2e8f0', color: isCheckedIn ? '#fff' : '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, flexShrink: 0 }}>{isCheckedIn ? '✓' : '•'}</div>
+            <div>
+              <p style={{ margin: '0 0 2px', fontSize: '13.5px', fontWeight: 600, color: isCheckedIn ? '#0b332c' : '#94a3b8' }}>Checked In</p>
+              <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>Clinic verified your presence in queue</p>
             </div>
           </div>
-        </div>
 
-        <button
-          onClick={handleCancel}
-          disabled={cancelling}
-          style={{
-            width: '100%',
-            padding: '14px',
-            background: 'rgba(239, 68, 68, 0.1)',
-            border: '1px solid rgba(239, 68, 68, 0.3)',
-            borderRadius: '14px',
-            color: '#ef4444',
-            fontWeight: 600,
-            fontSize: '13.5px',
-            cursor: 'pointer',
-            textAlign: 'center'
-          }}
-        >
-          {cancelling ? 'Cancelling...' : 'Cancel Ticket'}
-        </button>
+          <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+            <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: isTurn ? '#0b332c' : '#e2e8f0', color: isTurn ? '#fff' : '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, flexShrink: 0 }}>{isTurn ? '✓' : '○'}</div>
+            <div>
+              <p style={{ margin: '0 0 2px', fontSize: '13.5px', fontWeight: 600, color: isTurn ? '#0b332c' : '#94a3b8' }}>Your Turn</p>
+              <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>Enter doctor's chamber for consultation</p>
+            </div>
+          </div>
+
+        </div>
       </div>
+
+      {/* Cancel Ticket Button */}
+      <button
+        onClick={handleCancel}
+        disabled={cancelling}
+        style={{
+          width: '100%',
+          padding: '14px',
+          background: '#fef2f2',
+          border: '1px solid #fca5a5',
+          borderRadius: '16px',
+          color: '#dc2626',
+          fontWeight: 600,
+          fontSize: '14px',
+          cursor: 'pointer',
+          textAlign: 'center',
+          boxShadow: '0 2px 8px rgba(220, 38, 38, 0.05)'
+        }}
+      >
+        {cancelling ? 'Cancelling...' : 'Cancel Ticket'}
+      </button>
+
     </div>
   );
 }
