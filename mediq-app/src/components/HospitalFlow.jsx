@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import BookingTicket from './BookingTicket';
 import Profile from './Profile';
+import SymptomTriage from './SymptomTriage';
 import {
   getHospitals, getAllCities, getDoctorsForHospital, getWaitingCount,
   bookAppointment, searchDoctors, getAllSpecialties, getHospitalPaymentInfo, uploadPaymentScreenshot,
@@ -94,11 +95,12 @@ function DoctorAvatar({ bookable }) {
   );
 }
 
-export default function HospitalFlow({ user, isGuest, onLogout, displayName, initialCity }) {
+export default function HospitalFlow({ user, isGuest, onLogout, displayName, initialCity, lang, t }) {
   const [currentCity, setCurrentCity] = useState(initialCity || '');
   const [allCities, setAllCities] = useState([]);
   const [showCityPicker, setShowCityPicker] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showTriage, setShowTriage] = useState(false); // Smart Triage Modal State
   const [hospitals, setHospitals] = useState([]);
   const [availableCounts, setAvailableCounts] = useState({});
   const [selectedHospital, setSelectedHospital] = useState(null);
@@ -124,9 +126,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
 
-  // Voice Search States
   const [isListening, setIsListening] = useState(false);
-
   const isSearchActive = searchTerm.trim() !== '' || activeSpecialty !== '';
 
   useEffect(() => {
@@ -138,13 +138,13 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
     setTimeLeft(90);
     setPaymentExpired(false);
     const interval = setInterval(() => {
-      setTimeLeft((t) => {
-        if (t <= 1) {
+      setTimeLeft((tVal) => {
+        if (tVal <= 1) {
           clearInterval(interval);
           setPaymentExpired(true);
           return 0;
         }
-        return t - 1;
+        return tVal - 1;
       });
     }, 1000);
     return () => clearInterval(interval);
@@ -197,38 +197,24 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
     return () => clearTimeout(delay);
   }, [searchTerm, activeSpecialty, currentCity]);
 
-  // Handle Voice Search Recognition (Supports multi-language IN locale)
   const startVoiceSearch = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert('Voice search is not supported on this browser. Try Chrome or Safari.');
+      alert('Voice search is not supported on this browser.');
       return;
     }
-
     const recognition = new SpeechRecognition();
-    recognition.lang = 'en-IN'; // Adapts seamlessly to Indian English, Hindi, and Bengali voice inputs
+    recognition.lang = 'en-IN';
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
-
-    recognition.onstart = () => {
-      setIsListening(true);
-    };
-
+    recognition.onstart = () => setIsListening(true);
     recognition.onresult = (event) => {
-      const spokenText = event.results[0][0].transcript;
-      setSearchTerm(spokenText);
+      setSearchTerm(event.results[0][0].transcript);
       setActiveSpecialty('');
       setIsListening(false);
     };
-
-    recognition.onerror = () => {
-      setIsListening(false);
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-    };
-
+    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => setIsListening(false);
     recognition.start();
   };
 
@@ -325,7 +311,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
     setActiveSpecialty('');
   };
 
-  const nameForAvatar = isGuest ? 'Guest' : (displayName || 'Patient');
+  const nameForAvatar = isGuest ? t?.guest || 'Guest' : (displayName || 'Patient');
   const avatarInitial = nameForAvatar.charAt(0).toUpperCase();
 
   return (
@@ -340,17 +326,17 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
             <div className="flow-avatar">{avatarInitial}</div>
             <div style={{ textAlign: 'left' }}>
               <p className="flow-subtitle" style={{ margin: '0 0 2px' }}>
-                {isGuest ? 'Browsing as' : 'Good Morning,'}
+                {isGuest ? t?.browsingAs || 'Browsing as' : t?.greeting || 'Good Morning,'}
               </p>
               <p className="flow-greeting">
-                {isGuest ? 'Guest' : nameForAvatar}
+                {isGuest ? t?.guest || 'Guest' : nameForAvatar}
               </p>
             </div>
           </button>
 
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
             {isGuest && (
-              <button className="flow-logout-btn" onClick={onLogout}>Logout</button>
+              <button className="flow-logout-btn" onClick={onLogout}>{t?.logout || 'Logout'}</button>
             )}
             <div className="city-switcher-row" style={{ margin: 0 }}>
               <button className="city-pill" onClick={() => setShowCityPicker(!showCityPicker)}>
@@ -381,10 +367,9 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
         </div>
       </div>
 
-      <div className="flow-content" style={{ paddingBottom: '30px' }}>
+      <div className="flow-content" style={{ paddingBottom: '90px' }}>
         {!selectedHospital && (
           <div>
-            {/* Search Bar with Side-by-Side Mic Button (No Text Overlap) */}
             <div className="search-bar-wrap" style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '14px' }}>
               <div style={{ position: 'relative', flex: 1 }}>
                 <input
@@ -552,6 +537,34 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                 )}
               </>
             )}
+
+            {/* Smart Triage Trigger Banner placed right above the bottom tabbar area */}
+            <div style={{ marginTop: '24px' }}>
+              <button
+                onClick={() => setShowTriage(true)}
+                style={{
+                  width: '100%',
+                  background: 'linear-gradient(135deg, #0b332c 0%, #134e4a 100%)',
+                  color: '#fff',
+                  border: 'none',
+                  padding: '14px 16px',
+                  borderRadius: '16px',
+                  fontWeight: '600',
+                  fontSize: '13.5px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  cursor: 'pointer',
+                  boxShadow: '0 8px 20px rgba(11, 51, 44, 0.15)'
+                }}
+              >
+                <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '18px' }}>🩺</span>
+                  <span>Unsure which doctor to visit? <strong>Check Symptoms</strong></span>
+                </span>
+                <span style={{ fontSize: '16px' }}>→</span>
+              </button>
+            </div>
           </div>
         )}
 
@@ -615,6 +628,17 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
           </div>
         )}
       </div>
+
+      {/* Smart Triage Modal Popup */}
+      {showTriage && (
+        <SymptomTriage
+          onClose={() => setShowTriage(false)}
+          onSelectSpecialty={(specialty) => {
+            setActiveSpecialty(specialty);
+            setSearchTerm('');
+          }}
+        />
+      )}
 
       {ticketData && (
         <BookingTicket
