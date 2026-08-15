@@ -105,7 +105,7 @@ export async function getMyCurrentBooking(patientUserId) {
 
   if (error || !appointment) return null;
 
-  const { data: doctor } = await supabase
+ const { data: doctor } = await supabase
     .from('doctors')
     .select('name, specialty, avg_minutes_per_patient, status, delay_minutes')
     .eq('id', appointment.doctor_id)
