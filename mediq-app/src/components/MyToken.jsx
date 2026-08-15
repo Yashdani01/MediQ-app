@@ -22,7 +22,6 @@ export default function MyToken({ user }) {
     if (!user) { setLoading(false); return; }
     if (silent) setRefreshing(true);
     getMyCurrentBooking(user.id).then(async (data) => {
-      // Ensure we only show truly active, non-cancelled bookings
       if (data && data.status !== 'cancelled' && data.status !== 'completed') {
         setBooking(data);
         const statusData = await getAppointmentStatus(data.id);
@@ -54,10 +53,9 @@ export default function MyToken({ user }) {
     }
   };
 
-  // Instant dark-themed loader to prevent white background flash
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', background: '#0b0f0e', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, sans-serif' }}>
+      <div style={{ position: 'fixed', inset: 0, background: '#0b0f0e', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, sans-serif', zIndex: 100 }}>
         Loading Live Tracker...
       </div>
     );
@@ -65,8 +63,8 @@ export default function MyToken({ user }) {
 
   if (!booking) {
     return (
-      <div style={{ minHeight: '100vh', background: '#0b0f0e', color: '#fff', padding: '40px 20px', textAlign: 'center', boxSizing: 'border-box', fontFamily: 'Inter, sans-serif' }}>
-        <div style={{ maxWidth: '420px', margin: '80px auto', background: '#131b18', border: '1px solid #1f2f29', borderRadius: '24px', padding: '32px' }}>
+      <div style={{ position: 'fixed', inset: 0, background: '#0b0f0e', color: '#fff', padding: '40px 20px', textAlign: 'center', boxSizing: 'border-box', fontFamily: 'Inter, sans-serif', zIndex: 10, overflowY: 'auto' }}>
+        <div style={{ maxWidth: '420px', margin: '100px auto', background: '#131b18', border: '1px solid #1f2f29', borderRadius: '24px', padding: '32px' }}>
           <div style={{ fontSize: '36px', marginBottom: '12px' }}>🎟️</div>
           <h3 style={{ margin: '0 0 6px', color: '#fff', fontSize: '18px' }}>No Active Token</h3>
           <p style={{ margin: 0, color: '#94a3b8', fontSize: '13.5px' }}>You do not have any active queue tokens for today.</p>
@@ -83,7 +81,7 @@ export default function MyToken({ user }) {
   const isTurn = booking.status === 'serving';
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0b0f0e', color: '#fff', paddingBottom: '100px', fontFamily: 'Inter, sans-serif' }}>
+    <div style={{ position: 'fixed', inset: 0, background: '#0b0f0e', color: '#fff', overflowY: 'auto', paddingBottom: '100px', fontFamily: 'Inter, sans-serif', zIndex: 10 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 20px 10px', maxWidth: '480px', margin: '0 auto' }}>
         <h2 style={{ fontSize: '16px', fontWeight: 600, color: '#fff', margin: 0 }}>Live Queue Tracker</h2>
         <button 
