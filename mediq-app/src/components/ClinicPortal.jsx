@@ -463,6 +463,7 @@ export default function ClinicPortal() {
         const docWaitingCount = bookingsByDoctor[doc.id]?.filter(b => b.status === 'waiting').length || 0;
         const specs = doc.specialties || [doc.specialty || 'General Physician'];
         const scheduleObj = doc.custom_schedule || {};
+        const statusInfo = STATUS_OPTIONS.find((s) => s.value === doc.status) || STATUS_OPTIONS[0];
 
         return (
           <div key={doc.id} style={{ ...cardStyle, marginBottom: 18 }}>
@@ -513,6 +514,35 @@ export default function ClinicPortal() {
                       <p style={{ fontSize: 11, color: '#94a3b8', margin: '2px 0 0 0' }}>Specialties: {specs.join(', ')}</p>
                       <p style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, margin: '3px 0 0' }}>⭐ PTR Trust Score: {doc.ptr_score || '99.0'}%</p>
                     </div>
+                  </div>
+
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    background: statusInfo.color, color: statusInfo.textColor, fontSize: 10, fontWeight: 800,
+                    padding: '4px 10px', borderRadius: 100, border: `1px solid ${statusInfo.border}`,
+                  }}>
+                    {statusInfo.label}
+                  </span>
+                </div>
+
+                {/* Status Update Buttons */}
+                <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 14, padding: 10, marginBottom: 14, border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: '#64748b', margin: '0 0 6px 0', textTransform: 'uppercase', letterSpacing: 0.5 }}>Update Live Queue Status:</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {STATUS_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        onClick={() => handleStatusChange(doc.id, opt.value)}
+                        style={{
+                          padding: '5px 11px', borderRadius: 100, fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                          border: doc.status === opt.value ? `1px solid ${opt.border}` : '1px solid rgba(255,255,255,0.1)',
+                          background: doc.status === opt.value ? opt.color : 'rgba(255,255,255,0.03)',
+                          color: doc.status === opt.value ? opt.textColor : '#94a3b8',
+                        }}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
