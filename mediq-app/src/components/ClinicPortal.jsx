@@ -5,6 +5,7 @@ import {
   getHospitalUpi, updateHospitalUpi, getTodaysBookings, markAppointmentSeen,
   getHospitalLocation, updateHospitalLocation, cancelAppointment, checkInAppointment,
 } from '../hospitalData';
+import { supabase } from '../supabaseClient';
 import './Login.css';
 
 const STATUS_OPTIONS = [
@@ -66,6 +67,7 @@ export default function ClinicPortal() {
   const [pin, setPin] = useState('');
   const [unlockedPin, setUnlockedPin] = useState('');
   const [unlocked, setUnlocked] = useState(false);
+  const [clinicName, setClinicName] = useState('Clinic Portal');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -117,6 +119,16 @@ export default function ClinicPortal() {
   const [updatingPatient, setUpdatingPatient] = useState(null);
 
   const [viewScreenshotModal, setViewScreenshotModal] = useState(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const hId = params.get('hospital_id');
+    if (hId) {
+      supabase.from('hospitals').select('name').eq('id', hId).maybeSingle().then(({ data }) => {
+        if (data?.name) setClinicName(data.name);
+      });
+    }
+  }, []);
 
   const loadDoctors = async (currentPin) => {
     if (!currentPin) return;
@@ -170,6 +182,12 @@ export default function ClinicPortal() {
       setError('Invalid Access PIN. Please try again.');
       return;
     }
+
+    const { data: hospData } = await supabase.from('hospitals').select('name').eq('id', hospitalId).maybeSingle();
+    if (hospData?.name) {
+      setClinicName(hospData.name);
+    }
+
     setUnlockedPin(cleanPin);
     setUnlocked(true);
   };
@@ -362,7 +380,7 @@ export default function ClinicPortal() {
           <div style={{ width: 64, height: 64, borderRadius: 22, background: 'rgba(16,185,129,0.1)', border: '1.5px solid #10b981', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 28 }}>
             🏥
           </div>
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#fff', margin: '0 0 4px 0' }}>Shri Durga Medical Hall</h1>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#fff', margin: '0 0 4px 0' }}>{clinicName}</h1>
           <p style={{ fontSize: 13, color: '#94a3b8', margin: '0 0 28px 0', fontWeight: 600 }}>Staff Access Gateway · Enter Access PIN</p>
           <form onSubmit={handleUnlock} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <input
@@ -397,7 +415,7 @@ export default function ClinicPortal() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
         <div>
           <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: '#10b981', textTransform: 'uppercase', letterSpacing: 0.5 }}>Clinic Portal</p>
-          <h1 style={{ fontSize: 18, fontWeight: 800, color: '#fff', margin: '4px 0 2px' }}>Shri Durga Medical Hall</h1>
+          <h1 style={{ fontSize: 18, fontWeight: 800, color: '#fff', margin: '4px 0 2px' }}>{clinicName}</h1>
           <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>{todayDateStr}</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -774,7 +792,7 @@ export default function ClinicPortal() {
         </form>
       )}
 
-      {/* Walk-In Patients (standalone info card matching Figma) */}
+      {/* Walk-In Patients */}
       <div style={{ marginTop: 24 }}>
         <h3 style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 12 }}>Walk-In Patients</h3>
         <div style={{ ...cardStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -852,7 +870,7 @@ export default function ClinicPortal() {
 
             <div style={{ background: '#fff', padding: 16, borderRadius: 20, display: 'inline-block', marginBottom: 16 }}>
               <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`upi://pay?pa=${upiId}&pn=Shri Durga Medical Hall&cu=INR`)}`}
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`upi://pay?pa=${upiId}&pn=${encodeURIComponent(clinicName)}&cu=INR`)}`}
                 alt="Clinic UPI QR Code"
                 style={{ width: 180, height: 180, display: 'block', margin: '0 auto' }}
               />
