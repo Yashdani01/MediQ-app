@@ -349,7 +349,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
         </div>
       </div>
 
-      <div className="flow-content">
+      <div className="flow-content" style={{ paddingBottom: '30px' }}>
         {!selectedHospital && (
           <div>
             <div className="search-bar-wrap">
