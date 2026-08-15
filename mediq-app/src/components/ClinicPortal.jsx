@@ -8,12 +8,12 @@ import {
 import './Login.css';
 
 const STATUS_OPTIONS = [
-  { value: 'available', label: 'Available', color: '#d1fae5', textColor: '#065f46', dotColor: '#10b981' },
-  { value: 'delayed', label: 'Delayed', color: '#fef3c7', textColor: '#92400e', dotColor: '#f59e0b' },
-  { value: 'on_break', label: 'On Break', color: '#f1f5f9', textColor: '#475569', dotColor: '#64748b' },
-  { value: 'not_started', label: 'Not Started', color: '#fee2e2', textColor: '#991b1b', dotColor: '#ef4444' },
-  { value: 'on_leave', label: 'On Leave / Holiday', color: '#fecaca', textColor: '#991b1b', dotColor: '#dc2626' },
-  { value: 'completed', label: 'Done for Today', color: '#e2e8f0', textColor: '#334155', dotColor: '#475569' },
+  { value: 'available', label: 'Available', color: 'rgba(16,185,129,0.1)', border: 'rgba(16,185,129,0.2)', textColor: '#10b981' },
+  { value: 'delayed', label: 'Delayed', color: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.25)', textColor: '#f59e0b' },
+  { value: 'on_break', label: 'On Break', color: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.2)', textColor: '#94a3b8' },
+  { value: 'not_started', label: 'Not Started', color: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.2)', textColor: '#ef4444' },
+  { value: 'on_leave', label: 'On Leave / Holiday', color: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.25)', textColor: '#ef4444' },
+  { value: 'completed', label: 'Done for Today', color: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.2)', textColor: '#94a3b8' },
 ];
 
 const SPECIALTIES = [
@@ -43,10 +43,10 @@ function DayPicker({ selectedDays, onToggle }) {
           type="button"
           onClick={() => onToggle(day)}
           style={{
-            padding: '6px 10px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-            border: selectedDays.includes(day) ? 'none' : '1px solid #ddd',
-            background: selectedDays.includes(day) ? '#0d9488' : 'white',
-            color: selectedDays.includes(day) ? 'white' : '#333',
+            padding: '6px 10px', borderRadius: 100, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+            border: selectedDays.includes(day) ? 'none' : '1px solid rgba(255,255,255,0.1)',
+            background: selectedDays.includes(day) ? 'linear-gradient(90deg, #10b981 25%, #059669 75%)' : 'rgba(255,255,255,0.04)',
+            color: selectedDays.includes(day) ? 'white' : '#94a3b8',
           }}
         >
           {day}
@@ -55,6 +55,12 @@ function DayPicker({ selectedDays, onToggle }) {
     </div>
   );
 }
+
+const cardStyle = { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 24, padding: 16, boxShadow: '0 8px 24px 0 rgba(0,0,0,0.25)' };
+const panelInputStyle = { width: '100%', padding: '10px 12px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 14, boxSizing: 'border-box', outline: 'none' };
+const pillPrimaryBtn = { border: 'none', background: 'linear-gradient(90deg, #10b981 25%, #059669 75%)', color: '#fff', fontWeight: 700, cursor: 'pointer', borderRadius: 100, boxShadow: '0 4px 8px rgba(16,185,129,0.2)' };
+const pillGhostBtn = { border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', color: '#fff', fontWeight: 700, cursor: 'pointer', borderRadius: 100 };
+const pillDangerBtn = { border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.08)', color: '#ef4444', fontWeight: 700, cursor: 'pointer', borderRadius: 100 };
 
 export default function ClinicPortal() {
   const [pin, setPin] = useState('');
@@ -117,7 +123,7 @@ export default function ClinicPortal() {
     setRefreshing(true);
     const data = await getDoctorsForClinic(currentPin);
     setDoctors(data || []);
-    
+
     if (data && data.length > 0) {
       const bookingsMap = {};
       for (const doc of data) {
@@ -335,41 +341,40 @@ export default function ClinicPortal() {
     loadDoctors(unlockedPin);
   };
 
-  const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 14, boxSizing: 'border-box' };
+  const inputStyle = panelInputStyle;
 
   if (!unlocked) {
     return (
       <div style={{
         minHeight: '100vh',
-        background: 'radial-gradient(ellipse at 50% 30%, #115e59 0%, #0f172a 70%, #020617 100%)',
+        background: 'radial-gradient(circle at 50% 0%, rgba(15,118,110,0.35) 0%, rgba(9,10,15,0) 55%), linear-gradient(180deg, #090a0f 0%, #090a0f 100%)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       }}>
         <div style={{
-          background: 'rgba(255, 255, 255, 0.96)', backdropFilter: 'blur(20px)', borderRadius: 32,
+          background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 32,
           padding: '40px 32px 32px', width: '100%', maxWidth: 400, textAlign: 'center',
-          boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.45)',
         }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#d1fae5', border: '1px solid #a7f3d0', color: '#065f46', fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 20, marginBottom: 20 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#10b981', fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 100, marginBottom: 20 }}>
             <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981' }} />
             MediQ Secure Terminal Active
           </div>
-          <div style={{ width: 64, height: 64, borderRadius: 22, background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 28 }}>
+          <div style={{ width: 64, height: 64, borderRadius: 22, background: 'rgba(16,185,129,0.1)', border: '1.5px solid #10b981', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 28 }}>
             🏥
           </div>
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', margin: '0 0 4px 0' }}>Shri Durga Medical Hall</h1>
-          <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 28px 0', fontWeight: 600 }}>Staff Access Gateway · Enter Access PIN</p>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#fff', margin: '0 0 4px 0' }}>Shri Durga Medical Hall</h1>
+          <p style={{ fontSize: 13, color: '#94a3b8', margin: '0 0 28px 0', fontWeight: 600 }}>Staff Access Gateway · Enter Access PIN</p>
           <form onSubmit={handleUnlock} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <input
               type="password" inputMode="numeric" placeholder="• • • •" maxLength={6}
               value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} required
-              style={{ width: '100%', padding: '16px', borderRadius: 16, border: '2px solid #cbd5e1', background: '#f8fafc', fontSize: 24, fontWeight: 800, letterSpacing: '12px', textAlign: 'center', outline: 'none' }}
+              style={{ width: '100%', padding: '16px', borderRadius: 16, border: '1.5px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 24, fontWeight: 800, letterSpacing: '12px', textAlign: 'center', outline: 'none', boxSizing: 'border-box' }}
             />
-            <button type="submit" disabled={loading || !pin} style={{ width: '100%', padding: '16px', borderRadius: 16, border: 'none', background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)', color: 'white', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>
+            <button type="submit" disabled={loading || !pin} style={{ ...pillPrimaryBtn, width: '100%', padding: '16px', fontSize: 15, opacity: (loading || !pin) ? 0.6 : 1 }}>
               {loading ? 'Verifying PIN...' : 'Unlock Portal →'}
             </button>
           </form>
-          {error && <p style={{ color: '#ef4444', fontSize: 13, marginTop: 16, background: '#fef2f2', padding: '10px 14px', borderRadius: 12 }}>{error}</p>}
+          {error && <p style={{ color: '#fca5a5', fontSize: 13, marginTop: 16, background: 'rgba(220,38,38,0.12)', border: '1px solid rgba(220,38,38,0.25)', padding: '10px 14px', borderRadius: 12 }}>{error}</p>}
         </div>
       </div>
     );
@@ -382,64 +387,65 @@ export default function ClinicPortal() {
   const todayDateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
   return (
-    <div style={{ maxWidth: 600, margin: '0 auto', padding: '20px 16px 100px', background: '#f8fafc', minHeight: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
-      
+    <div style={{
+      maxWidth: 600, margin: '0 auto', padding: '20px 16px 100px', minHeight: '100vh',
+      background: 'radial-gradient(circle at 50% 0%, rgba(15,118,110,0.35) 0%, rgba(9,10,15,0) 55%), linear-gradient(180deg, #090a0f 0%, #090a0f 100%)',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    }}>
+
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
         <div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#d1fae5', border: '1px solid #a7f3d0', padding: '3px 10px', borderRadius: 20, marginBottom: 6 }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }} />
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#065f46', letterSpacing: 0.5 }}>OPERATIONAL · QUEUE ACTIVE</span>
-          </div>
-          <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '2px 0' }}>Shri Durga Medical Hall</h1>
-          <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>{todayDateStr}</p>
+          <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: '#10b981', textTransform: 'uppercase', letterSpacing: 0.5 }}>Clinic Portal</p>
+          <h1 style={{ fontSize: 18, fontWeight: 800, color: '#fff', margin: '4px 0 2px' }}>Shri Durga Medical Hall</h1>
+          <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>{todayDateStr}</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button
             onClick={() => setShowSettingsDrawer(!showSettingsDrawer)}
-            style={{ padding: '8px 12px', borderRadius: 12, border: '1px solid #cbd5e1', background: 'white', color: '#0f172a', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+            style={{ ...pillGhostBtn, padding: '8px 12px', fontSize: 13 }}
           >
             ⚙️ Settings
           </button>
-          <button onClick={handleLogout} style={{ padding: '8px 16px', borderRadius: 12, border: '1px solid #fca5a5', background: 'white', color: '#ef4444', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          <button onClick={handleLogout} style={{ ...pillDangerBtn, padding: '8px 16px', fontSize: 13 }}>
             Logout ➔
           </button>
         </div>
       </div>
 
       {/* Stats Summary */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 20 }}>
-        <div style={{ background: 'white', borderRadius: 16, padding: 12, border: '1px solid #e2e8f0', textAlign: 'center' }}>
-          <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>Total Patients</span>
-          <p style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '4px 0 0 0' }}>{totalBookings}</p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 20 }}>
+        <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 12 }}>
+          <span style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Total Patients</span>
+          <p style={{ fontSize: 20, fontWeight: 800, color: '#fff', margin: '4px 0 0 0' }}>{totalBookings}</p>
         </div>
-        <div style={{ background: '#ccfbf1', borderRadius: 16, padding: 12, border: '1px solid #99f6e4', textAlign: 'center' }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: '#0f766e' }}>Waiting</span>
-          <p style={{ fontSize: 22, fontWeight: 800, color: '#0f766e', margin: '4px 0 0 0' }}>{waitingBookings}</p>
+        <div style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: 16, padding: 12 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: '#fbbf24' }}>Waiting</span>
+          <p style={{ fontSize: 20, fontWeight: 800, color: '#fbbf24', margin: '4px 0 0 0' }}>{waitingBookings}</p>
         </div>
-        <div style={{ background: 'white', borderRadius: 16, padding: 12, border: '1px solid #e2e8f0', textAlign: 'center' }}>
-          <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>Completed</span>
-          <p style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '4px 0 0 0' }}>{completedBookings}</p>
+        <div style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 16, padding: 12 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: '#10b981' }}>Completed</span>
+          <p style={{ fontSize: 20, fontWeight: 800, color: '#10b981', margin: '4px 0 0 0' }}>{completedBookings}</p>
         </div>
       </div>
 
       {/* Settings Drawer */}
       {showSettingsDrawer && (
-        <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 20, padding: 18, marginBottom: 20, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)' }}>
+        <div style={{ ...cardStyle, marginBottom: 20 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <h4 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#0f172a' }}>⚙️ Clinic Configurations</h4>
-            <button onClick={() => setShowSettingsDrawer(false)} style={{ border: 'none', background: '#f1f5f9', borderRadius: '50%', width: 26, height: 26, fontWeight: 700, cursor: 'pointer' }}>✕</button>
+            <h4 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#fff' }}>⚙️ Clinic Configurations</h4>
+            <button onClick={() => setShowSettingsDrawer(false)} style={{ border: 'none', background: 'rgba(255,255,255,0.06)', borderRadius: '50%', width: 26, height: 26, color: '#94a3b8', fontWeight: 700, cursor: 'pointer' }}>✕</button>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div style={{ background: '#f8fafc', borderRadius: 12, padding: 12, border: '1px solid #f1f5f9' }}>
-              <p style={{ fontSize: 12, fontWeight: 700, color: '#64748b', margin: '0 0 6px 0', textTransform: 'uppercase' }}>📍 Google Maps Navigation Link</p>
+            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 12, padding: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', margin: '0 0 6px 0', textTransform: 'uppercase' }}>📍 Google Maps Navigation Link</p>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                <button onClick={() => { setLocationInput(locationStr); setEditingLocation(!editingLocation); }} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                <button onClick={() => { setLocationInput(locationStr); setEditingLocation(!editingLocation); }} style={{ ...pillGhostBtn, padding: '6px 12px', fontSize: 12 }}>
                   {locationStr ? '✏️ Edit Map Link' : '+ Add Map Link'}
                 </button>
                 {locationStr && (
-                  <a href={locationStr} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: '#0284c7', fontWeight: 700, textDecoration: 'none' }}>
+                  <a href={locationStr} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: '#10b981', fontWeight: 700, textDecoration: 'none' }}>
                     🔗 Test Route Link ➔
                   </a>
                 )}
@@ -448,19 +454,19 @@ export default function ClinicPortal() {
               {editingLocation && (
                 <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                   <input placeholder="Paste Google Maps share link" value={locationInput} onChange={(e) => setLocationInput(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
-                  <button onClick={handleSaveLocation} disabled={savingLocation} style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: '#0d9488', color: 'white', fontWeight: 600, cursor: 'pointer' }}>Save</button>
+                  <button onClick={handleSaveLocation} disabled={savingLocation} style={{ ...pillPrimaryBtn, padding: '8px 14px', fontSize: 13 }}>Save</button>
                 </div>
               )}
             </div>
 
-            <div style={{ background: '#f8fafc', borderRadius: 12, padding: 12, border: '1px solid #f1f5f9' }}>
-              <p style={{ fontSize: 12, fontWeight: 700, color: '#64748b', margin: '0 0 6px 0', textTransform: 'uppercase' }}>💳 Clinic UPI & On-Screen QR Code</p>
+            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 12, padding: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', margin: '0 0 6px 0', textTransform: 'uppercase' }}>💳 Clinic UPI & On-Screen QR Code</p>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                <button onClick={() => { setUpiInput(upiId); setEditingUpi(!editingUpi); }} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                <button onClick={() => { setUpiInput(upiId); setEditingUpi(!editingUpi); }} style={{ ...pillGhostBtn, padding: '6px 12px', fontSize: 12 }}>
                   {upiId ? `✏️ Change UPI (${upiId})` : '+ Add UPI ID'}
                 </button>
                 {upiId && (
-                  <button onClick={() => setShowQrModal(true)} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: '#ccfbf1', color: '#0f766e', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                  <button onClick={() => setShowQrModal(true)} style={{ ...pillPrimaryBtn, padding: '6px 12px', fontSize: 12 }}>
                     📱 Show On-Screen QR Code
                   </button>
                 )}
@@ -469,7 +475,7 @@ export default function ClinicPortal() {
               {editingUpi && (
                 <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                   <input placeholder="Clinic UPI ID (e.g. 9064036668@slc)" value={upiInput} onChange={(e) => setUpiInput(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
-                  <button onClick={handleSaveUpi} disabled={savingUpi} style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: '#0d9488', color: 'white', fontWeight: 600, cursor: 'pointer' }}>Save</button>
+                  <button onClick={handleSaveUpi} disabled={savingUpi} style={{ ...pillPrimaryBtn, padding: '8px 14px', fontSize: 13 }}>Save</button>
                 </div>
               )}
             </div>
@@ -477,7 +483,7 @@ export default function ClinicPortal() {
         </div>
       )}
 
-      <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginBottom: 14 }}>Doctor Roster & Queue Control</h3>
+      <h3 style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 14 }}>Doctor Roster & Queue Control</h3>
 
       {/* Doctor Roster */}
       {doctors.map((doc) => {
@@ -486,7 +492,7 @@ export default function ClinicPortal() {
         const docWaitingCount = bookingsByDoctor[doc.id]?.filter(b => b.status === 'waiting').length || 0;
 
         return (
-          <div key={doc.id} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 24, padding: 18, marginBottom: 18, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.03)' }}>
+          <div key={doc.id} style={{ ...cardStyle, marginBottom: 18 }}>
             {isEditing ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <input value={editName} onChange={(e) => setEditName(e.target.value)} style={inputStyle} />
@@ -495,7 +501,7 @@ export default function ClinicPortal() {
                 </select>
                 <input type="number" value={editAvgMinutes} onChange={(e) => setEditAvgMinutes(e.target.value)} style={inputStyle} placeholder="Avg min per patient" />
                 <input placeholder="Consultation fee (₹)" type="number" value={editFee} onChange={(e) => setEditFee(e.target.value)} style={inputStyle} />
-                
+
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   <input type="time" value={editStartTime} onChange={(e) => setEditStartTime(e.target.value)} style={inputStyle} />
                   <input type="time" value={editEndTime} onChange={(e) => setEditEndTime(e.target.value)} style={inputStyle} />
@@ -503,58 +509,57 @@ export default function ClinicPortal() {
 
                 <DayPicker selectedDays={editWorkingDays} onToggle={toggleEditDay} />
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => handleSaveEdit(doc.id)} style={{ flex: 1, padding: 10, borderRadius: 8, border: 'none', background: '#0d9488', color: 'white', fontWeight: 600 }}>Save</button>
-                  <button onClick={() => setEditingId(null)} style={{ flex: 1, padding: 10, borderRadius: 8, border: '1px solid #ccc', background: 'white' }}>Cancel</button>
+                  <button onClick={() => handleSaveEdit(doc.id)} style={{ ...pillPrimaryBtn, flex: 1, padding: 10 }}>Save</button>
+                  <button onClick={() => setEditingId(null)} style={{ ...pillGhostBtn, flex: 1, padding: 10 }}>Cancel</button>
                 </div>
               </div>
             ) : (
               <>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{ width: 46, height: 46, borderRadius: 16, background: '#e6fffa', color: '#0d9488', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 700 }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 20, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
                       🩺
                     </div>
                     <div>
-                      <h4 style={{ fontSize: 17, fontWeight: 800, margin: 0, color: '#0f172a', letterSpacing: '-0.3px' }}>{doc.name}</h4>
-                      <p style={{ fontSize: 13, color: '#64748b', margin: '2px 0 0 0', fontWeight: 500 }}>{doc.specialty}</p>
+                      <h4 style={{ fontSize: 15, fontWeight: 800, margin: 0, color: '#fff' }}>{doc.name}</h4>
+                      <p style={{ fontSize: 12, color: '#94a3b8', margin: '2px 0 0 0', fontWeight: 500 }}>{doc.specialty}</p>
                     </div>
                   </div>
 
                   <span style={{
                     display: 'inline-flex', alignItems: 'center', gap: 6,
-                    background: statusInfo.color, color: statusInfo.textColor, fontSize: 11, fontWeight: 700,
-                    padding: '6px 12px', borderRadius: 20, border: `1px solid ${statusInfo.color}`,
+                    background: statusInfo.color, color: statusInfo.textColor, fontSize: 10, fontWeight: 800,
+                    padding: '4px 10px', borderRadius: 100, border: `1px solid ${statusInfo.border}`,
                   }}>
-                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: statusInfo.dotColor, display: 'inline-block' }} />
                     {statusInfo.label}
                   </span>
                 </div>
 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
                   {doc.consultation_fee != null && (
-                    <span style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', fontSize: 12, fontWeight: 700, padding: '4px 10px', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', color: '#10b981', fontSize: 12, fontWeight: 700, padding: '4px 10px', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                       💳 ₹{doc.consultation_fee} Fee
                     </span>
                   )}
                   {(doc.working_days?.length > 0 || doc.start_time) && (
-                    <span style={{ background: '#f8fafc', border: '1px solid #e2e8f0', color: '#475569', fontSize: 12, fontWeight: 600, padding: '4px 10px', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#94a3b8', fontSize: 12, fontWeight: 600, padding: '4px 10px', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                       🕒 {doc.working_days?.join(', ')} {doc.start_time && doc.end_time ? `· ${formatTime(doc.start_time)} – ${formatTime(doc.end_time)}` : ''}
                     </span>
                   )}
                 </div>
 
-                <div style={{ background: '#f8fafc', borderRadius: 14, padding: 10, marginBottom: 14, border: '1px solid #f1f5f9' }}>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', margin: '0 0 6px 0', textTransform: 'uppercase', letterSpacing: 0.5 }}>Update Live Queue Status:</p>
+                <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 14, padding: 10, marginBottom: 14, border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: '#64748b', margin: '0 0 6px 0', textTransform: 'uppercase', letterSpacing: 0.5 }}>Update Live Queue Status:</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                     {STATUS_OPTIONS.map((opt) => (
                       <button
                         key={opt.value}
                         onClick={() => handleStatusChange(doc.id, opt.value)}
                         style={{
-                          padding: '5px 11px', borderRadius: 12, fontSize: 11, fontWeight: 700, cursor: 'pointer',
-                          border: doc.status === opt.value ? 'none' : '1px solid #cbd5e1',
-                          background: doc.status === opt.value ? opt.color : 'white',
-                          color: doc.status === opt.value ? opt.textColor : '#64748b',
+                          padding: '5px 11px', borderRadius: 100, fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                          border: doc.status === opt.value ? `1px solid ${opt.border}` : '1px solid rgba(255,255,255,0.1)',
+                          background: doc.status === opt.value ? opt.color : 'rgba(255,255,255,0.03)',
+                          color: doc.status === opt.value ? opt.textColor : '#94a3b8',
                         }}
                       >
                         {opt.label}
@@ -567,39 +572,42 @@ export default function ClinicPortal() {
                   <button
                     onClick={() => toggleTodaysPatients(doc.id)}
                     style={{
-                      padding: '10px 12px', borderRadius: 12, border: 'none',
-                      background: expandedDoctor === doc.id ? '#115e59' : '#0d9488', color: 'white',
-                      fontSize: 12, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px rgba(13, 148, 136, 0.2)',
+                      padding: '10px 12px', borderRadius: 100, border: 'none',
+                      background: expandedDoctor === doc.id
+                        ? 'rgba(255,255,255,0.08)'
+                        : 'linear-gradient(90deg, #10b981 25%, #059669 75%)',
+                      color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                      boxShadow: expandedDoctor === doc.id ? 'none' : '0 4px 8px rgba(16,185,129,0.2)',
                     }}
                   >
-                    {expandedDoctor === doc.id ? 'Hide Queue' : `👥 Queue (${docWaitingCount})`}
+                    {expandedDoctor === doc.id ? 'Hide Queue' : `Manage Queue (${docWaitingCount})`}
                   </button>
-                  <button onClick={() => setShowWalkinForm(showWalkinForm === doc.id ? null : doc.id)} style={{ padding: '10px 8px', borderRadius: 12, border: '1px solid #a7f3d0', background: '#f0fdf4', color: '#047857', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                  <button onClick={() => setShowWalkinForm(showWalkinForm === doc.id ? null : doc.id)} style={{ ...pillGhostBtn, padding: '10px 8px', fontSize: 12 }}>
                     + Walk-in
                   </button>
-                  <button onClick={() => startEdit(doc)} style={{ padding: '10px 8px', borderRadius: 12, border: '1px solid #cbd5e1', background: 'white', color: '#334155', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                  <button onClick={() => startEdit(doc)} style={{ ...pillGhostBtn, padding: '10px 8px', fontSize: 12 }}>
                     ⚙️ Edit
                   </button>
-                  <button onClick={() => handleDelete(doc.id, doc.name)} style={{ padding: '10px 8px', borderRadius: 12, border: '1px solid #fca5a5', background: '#fff5f5', color: '#ef4444', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                  <button onClick={() => handleDelete(doc.id, doc.name)} style={{ ...pillDangerBtn, padding: '10px 8px', fontSize: 12 }}>
                     🗑️
                   </button>
                 </div>
 
                 {showWalkinForm === doc.id && (
-                  <div style={{ marginTop: 12, background: '#f8fafc', borderRadius: 12, padding: 12, display: 'flex', flexDirection: 'column', gap: 8, border: '1px solid #e2e8f0' }}>
+                  <div style={{ marginTop: 12, background: 'rgba(255,255,255,0.03)', borderRadius: 12, padding: 12, display: 'flex', flexDirection: 'column', gap: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
                     <input placeholder="Patient name" value={walkinName} onChange={(e) => setWalkinName(e.target.value)} style={inputStyle} />
                     <input placeholder="Phone (optional)" value={walkinPhone} onChange={(e) => setWalkinPhone(e.target.value)} style={inputStyle} />
-                    <button onClick={() => handleWalkinSubmit(doc.id)} style={{ padding: 10, borderRadius: 8, border: 'none', background: '#0d9488', color: 'white', fontWeight: 600, cursor: 'pointer' }}>Create Token</button>
+                    <button onClick={() => handleWalkinSubmit(doc.id)} style={{ ...pillPrimaryBtn, padding: 10 }}>Create Token</button>
                   </div>
                 )}
 
                 {/* Queue Drawer */}
                 {expandedDoctor === doc.id && (
-                  <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid #f1f5f9' }}>
+                  <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
                     {loadingBookings ? (
-                      <p style={{ fontSize: 13, color: '#999', textAlign: 'center' }}>Loading queue...</p>
+                      <p style={{ fontSize: 13, color: '#64748b', textAlign: 'center' }}>Loading queue...</p>
                     ) : !bookingsByDoctor[doc.id] || bookingsByDoctor[doc.id].length === 0 ? (
-                      <p style={{ fontSize: 13, color: '#999', textAlign: 'center' }}>No bookings for today yet.</p>
+                      <p style={{ fontSize: 13, color: '#64748b', textAlign: 'center' }}>No bookings for today yet.</p>
                     ) : (
                       bookingsByDoctor[doc.id].map((b) => {
                         const isWaiting = b.status === 'waiting';
@@ -608,32 +616,32 @@ export default function ClinicPortal() {
                         const isCheckedIn = !!b.checked_in_at;
 
                         return (
-                          <div key={b.id} style={{ background: isWaiting ? '#ffffff' : '#f0fdf4', border: '1px solid #e2e8f0', borderRadius: 16, padding: 14, marginBottom: 10, boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
+                          <div key={b.id} style={{ background: isWaiting ? 'rgba(255,255,255,0.03)' : 'rgba(16,185,129,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 14, marginBottom: 10 }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                               <div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                  <span style={{ fontSize: 16, fontWeight: 800, color: '#0d9488' }}>#{b.token_number}</span>
-                                  <h5 style={{ fontWeight: 800, fontSize: 15, margin: 0, color: '#0f172a' }}>{b.patient_name || 'Patient'}</h5>
+                                  <span style={{ fontSize: 16, fontWeight: 800, color: '#10b981' }}>#{b.token_number}</span>
+                                  <h5 style={{ fontWeight: 800, fontSize: 15, margin: 0, color: '#fff' }}>{b.patient_name || 'Patient'}</h5>
                                 </div>
                                 {b.patient_phone && (
-                                  <a href={`tel:${b.patient_phone}`} style={{ fontSize: 12, color: '#0284c7', textDecoration: 'none', fontWeight: 600, display: 'inline-block', marginTop: 4 }}>
+                                  <a href={`tel:${b.patient_phone}`} style={{ fontSize: 12, color: '#38bdf8', textDecoration: 'none', fontWeight: 600, display: 'inline-block', marginTop: 4 }}>
                                     📞 {b.patient_phone}
                                   </a>
                                 )}
                               </div>
 
                               <span style={{
-                                background: isWalkin ? '#f1f5f9' : '#e0e7ff', color: isWalkin ? '#334155' : '#3730a3',
+                                background: isWalkin ? 'rgba(255,255,255,0.05)' : 'rgba(99,102,241,0.12)', color: isWalkin ? '#94a3b8' : '#a5b4fc',
                                 fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 8,
                               }}>
                                 {isWalkin ? '🚪 Walk-In' : '📱 App Token'}
                               </span>
                             </div>
 
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f8fafc', padding: '8px 10px', borderRadius: 10, margin: '8px 0' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.03)', padding: '8px 10px', borderRadius: 10, margin: '8px 0' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                 <span style={{
-                                  background: isUpi ? '#d1fae5' : '#fef3c7', color: isUpi ? '#065f46' : '#92400e',
+                                  background: isUpi ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)', color: isUpi ? '#10b981' : '#f59e0b',
                                   fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 12,
                                 }}>
                                   {isUpi ? '🟢 UPI Verified' : '🪙 Cash Pending'}
@@ -644,7 +652,7 @@ export default function ClinicPortal() {
                               {isUpi && b.payment_screenshot_url && (
                                 <button
                                   onClick={() => setViewScreenshotModal({ ...b, doctorName: doc.name })}
-                                  style={{ border: 'none', background: '#ccfbf1', color: '#0f766e', fontSize: 11, fontWeight: 700, padding: '4px 8px', borderRadius: 6, cursor: 'pointer' }}
+                                  style={{ ...pillGhostBtn, fontSize: 11, padding: '4px 8px', borderRadius: 6 }}
                                 >
                                   🖼️ Screenshot
                                 </button>
@@ -654,14 +662,14 @@ export default function ClinicPortal() {
                             {isWaiting && (
                               <div style={{ margin: '8px 0' }}>
                                 {isCheckedIn ? (
-                                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#d1fae5', color: '#065f46', fontSize: 12, fontWeight: 700, padding: '5px 10px', borderRadius: 10 }}>
+                                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#10b981', fontSize: 12, fontWeight: 700, padding: '5px 10px', borderRadius: 100 }}>
                                     ✓ Checked In
                                   </span>
                                 ) : (
                                   <button
                                     onClick={() => handleCheckIn(b.id, doc.id)}
                                     disabled={updatingPatient === b.id}
-                                    style={{ padding: '8px 14px', borderRadius: 10, border: '1px solid #a7f3d0', background: '#f0fdf4', color: '#047857', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                                    style={{ ...pillGhostBtn, padding: '8px 14px', fontSize: 12 }}
                                   >
                                     {updatingPatient === b.id ? 'Checking In...' : '📍 Check In Patient'}
                                   </button>
@@ -674,20 +682,20 @@ export default function ClinicPortal() {
                                 <button
                                   onClick={() => handleMarkSeen(b.id, doc.id)}
                                   disabled={updatingPatient === b.id}
-                                  style={{ flex: 2, padding: '10px', borderRadius: 10, border: 'none', background: '#0d9488', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                                  style={{ ...pillPrimaryBtn, flex: 2, padding: '10px', fontSize: 12 }}
                                 >
                                   {updatingPatient === b.id ? 'Updating...' : '✓ Call & Mark Seen'}
                                 </button>
                                 <button
                                   onClick={() => handleNoShowCancel(b.id, doc.id)}
                                   disabled={updatingPatient === b.id}
-                                  style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid #fca5a5', background: '#fff5f5', color: '#ef4444', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                                  style={{ ...pillDangerBtn, flex: 1, padding: '10px', fontSize: 12 }}
                                 >
                                   Did Not Show
                                 </button>
                               </div>
                             ) : (
-                              <p style={{ color: '#047857', fontWeight: 700, fontSize: 12, margin: '6px 0 0 0' }}>✓ Completed / Seen</p>
+                              <p style={{ color: '#10b981', fontWeight: 700, fontSize: 12, margin: '6px 0 0 0' }}>✓ Completed / Seen</p>
                             )}
                           </div>
                         );
@@ -704,23 +712,23 @@ export default function ClinicPortal() {
       {/* Add Doctor Trigger Button */}
       <button
         onClick={() => setShowAddForm(!showAddForm)}
-        style={{ width: '100%', padding: 14, borderRadius: 14, border: 'none', background: '#0d9488', color: 'white', fontWeight: 700, fontSize: 14, marginTop: 10, cursor: 'pointer' }}
+        style={{ ...pillPrimaryBtn, width: '100%', padding: 14, fontSize: 14, marginTop: 10 }}
       >
         {showAddForm ? 'Close Form' : '+ Add New Doctor'}
       </button>
 
       {/* Add Doctor Form */}
       {showAddForm && (
-        <form onSubmit={handleAddDoctor} style={{ background: 'white', borderRadius: 20, padding: 20, marginTop: 14, display: 'flex', flexDirection: 'column', gap: 12, border: '1px solid #e2e8f0', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)' }}>
-          <h4 style={{ margin: '0 0 4px 0', fontSize: 16, fontWeight: 800, color: '#0f172a' }}>Add Doctor Profile</h4>
-          
+        <form onSubmit={handleAddDoctor} style={{ ...cardStyle, marginTop: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <h4 style={{ margin: '0 0 4px 0', fontSize: 16, fontWeight: 800, color: '#fff' }}>Add Doctor Profile</h4>
+
           <div>
-            <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 4 }}>Doctor Name *</label>
+            <label style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: 4 }}>Doctor Name *</label>
             <input placeholder="e.g. Dr. Siddika Khatun" value={newName} onChange={(e) => setNewName(e.target.value)} style={inputStyle} required />
           </div>
 
           <div>
-            <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 4 }}>Specialty *</label>
+            <label style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: 4 }}>Specialty *</label>
             <select value={newSpecialty} onChange={(e) => setNewSpecialty(e.target.value)} style={inputStyle}>
               {SPECIALTIES.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
@@ -728,30 +736,30 @@ export default function ClinicPortal() {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 4 }}>Consultation Fee (₹)</label>
+              <label style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: 4 }}>Consultation Fee (₹)</label>
               <input placeholder="200" type="number" value={newFee} onChange={(e) => setNewFee(e.target.value)} style={inputStyle} />
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 700, color: '#64748b', display: 'block', marginBottom: 4 }}>Avg Min / Patient</label>
+              <label style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: 4 }}>Avg Min / Patient</label>
               <input placeholder="10" type="number" value={newAvgMinutes} onChange={(e) => setNewAvgMinutes(e.target.value)} style={inputStyle} />
             </div>
           </div>
 
-          <div style={{ background: '#f8fafc', padding: 12, borderRadius: 12, border: '1px solid #f1f5f9' }}>
-            <p style={{ fontSize: 12, fontWeight: 700, color: '#0f172a', margin: '0 0 8px 0' }}>🕒 Doctor Clinic Timings & Schedule</p>
+          <div style={{ background: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: '#fff', margin: '0 0 8px 0' }}>🕒 Doctor Clinic Timings & Schedule</p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 2 }}>Clinic Arrival Time</label>
+                <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', display: 'block', marginBottom: 2 }}>Clinic Arrival Time</label>
                 <input type="time" value={newStartTime} onChange={(e) => setNewStartTime(e.target.value)} style={inputStyle} required />
               </div>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 2 }}>Clinic Departure Time</label>
+                <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', display: 'block', marginBottom: 2 }}>Clinic Departure Time</label>
                 <input type="time" value={newEndTime} onChange={(e) => setNewEndTime(e.target.value)} style={inputStyle} required />
               </div>
             </div>
 
             <div>
-              <label style={{ fontSize: 11, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 4 }}>Visiting Days</label>
+              <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', display: 'block', marginBottom: 4 }}>Visiting Days</label>
               <DayPicker selectedDays={newWorkingDays} onToggle={toggleNewDay} />
             </div>
           </div>
@@ -759,35 +767,46 @@ export default function ClinicPortal() {
           <button
             type="submit"
             disabled={savingDoctor}
-            style={{ padding: 14, borderRadius: 12, border: 'none', background: '#0d9488', color: 'white', fontWeight: 700, fontSize: 14, cursor: 'pointer', marginTop: 6 }}
+            style={{ ...pillPrimaryBtn, padding: 14, fontSize: 14, marginTop: 6 }}
           >
             {savingDoctor ? 'Saving Doctor...' : '✓ Save Doctor Profile'}
           </button>
         </form>
       )}
 
+      {/* Walk-In Patients (standalone info card matching Figma) */}
+      <div style={{ marginTop: 24 }}>
+        <h3 style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 12 }}>Walk-In Patients</h3>
+        <div style={{ ...cardStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#fff' }}>Add Offline Patient</p>
+            <p style={{ margin: '4px 0 0', fontSize: 11, color: '#94a3b8' }}>Use "+ Walk-in" on a doctor's card above to assign a token</p>
+          </div>
+        </div>
+      </div>
+
       {/* Screenshot Modal */}
       {viewScreenshotModal && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(6px)',
+          background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 1000,
         }}>
-          <div style={{ background: 'white', borderRadius: 24, padding: 20, width: '100%', maxWidth: 420, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+          <div style={{ background: '#14161d', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 24, padding: 20, width: '100%', maxWidth: 420 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#0f172a' }}>Verify Payment Receipt</h3>
-              <button onClick={() => setViewScreenshotModal(null)} style={{ border: 'none', background: '#f1f5f9', borderRadius: '50%', width: 28, height: 28, fontWeight: 700, cursor: 'pointer' }}>✕</button>
+              <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#fff' }}>Verify Payment Receipt</h3>
+              <button onClick={() => setViewScreenshotModal(null)} style={{ border: 'none', background: 'rgba(255,255,255,0.06)', borderRadius: '50%', width: 28, height: 28, color: '#94a3b8', fontWeight: 700, cursor: 'pointer' }}>✕</button>
             </div>
 
-            <div style={{ background: '#f8fafc', borderRadius: 12, padding: 12, marginBottom: 14, border: '1px solid #e2e8f0' }}>
-              <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#0f172a' }}>Patient: {viewScreenshotModal.patient_name || 'N/A'}</p>
-              <p style={{ margin: '2px 0 0 0', fontSize: 12, color: '#64748b' }}>Token #{viewScreenshotModal.token_number} · Doctor: {viewScreenshotModal.doctorName}</p>
+            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 12, padding: 12, marginBottom: 14, border: '1px solid rgba(255,255,255,0.06)' }}>
+              <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#fff' }}>Patient: {viewScreenshotModal.patient_name || 'N/A'}</p>
+              <p style={{ margin: '2px 0 0 0', fontSize: 12, color: '#94a3b8' }}>Token #{viewScreenshotModal.token_number} · Doctor: {viewScreenshotModal.doctorName}</p>
               {viewScreenshotModal.utr_id && (
-                <p style={{ margin: '6px 0 0 0', fontSize: 13, fontWeight: 700, color: '#0d9488' }}>UTR ID: {viewScreenshotModal.utr_id}</p>
+                <p style={{ margin: '6px 0 0 0', fontSize: 13, fontWeight: 700, color: '#10b981' }}>UTR ID: {viewScreenshotModal.utr_id}</p>
               )}
             </div>
 
-            <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0', background: '#0f172a', maxHeight: 320, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+            <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', background: '#000', maxHeight: 320, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
               <img
                 src={viewScreenshotModal.payment_screenshot_url}
                 alt="Payment Screenshot"
@@ -800,13 +819,13 @@ export default function ClinicPortal() {
                 href={viewScreenshotModal.payment_screenshot_url}
                 target="_blank"
                 rel="noreferrer"
-                style={{ flex: 1, padding: 12, borderRadius: 12, border: '1px solid #cbd5e1', background: 'white', color: '#0f172a', fontWeight: 700, fontSize: 13, textDecoration: 'none', textAlign: 'center' }}
+                style={{ ...pillGhostBtn, flex: 1, padding: 12, fontSize: 13, textDecoration: 'none', textAlign: 'center' }}
               >
                 🔍 Open Full Image
               </a>
               <button
                 onClick={() => setViewScreenshotModal(null)}
-                style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: '#0d9488', color: 'white', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+                style={{ ...pillPrimaryBtn, flex: 1, padding: 12, fontSize: 13 }}
               >
                 ✓ Confirm Verified
               </button>
@@ -819,19 +838,19 @@ export default function ClinicPortal() {
       {showQrModal && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(8px)',
+          background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 1000,
         }}>
-          <div style={{ background: 'white', borderRadius: 28, padding: 24, width: '100%', maxWidth: 360, textAlign: 'center', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.3)' }}>
+          <div style={{ background: '#14161d', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 28, padding: 24, width: '100%', maxWidth: 360, textAlign: 'center' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#0d9488', background: '#ccfbf1', padding: '4px 10px', borderRadius: 12 }}>CLINIC PAYMENT QR</span>
-              <button onClick={() => setShowQrModal(false)} style={{ border: 'none', background: '#f1f5f9', borderRadius: '50%', width: 28, height: 28, fontWeight: 700, cursor: 'pointer' }}>✕</button>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: '4px 10px', borderRadius: 12 }}>CLINIC PAYMENT QR</span>
+              <button onClick={() => setShowQrModal(false)} style={{ border: 'none', background: 'rgba(255,255,255,0.06)', borderRadius: '50%', width: 28, height: 28, color: '#94a3b8', fontWeight: 700, cursor: 'pointer' }}>✕</button>
             </div>
 
-            <h3 style={{ margin: '0 0 4px 0', fontSize: 18, fontWeight: 800, color: '#0f172a' }}>Scan to Pay Reception</h3>
-            <p style={{ margin: '0 0 16px 0', fontSize: 12, color: '#64748b' }}>Works with Google Pay, PhonePe, Paytm & BHIM</p>
+            <h3 style={{ margin: '0 0 4px 0', fontSize: 18, fontWeight: 800, color: '#fff' }}>Scan to Pay Reception</h3>
+            <p style={{ margin: '0 0 16px 0', fontSize: 12, color: '#94a3b8' }}>Works with Google Pay, PhonePe, Paytm & BHIM</p>
 
-            <div style={{ background: '#f8fafc', padding: 16, borderRadius: 20, border: '1px solid #e2e8f0', display: 'inline-block', marginBottom: 16 }}>
+            <div style={{ background: '#fff', padding: 16, borderRadius: 20, display: 'inline-block', marginBottom: 16 }}>
               <img
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`upi://pay?pa=${upiId}&pn=Shri Durga Medical Hall&cu=INR`)}`}
                 alt="Clinic UPI QR Code"
@@ -839,13 +858,13 @@ export default function ClinicPortal() {
               />
             </div>
 
-            <p style={{ fontSize: 13, fontWeight: 700, color: '#0d9488', margin: '0 0 18px 0', background: '#f0fdf4', padding: '8px 12px', borderRadius: 10 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#10b981', margin: '0 0 18px 0', background: 'rgba(16,185,129,0.08)', padding: '8px 12px', borderRadius: 10 }}>
               UPI ID: {upiId}
             </p>
 
             <button
               onClick={() => setShowQrModal(false)}
-              style={{ width: '100%', padding: 14, borderRadius: 14, border: 'none', background: '#0f172a', color: 'white', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}
+              style={{ ...pillGhostBtn, width: '100%', padding: 14, fontSize: 14 }}
             >
               Done / Close
             </button>
