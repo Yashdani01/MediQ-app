@@ -437,16 +437,21 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                       .sort((a, b) => a.liveQueue - b.liveQueue)
                       .map((doc) => {
                         const availability = getAvailability(doc);
+                        const specs = doc.specialties || [doc.specialty || 'General Physician'];
                         return (
                           <div key={doc.id} className={`doctor-card ${availability.bookable ? '' : 'muted'}`}>
                             <div className="doctor-info">
                               <DoctorAvatar bookable={availability.bookable} />
                               <div className="doctor-details">
                                 <div className="doctor-details-top">
-                                  <p className="doctor-name">{doc.name}</p>
+                                  <div>
+                                    <p className="doctor-name">{doc.name}</p>
+                                    <p style={{ margin: '0 0 2px', fontSize: '11px', color: '#10b981', fontWeight: 700 }}>{doc.degrees || 'MBBS, General Practitioner'}</p>
+                                  </div>
                                   <DoctorStatusBadge availability={availability} />
                                 </div>
-                                <p className="doctor-specialty">{doc.specialty}</p>
+                                <p className="doctor-specialty">{specs.join(', ')}</p>
+                                <p style={{ fontSize: '11px', color: '#d97706', fontWeight: 700, margin: '2px 0 0' }}>⭐ PTR Trust Score: {doc.ptr_score || '99.0'}%</p>
                                 <p className="doctor-hospital-tag">{doc.hospital?.name}</p>
                               </div>
                             </div>
@@ -553,16 +558,21 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
               <div className="doctor-list">
                 {doctors.map((doc) => {
                   const availability = getAvailability(doc);
+                  const specs = doc.specialties || [doc.specialty || 'General Physician'];
                   return (
                     <div key={doc.id} className={`doctor-card ${availability.bookable ? '' : 'muted'}`}>
                       <div className="doctor-info">
                         <DoctorAvatar bookable={availability.bookable} />
                         <div className="doctor-details">
                           <div className="doctor-details-top">
-                            <p className="doctor-name">{doc.name}</p>
+                            <div>
+                              <p className="doctor-name">{doc.name}</p>
+                              <p style={{ margin: '0 0 2px', fontSize: '11px', color: '#10b981', fontWeight: 700 }}>{doc.degrees || 'MBBS, General Practitioner'}</p>
+                            </div>
                             <DoctorStatusBadge availability={availability} />
                           </div>
-                          <p className="doctor-specialty">{doc.specialty}</p>
+                          <p className="doctor-specialty">{specs.join(', ')}</p>
+                          <p style={{ fontSize: '11px', color: '#d97706', fontWeight: 700, margin: '2px 0 0' }}>⭐ PTR Trust Score: {doc.ptr_score || '99.0'}%</p>
                         </div>
                       </div>
 
