@@ -314,6 +314,33 @@ export default function ClinicPortal() {
     setLoadingBookings(false);
   };
 
+  const handleMarkSeen = async (appointmentId, doctorId) => {
+    setUpdatingPatient(appointmentId);
+    const { error } = await markAppointmentSeen(appointmentId);
+    setUpdatingPatient(null);
+    if (error) { setError('Could not update patient status.'); return; }
+    await refreshBookings(doctorId);
+    loadDoctors(unlockedPin);
+  };
+
+  const handleCheckIn = async (appointmentId, doctorId) => {
+    setUpdatingPatient(appointmentId);
+    const { error } = await checkInAppointment(unlockedPin, appointmentId);
+    setUpdatingPatient(null);
+    if (error) { setError('Could not check in patient.'); return; }
+    await refreshBookings(doctorId);
+  };
+
+  const handleNoShowCancel = async (appointmentId, doctorId) => {
+    if (!window.confirm('Mark this patient as "Did Not Show Up / Cancel"?')) return;
+    setUpdatingPatient(appointmentId);
+    const { error } = await cancelAppointment(appointmentId);
+    setUpdatingPatient(null);
+    if (error) { setError('Could not cancel booking.'); return; }
+    await refreshBookings(doctorId);
+    loadDoctors(unlockedPin);
+  };
+
   if (!unlocked) {
     return (
       <div style={{
@@ -615,7 +642,7 @@ export default function ClinicPortal() {
                           {b.status === 'waiting' ? (
                             <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                               <button onClick={() => handleMarkSeen(b.id, doc.id)} style={{ ...pillPrimaryBtn, flex: 2, padding: '10px', fontSize: 12 }}>✓ Call & Mark Seen</button>
-                              <button onClick={() => cancelAppointment(b.id).then(() => refreshBookings(doc.id))} style={{ ...pillDangerBtn, flex: 1, padding: '10px', fontSize: 12 }}>Cancel</button>
+                              <button onClick={() => handleNoShowCancel(b.id, doc.id)} style={{ ...pillDangerBtn, flex: 1, padding: '10px', fontSize: 12 }}>Did Not Show</button>
                             </div>
                           ) : (
                             <p style={{ color: '#10b981', fontWeight: 700, fontSize: 12, margin: '6px 0 0 0' }}>✓ Completed / Seen</p>
