@@ -107,7 +107,7 @@ export async function getMyCurrentBooking(patientUserId) {
 
   const { data: doctor } = await supabase
     .from('doctors')
-    .select('name, specialty, avg_minutes_per_patient')
+    .select('name, specialty, avg_minutes_per_patient, status, delay_minutes')
     .eq('id', appointment.doctor_id)
     .single();
 
@@ -196,24 +196,24 @@ export async function searchDoctors(city, searchTerm) {
 
   // Comprehensive Multi-Lingual Symptom & Keyword Dictionary
   if (
-    lowerTerm.includes('dant') || lowerTerm.includes('teeth') || lowerTerm.includes('tooth') || 
+    lowerTerm.includes('dant') || lowerTerm.includes('teeth') || lowerTerm.includes('tooth') ||
     lowerTerm.includes('dental') || lowerTerm.includes('danto') || lowerTerm.includes('daant')
   ) {
     refinedTerm = 'Dentist';
   } else if (
-    lowerTerm.includes('heart') || lowerTerm.includes('chest') || lowerTerm.includes('seene') || 
+    lowerTerm.includes('heart') || lowerTerm.includes('chest') || lowerTerm.includes('seene') ||
     lowerTerm.includes('cardiologist') || lowerTerm.includes('bp') || lowerTerm.includes('blood pressure')
   ) {
     refinedTerm = 'Cardiologist';
   } else if (
-    lowerTerm.includes('sugar') || lowerTerm.includes('diabetes') || lowerTerm.includes('diabetic') || 
+    lowerTerm.includes('sugar') || lowerTerm.includes('diabetes') || lowerTerm.includes('diabetic') ||
     lowerTerm.includes('madhumeh')
   ) {
     refinedTerm = 'Diabetologist';
   } else if (
-    lowerTerm.includes('fever') || lowerTerm.includes('cold') || lowerTerm.includes('cough') || 
-    lowerTerm.includes('bukhar') || lowerTerm.includes('jhor') || lowerTerm.includes('thanda') || 
-    lowerTerm.includes('sardi') || lowerTerm.includes('headache') || lowerTerm.includes('matha') || 
+    lowerTerm.includes('fever') || lowerTerm.includes('cold') || lowerTerm.includes('cough') ||
+    lowerTerm.includes('bukhar') || lowerTerm.includes('jhor') || lowerTerm.includes('thanda') ||
+    lowerTerm.includes('sardi') || lowerTerm.includes('headache') || lowerTerm.includes('matha') ||
     lowerTerm.includes('general') || lowerTerm.includes('physician')
   ) {
     refinedTerm = 'General Physician';
@@ -292,7 +292,7 @@ export async function uploadPatientReport(patientUserId, reportName, reportType,
 
   const fileExt = file.name.split('.').pop();
   const fileName = `${patient.id}-${Date.now()}.${fileExt}`;
-  
+
   const { error: uploadError } = await supabase.storage
     .from('patient-reports')
     .upload(fileName, file);
