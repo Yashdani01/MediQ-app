@@ -318,7 +318,11 @@ export default function ClinicPortal() {
     setUpdatingPatient(appointmentId);
     const { error } = await markAppointmentSeen(unlockedPin, appointmentId);
     setUpdatingPatient(null);
-    if (error) { setError('Could not update patient status.'); return; }
+    if (error) { 
+      console.error("Mark seen error:", error);
+      setError('Could not update patient status.'); 
+      return; 
+    }
     await refreshBookings(doctorId);
     loadDoctors(unlockedPin);
   };
@@ -332,11 +336,15 @@ export default function ClinicPortal() {
   };
 
   const handleNoShowCancel = async (appointmentId, doctorId) => {
-    if (!window.confirm('Mark this patient as "Did Not Show Up / Cancel"?')) return;
+    if (!window.confirm('Mark this patient as cancelled / did not show?')) return;
     setUpdatingPatient(appointmentId);
-    const { error } = await cancelAppointment(unlockedPin, appointmentId);
+    const { error } = await cancelAppointment(appointmentId);
     setUpdatingPatient(null);
-    if (error) { setError('Could not cancel booking.'); return; }
+    if (error) { 
+      console.error("Cancel appointment error:", error);
+      setError('Could not cancel booking.'); 
+      return; 
+    }
     await refreshBookings(doctorId);
     loadDoctors(unlockedPin);
   };
