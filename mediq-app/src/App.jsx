@@ -1,8 +1,9 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 import Login from './components/Login';
 import HospitalFlow from './components/HospitalFlow';
-import MyToken from './components/MyToken';import Reports from './components/Reports';
+import MyToken from './components/MyToken';
+import Reports from './components/Reports';
 import ClinicPortal from './components/ClinicPortal';
 import './components/MyToken.css';
 
@@ -34,7 +35,7 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-const loadPatientProfile = async (user) => {
+  const loadPatientProfile = async (user) => {
     const urlParams = new URLSearchParams(window.location.search);
     const pendingName = urlParams.get('name');
     const pendingCity = urlParams.get('city');
@@ -98,28 +99,31 @@ const loadPatientProfile = async (user) => {
   const initialCity = patientProfile?.city || '';
 
   return (
-    <>
-      {activeTab === 'home' && (
-        <HospitalFlow
-          user={session?.user || null}
-          isGuest={isGuest}
-          onLogout={handleLogout}
-          displayName={displayName}
-          initialCity={initialCity}
-        />
-      )}
-      {activeTab === 'token' && (
-        <MyToken user={session?.user || null} />
-      )}
-{activeTab === 'reports' && (
-        <Reports user={session?.user || null} />
-      )}
-   <div className="tabbar">
+    <div className="device">
+      <main>
+        {activeTab === 'home' && (
+          <HospitalFlow
+            user={session?.user || null}
+            isGuest={isGuest}
+            onLogout={handleLogout}
+            displayName={displayName}
+            initialCity={initialCity}
+          />
+        )}
+        {activeTab === 'token' && (
+          <MyToken user={session?.user || null} />
+        )}
+        {activeTab === 'reports' && (
+          <Reports user={session?.user || null} />
+        )}
+      </main>
+
+      <nav className="tabbar">
         <button
           className={`tabbar-item ${activeTab === 'home' ? 'active' : ''}`}
           onClick={() => setActiveTab('home')}
         >
-          <svg className="tabbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg className="tabbar-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
             <polyline points="9 22 9 12 15 12 15 22" />
           </svg>
@@ -129,7 +133,7 @@ const loadPatientProfile = async (user) => {
           className={`tabbar-item ${activeTab === 'reports' ? 'active' : ''}`}
           onClick={() => setActiveTab('reports')}
         >
-          <svg className="tabbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg className="tabbar-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
             <polyline points="14 2 14 8 20 8" />
             <line x1="16" y1="13" x2="8" y2="13" />
@@ -142,13 +146,13 @@ const loadPatientProfile = async (user) => {
           className={`tabbar-item ${activeTab === 'token' ? 'active' : ''}`}
           onClick={() => setActiveTab('token')}
         >
-          <svg className="tabbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg className="tabbar-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z" />
             <line x1="13" y1="5" x2="13" y2="19" strokeDasharray="4 4" />
           </svg>
           My Token
         </button>
-      </div>
-    </>
+      </nav>
+    </div>
   );
 }
