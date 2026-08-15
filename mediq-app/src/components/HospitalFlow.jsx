@@ -624,51 +624,63 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
               <p className="flow-empty">No doctors listed for this hospital yet.</p>
             ) : (
               <div className="doctor-list" style={{ width: '100%', boxSizing: 'border-box' }}>
-                {doctors.map((doc) => {
-                  const availability = getAvailability(doc);
-                  const specs = doc.specialties || [doc.specialty || 'General Physician'];
-                  return (
-                    <div key={doc.id} className={`doctor-card ${availability.bookable ? '' : 'muted'}`} style={{ width: '100%', boxSizing: 'border-box' }}>
-                      <div className="doctor-info">
-                        <DoctorAvatar bookable={availability.bookable} />
-                        <div className="doctor-details">
-                          <div className="doctor-details-top">
-                            <div>
-                              <p className="doctor-name">{doc.name}</p>
-                              <p style={{ margin: '0 0 2px', fontSize: '11px', color: '#10b981', fontWeight: 700 }}>{doc.degrees || 'MBBS, General Practitioner'}</p>
+                {doctors
+                  .sort((a, b) => {
+                    const getWeight = (doc) => {
+                      if (doc.status === 'available') return 1;
+                      if (doc.status === 'delayed') return 2;
+                      if (doc.status === 'on_break') return 3;
+                      if (doc.status === 'not_started') return 4;
+                      if (doc.status === 'completed' || doc.status === 'on_leave') return 5;
+                      return 2;
+                    };
+                    return getWeight(a) - getWeight(b);
+                  })
+                  .map((doc) => {
+                    const availability = getAvailability(doc);
+                    const specs = doc.specialties || [doc.specialty || 'General Physician'];
+                    return (
+                      <div key={doc.id} className={`doctor-card ${availability.bookable ? '' : 'muted'}`} style={{ width: '100%', boxSizing: 'border-box' }}>
+                        <div className="doctor-info">
+                          <DoctorAvatar bookable={availability.bookable} />
+                          <div className="doctor-details">
+                            <div className="doctor-details-top">
+                              <div>
+                                <p className="doctor-name">{doc.name}</p>
+                                <p style={{ margin: '0 0 2px', fontSize: '11px', color: '#10b981', fontWeight: 700 }}>{doc.degrees || 'MBBS, General Practitioner'}</p>
+                              </div>
+                              <DoctorStatusBadge availability={availability} />
                             </div>
-                            <DoctorStatusBadge availability={availability} />
+                            <p className="doctor-specialty">{specs.join(', ')}</p>
+                            <p style={{ fontSize: '11px', color: '#d97706', fontWeight: 700, margin: '2px 0 0' }}>⭐ PTR Trust Score: {doc.ptr_score || '99.0'}%</p>
                           </div>
-                          <p className="doctor-specialty">{specs.join(', ')}</p>
-                          <p style={{ fontSize: '11px', color: '#d97706', fontWeight: 700, margin: '2px 0 0' }}>⭐ PTR Trust Score: {doc.ptr_score || '99.0'}%</p>
+                        </div>
+
+                        <div className="doctor-card-divider" />
+
+                        <div className="doc-stats">
+                          <div>
+                            <p className="doc-stats-label">Schedule</p>
+                            <DoctorSchedule doc={doc} />
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <p className="doc-stats-label">Waiting</p>
+                            <p className={`doc-stats-value ${availability.bookable ? 'green' : ''}`}>
+                              {availability.bookable ? `${doc.liveQueue} Patients` : 'Closed'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="doc-footer">
+                          <div>
+                            <p className="doc-fee-label">Consultation Fee</p>
+                            <DoctorFee doc={doc} />
+                          </div>
+                          <BookButton availability={availability} onClick={() => openPaymentChoice(doc, selectedHospital.id)} />
                         </div>
                       </div>
-
-                      <div className="doctor-card-divider" />
-
-                      <div className="doc-stats">
-                        <div>
-                          <p className="doc-stats-label">Schedule</p>
-                          <DoctorSchedule doc={doc} />
-                        </div>
-                        <div style={{ textAlign: 'right' }}>
-                          <p className="doc-stats-label">Waiting</p>
-                          <p className={`doc-stats-value ${availability.bookable ? 'green' : ''}`}>
-                            {availability.bookable ? `${doc.liveQueue} Patients` : 'Closed'}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="doc-footer">
-                        <div>
-                          <p className="doc-fee-label">Consultation Fee</p>
-                          <DoctorFee doc={doc} />
-                        </div>
-                        <BookButton availability={availability} onClick={() => openPaymentChoice(doc, selectedHospital.id)} />
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
               </div>
             )}
 
