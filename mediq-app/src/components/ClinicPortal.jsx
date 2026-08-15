@@ -18,7 +18,7 @@ const SPECIALTIES = [
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 const cardStyle = { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 24, padding: 16, boxShadow: '0 8px 24px 0 rgba(0,0,0,0.25)' };
-const panelInputStyle = { width: '100%', padding: '10px 12px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: '#131b18', color: '#fff', fontSize: 14, boxSizing: 'border-box', outline: 'none' };
+const panelInputStyle = { width: '100%', padding: '10px 12px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 14, boxSizing: 'border-box', outline: 'none' };
 const pillPrimaryBtn = { border: 'none', background: 'linear-gradient(90deg, #10b981 25%, #059669 75%)', color: '#fff', fontWeight: 700, cursor: 'pointer', borderRadius: 100, boxShadow: '0 4px 8px rgba(16,185,129,0.2)' };
 const pillGhostBtn = { border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', color: '#fff', fontWeight: 700, cursor: 'pointer', borderRadius: 100 };
 const pillDangerBtn = { border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.08)', color: '#ef4444', fontWeight: 700, cursor: 'pointer', borderRadius: 100 };
@@ -212,7 +212,6 @@ export default function ClinicPortal() {
         newFee ? parseFloat(newFee) : 0
       );
 
-      // Save custom fields via direct supabase update if helper doesn't cover extra columns
       const { data: latestDocs } = await getDoctorsForClinic(unlockedPin);
       const justAdded = latestDocs[latestDocs.length - 1];
       if (justAdded) {
@@ -310,125 +309,381 @@ export default function ClinicPortal() {
           background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 32,
           padding: '40px 32px 32px', width: '100%', maxWidth: 400, textAlign: 'center',
         }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#10b981', fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 100, marginBottom: 20 }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981' }} />
+            MediQ Secure Terminal Active
+          </div>
+          <div style={{ width: 64, height: 64, borderRadius: 22, background: 'rgba(16,185,129,0.1)', border: '1.5px solid #10b981', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 28 }}>
+            🏥
+          </div>
           <h1 style={{ fontSize: 24, fontWeight: 800, color: '#fff', margin: '0 0 4px 0' }}>{clinicName}</h1>
           <p style={{ fontSize: 13, color: '#94a3b8', margin: '0 0 28px 0', fontWeight: 600 }}>Staff Access Gateway · Enter Access PIN</p>
           <form onSubmit={handleUnlock} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <input
               type="password" inputMode="numeric" placeholder="• • • •" maxLength={6}
               value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} required
-              style={{ width: '100%', padding: '16px', borderRadius: 16, border: '1.5px solid rgba(255,255,255,0.1)', background: '#131b18', color: '#fff', fontSize: 24, fontWeight: 800, letterSpacing: '12px', textAlign: 'center', outline: 'none', boxSizing: 'border-box' }}
+              style={{ width: '100%', padding: '16px', borderRadius: 16, border: '1.5px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 24, fontWeight: 800, letterSpacing: '12px', textAlign: 'center', outline: 'none', boxSizing: 'border-box' }}
             />
-            <button type="submit" disabled={loading || !pin} style={{ ...pillPrimaryBtn, width: '100%', padding: '16px', fontSize: 15 }}>
+            <button type="submit" disabled={loading || !pin} style={{ ...pillPrimaryBtn, width: '100%', padding: '16px', fontSize: 15, opacity: (loading || !pin) ? 0.6 : 1 }}>
               {loading ? 'Verifying PIN...' : 'Unlock Portal →'}
             </button>
           </form>
-          {error && <p style={{ color: '#fca5a5', fontSize: 13, marginTop: 16 }}>{error}</p>}
+          {error && <p style={{ color: '#fca5a5', fontSize: 13, marginTop: 16, background: 'rgba(220,38,38,0.12)', border: '1px solid rgba(220,38,38,0.25)', padding: '10px 14px', borderRadius: 12 }}>{error}</p>}
         </div>
       </div>
     );
   }
 
+  const allBookings = Object.values(bookingsByDoctor).flat();
+  const totalBookings = allBookings.length;
+  const waitingBookings = allBookings.filter(b => b.status === 'waiting').length;
+  const completedBookings = allBookings.filter(b => b.status === 'completed' || b.status === 'seen').length;
+  const todayDateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
   return (
-    <div style={{ maxWidth: 600, margin: '0 auto', padding: '20px 16px 100px', minHeight: '100vh', background: '#090a0f', color: '#fff', fontFamily: 'sans-serif' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <h1 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>{clinicName} - Portal</h1>
-        <button onClick={handleLogout} style={{ ...pillDangerBtn, padding: '8px 16px', fontSize: 13 }}>Logout</button>
+    <div style={{
+      maxWidth: 600, margin: '0 auto', padding: '20px 16px 100px', minHeight: '100vh',
+      background: 'radial-gradient(circle at 50% 0%, rgba(15,118,110,0.35) 0%, rgba(9,10,15,0) 55%), linear-gradient(180deg, #090a0f 0%, #090a0f 100%)',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      color: '#fff',
+    }}>
+
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+        <div>
+          <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: '#10b981', textTransform: 'uppercase', letterSpacing: 0.5 }}>Clinic Portal</p>
+          <h1 style={{ fontSize: 18, fontWeight: 800, color: '#fff', margin: '4px 0 2px' }}>{clinicName}</h1>
+          <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>{todayDateStr}</p>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            onClick={() => setShowSettingsDrawer(!showSettingsDrawer)}
+            style={{ ...pillGhostBtn, padding: '8px 12px', fontSize: 13 }}
+          >
+            ⚙️ Settings
+          </button>
+          <button onClick={handleLogout} style={{ ...pillDangerBtn, padding: '8px 16px', fontSize: 13 }}>
+            Logout ➔
+          </button>
+        </div>
       </div>
 
-      <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 14 }}>Doctor Roster & Advanced Management</h3>
+      {/* Stats Summary */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 20 }}>
+        <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 12 }}>
+          <span style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Total Patients</span>
+          <p style={{ fontSize: 20, fontWeight: 800, color: '#fff', margin: '4px 0 0 0' }}>{totalBookings}</p>
+        </div>
+        <div style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: 16, padding: 12 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: '#fbbf24' }}>Waiting</span>
+          <p style={{ fontSize: 20, fontWeight: 800, color: '#fbbf24', margin: '4px 0 0 0' }}>{waitingBookings}</p>
+        </div>
+        <div style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 16, padding: 12 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: '#10b981' }}>Completed</span>
+          <p style={{ fontSize: 20, fontWeight: 800, color: '#10b981', margin: '4px 0 0 0' }}>{completedBookings}</p>
+        </div>
+      </div>
 
+      {/* Settings Drawer */}
+      {showSettingsDrawer && (
+        <div style={{ ...cardStyle, marginBottom: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+            <h4 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#fff' }}>⚙️ Clinic Configurations</h4>
+            <button onClick={() => setShowSettingsDrawer(false)} style={{ border: 'none', background: 'rgba(255,255,255,0.06)', borderRadius: '50%', width: 26, height: 26, color: '#94a3b8', fontWeight: 700, cursor: 'pointer' }}>✕</button>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 12, padding: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', margin: '0 0 6px 0', textTransform: 'uppercase' }}>📍 Google Maps Navigation Link</p>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <button onClick={() => { setLocationInput(locationStr); setEditingLocation(!editingLocation); }} style={{ ...pillGhostBtn, padding: '6px 12px', fontSize: 12 }}>
+                  {locationStr ? '✏️ Edit Map Link' : '+ Add Map Link'}
+                </button>
+                {locationStr && (
+                  <a href={locationStr} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: '#10b981', fontWeight: 700, textDecoration: 'none' }}>
+                    🔗 Test Route Link ➔
+                  </a>
+                )}
+              </div>
+
+              {editingLocation && (
+                <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                  <input placeholder="Paste Google Maps share link" value={locationInput} onChange={(e) => setLocationInput(e.target.value)} style={{ ...panelInputStyle, flex: 1 }} />
+                  <button onClick={handleSaveLocation} disabled={savingLocation} style={{ ...pillPrimaryBtn, padding: '8px 14px', fontSize: 13 }}>Save</button>
+                </div>
+              )}
+            </div>
+
+            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 12, padding: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', margin: '0 0 6px 0', textTransform: 'uppercase' }}>💳 Clinic UPI & On-Screen QR Code</p>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <button onClick={() => { setUpiInput(upiId); setEditingUpi(!editingUpi); }} style={{ ...pillGhostBtn, padding: '6px 12px', fontSize: 12 }}>
+                  {upiId ? `✏️ Change UPI (${upiId})` : '+ Add UPI ID'}
+                </button>
+                {upiId && (
+                  <button onClick={() => setShowQrModal(true)} style={{ ...pillPrimaryBtn, padding: '6px 12px', fontSize: 12 }}>
+                    📱 Show On-Screen QR Code
+                  </button>
+                )}
+              </div>
+
+              {editingUpi && (
+                <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                  <input placeholder="Clinic UPI ID" value={upiInput} onChange={(e) => setUpiInput(e.target.value)} style={{ ...panelInputStyle, flex: 1 }} />
+                  <button onClick={handleSaveUpi} disabled={savingUpi} style={{ ...pillPrimaryBtn, padding: '8px 14px', fontSize: 13 }}>Save</button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <h3 style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 14 }}>Doctor Roster & Queue Control</h3>
+
+      {/* Doctor Roster */}
       {doctors.map((doc) => {
         const isEditing = editingId === doc.id;
-        const specs = doc.specialties || [doc.specialty];
-        const scheduleObj = doc.custom_schedule || {};
+        const docWaitingCount = bookingsByDoctor[doc.id]?.filter(b => b.status === 'waiting').length || 0;
+        const specs = doc.specialties || [doc.specialty || 'General Physician'];
 
         return (
           <div key={doc.id} style={{ ...cardStyle, marginBottom: 18 }}>
             {isEditing ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <input value={editName} onChange={(e) => setEditName(e.target.value)} style={panelInputStyle} placeholder="Doctor Name" />
-                <input value={editDegrees} onChange={(e) => setEditDegrees(e.target.value)} style={panelInputStyle} placeholder="Degrees (e.g. MBBS, MD - Cardiology)" />
-                <input type="number" step="0.1" value={editPtr} onChange={(e) => setEditPtr(e.target.value)} style={panelInputStyle} placeholder="PTR Score (e.g. 99.4)" />
-                <input type="number" value={editFee} onChange={(e) => setEditFee(e.target.value)} style={panelInputStyle} placeholder="Consultation Fee (₹)" />
+                <input value={editDegrees} onChange={(e) => setEditDegrees(e.target.value)} style={panelInputStyle} placeholder="Degrees (e.g. MBBS, MD)" />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <input type="number" step="0.1" value={editPtr} onChange={(e) => setEditPtr(e.target.value)} style={panelInputStyle} placeholder="PTR Trust Score %" />
+                  <input type="number" value={editFee} onChange={(e) => setEditFee(e.target.value)} style={panelInputStyle} placeholder="Fee (₹)" />
+                </div>
 
                 <p style={{ fontSize: 12, fontWeight: 700, color: '#10b981', margin: '4px 0 0' }}>Select Specialties:</p>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {SPECIALTIES.map(s => (
-                    <button type="button" key={s} onClick={() => toggleSpecialty(s, editSpecialties, setEditSpecialties)} style={{ padding: '4px 10px', borderRadius: 20, fontSize: 11, background: editSpecialties.includes(s) ? '#10b981' : 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', cursor: 'pointer' }}>
+                    <button type="button" key={s} onClick={() => toggleSpecialty(s, editSpecialties, setEditSpecialties)} style={{ padding: '5px 10px', borderRadius: 20, fontSize: 11, background: editSpecialties.includes(s) ? '#10b981' : 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', cursor: 'pointer' }}>
                       {s}
                     </button>
                   ))}
                 </div>
 
+                <p style={{ fontSize: 12, fontWeight: 700, color: '#10b981', margin: '8px 0 0' }}>Day-wise Custom Timings:</p>
+                {DAYS.map(day => (
+                  <div key={day} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.02)', padding: 6, borderRadius: 8 }}>
+                    <label style={{ fontSize: 11, fontWeight: 700, width: 35 }}>{day}</label>
+                    <input type="checkbox" checked={editDaySchedules[day]?.active || false} onChange={(e) => setEditDaySchedules({ ...editDaySchedules, [day]: { ...(editDaySchedules[day] || { start: '10:00', end: '14:00' }), active: e.target.checked } })} />
+                    <input type="time" value={editDaySchedules[day]?.start || '10:00'} onChange={(e) => setEditDaySchedules({ ...editDaySchedules, [day]: { ...(editDaySchedules[day] || {}), start: e.target.value } })} style={{ ...panelInputStyle, padding: '4px 6px', fontSize: 11 }} />
+                    <span>to</span>
+                    <input type="time" value={editDaySchedules[day]?.end || '14:00'} onChange={(e) => setEditDaySchedules({ ...editDaySchedules, [day]: { ...(editDaySchedules[day] || {}), end: e.target.value } })} style={{ ...panelInputStyle, padding: '4px 6px', fontSize: 11 }} />
+                  </div>
+                ))}
+
                 <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                  <button onClick={() => handleSaveEdit(doc.id)} style={{ ...pillPrimaryBtn, flex: 1, padding: 10 }}>Save Changes</button>
+                  <button onClick={() => handleSaveEdit(doc.id)} style={{ ...pillPrimaryBtn, flex: 1, padding: 10 }}>Save</button>
                   <button onClick={() => setEditingId(null)} style={{ ...pillGhostBtn, flex: 1, padding: 10 }}>Cancel</button>
                 </div>
               </div>
             ) : (
               <>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div>
-                    <h4 style={{ fontSize: 16, fontWeight: 800, margin: '0 0 2px' }}>{doc.name}</h4>
-                    <p style={{ fontSize: 12, color: '#10b981', margin: '0 0 4px', fontWeight: 700 }}>{doc.degrees || 'MBBS'}</p>
-                    <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>Specialties: {specs.join(', ')}</p>
-                    <p style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, margin: '4px 0 0' }}>⭐ PTR Trust Score: {doc.ptr_score || '99.0'}%</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 20, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
+                      🩺
+                    </div>
+                    <div>
+                      <h4 style={{ fontSize: 15, fontWeight: 800, margin: 0, color: '#fff' }}>{doc.name}</h4>
+                      <p style={{ fontSize: 12, color: '#10b981', margin: '2px 0 0 0', fontWeight: 700 }}>{doc.degrees || 'MBBS, General Practitioner'}</p>
+                      <p style={{ fontSize: 11, color: '#94a3b8', margin: '2px 0 0 0' }}>{specs.join(', ')}</p>
+                      <p style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, margin: '3px 0 0' }}>⭐ PTR Trust Score: {doc.ptr_score || '99.0'}%</p>
+                    </div>
                   </div>
-                  <button onClick={() => startEdit(doc)} style={{ ...pillGhostBtn, padding: '6px 12px', fontSize: 12 }}>⚙️ Edit Profile</button>
                 </div>
 
-                <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-                  <button onClick={() => toggleTodaysPatients(doc.id)} style={{ ...pillPrimaryBtn, flex: 1, padding: 10, fontSize: 12 }}>
-                    {expandedDoctor === doc.id ? 'Hide Queue' : 'Manage Queue'}
-                  </button>
-                  <button onClick={() => handleDelete(doc.id, doc.name)} style={{ ...pillDangerBtn, padding: '10px 14px', fontSize: 12 }}>🗑️</button>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
+                  {doc.consultation_fee != null && (
+                    <span style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', color: '#10b981', fontSize: 12, fontWeight: 700, padding: '4px 10px', borderRadius: 8 }}>
+                      💳 ₹{doc.consultation_fee} Fee
+                    </span>
+                  )}
                 </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 8 }}>
+                  <button
+                    onClick={() => toggleTodaysPatients(doc.id)}
+                    style={{
+                      padding: '10px 12px', borderRadius: 100, border: 'none',
+                      background: expandedDoctor === doc.id ? 'rgba(255,255,255,0.08)' : 'linear-gradient(90deg, #10b981 25%, #059669 75%)',
+                      color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                    }}
+                  >
+                    {expandedDoctor === doc.id ? 'Hide Queue' : `Manage Queue (${docWaitingCount})`}
+                  </button>
+                  <button onClick={() => setShowWalkinForm(showWalkinForm === doc.id ? null : doc.id)} style={{ ...pillGhostBtn, padding: '10px 8px', fontSize: 12 }}>+ Walk-in</button>
+                  <button onClick={() => startEdit(doc)} style={{ ...pillGhostBtn, padding: '10px 8px', fontSize: 12 }}>⚙️ Edit</button>
+                  <button onClick={() => handleDelete(doc.id, doc.name)} style={{ ...pillDangerBtn, padding: '10px 8px', fontSize: 12 }}>🗑️</button>
+                </div>
+
+                {showWalkinForm === doc.id && (
+                  <div style={{ marginTop: 12, background: 'rgba(255,255,255,0.03)', borderRadius: 12, padding: 12, display: 'flex', flexDirection: 'column', gap: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <input placeholder="Patient name" value={walkinName} onChange={(e) => setWalkinName(e.target.value)} style={panelInputStyle} />
+                    <input placeholder="Phone (optional)" value={walkinPhone} onChange={(e) => setWalkinPhone(e.target.value)} style={panelInputStyle} />
+                    <button onClick={() => handleWalkinSubmit(doc.id)} style={{ ...pillPrimaryBtn, padding: 10 }}>Create Token</button>
+                  </div>
+                )}
+
+                {expandedDoctor === doc.id && (
+                  <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                    {loadingBookings ? (
+                      <p style={{ fontSize: 13, color: '#64748b', textAlign: 'center' }}>Loading queue...</p>
+                    ) : !bookingsByDoctor[doc.id] || bookingsByDoctor[doc.id].length === 0 ? (
+                      <p style={{ fontSize: 13, color: '#64748b', textAlign: 'center' }}>No bookings for today yet.</p>
+                    ) : (
+                      bookingsByDoctor[doc.id].map((b) => (
+                        <div key={b.id} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 14, marginBottom: 10 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                            <div>
+                              <span style={{ fontSize: 16, fontWeight: 800, color: '#10b981' }}>#{b.token_number}</span>
+                              <h5 style={{ fontWeight: 800, fontSize: 15, margin: 0, color: '#fff' }}>{b.patient_name || 'Patient'}</h5>
+                            </div>
+                            <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 8, background: 'rgba(99,102,241,0.12)', color: '#a5b4fc' }}>
+                              {b.is_walkin ? '🚪 Walk-In' : '📱 App Token'}
+                            </span>
+                          </div>
+                          {b.status === 'waiting' ? (
+                            <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                              <button onClick={() => handleMarkSeen(b.id, doc.id)} style={{ ...pillPrimaryBtn, flex: 2, padding: '10px', fontSize: 12 }}>✓ Call & Mark Seen</button>
+                              <button onClick={() => cancelAppointment(b.id).then(() => refreshBookings(doc.id))} style={{ ...pillDangerBtn, flex: 1, padding: '10px', fontSize: 12 }}>Cancel</button>
+                            </div>
+                          ) : (
+                            <p style={{ color: '#10b981', fontWeight: 700, fontSize: 12, margin: '6px 0 0 0' }}>✓ Completed / Seen</p>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
               </>
             )}
           </div>
         );
       })}
 
-      <button onClick={() => setShowAddForm(!showAddForm)} style={{ ...pillPrimaryBtn, width: '100%', padding: 14, fontSize: 14, marginTop: 10 }}>
+      {/* Add Doctor Trigger Button */}
+      <button
+        onClick={() => setShowAddForm(!showAddForm)}
+        style={{ ...pillPrimaryBtn, width: '100%', padding: 14, fontSize: 14, marginTop: 10 }}
+      >
         {showAddForm ? 'Close Form' : '+ Add New Doctor'}
       </button>
 
+      {/* Add Doctor Form */}
       {showAddForm && (
         <form onSubmit={handleAddDoctor} style={{ ...cardStyle, marginTop: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <h4 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>Add Doctor Profile</h4>
-          <input placeholder="Doctor Name (e.g. Dr. A. Datta)" value={newName} onChange={(e) => setNewName(e.target.value)} style={panelInputStyle} required />
-          <input placeholder="Degrees (e.g. MBBS, MD, DNB)" value={newDegrees} onChange={(e) => setNewDegrees(e.target.value)} style={panelInputStyle} required />
-          
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <input placeholder="Consultation Fee (₹)" type="number" value={newFee} onChange={(e) => setNewFee(e.target.value)} style={panelInputStyle} />
-            <input placeholder="PTR Trust Score (e.g. 99.2)" type="number" step="0.1" value={newPtr} onChange={(e) => setNewPtr(e.target.value)} style={panelInputStyle} />
+          <h4 style={{ margin: '0 0 4px 0', fontSize: 16, fontWeight: 800, color: '#fff' }}>Add Doctor Profile</h4>
+
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: 4 }}>Doctor Name *</label>
+            <input placeholder="e.g. Dr. Gautam Banerjee" value={newName} onChange={(e) => setNewName(e.target.value)} style={panelInputStyle} required />
           </div>
 
-          <p style={{ fontSize: 12, fontWeight: 700, color: '#10b981', margin: '4px 0 0' }}>Select Specialties (Multiple Allowed):</p>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {SPECIALTIES.map(s => (
-              <button type="button" key={s} onClick={() => toggleSpecialty(s, newSpecialties, setNewSpecialties)} style={{ padding: '5px 10px', borderRadius: 20, fontSize: 11, background: newSpecialties.includes(s) ? '#10b981' : 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', cursor: 'pointer' }}>
-                {s}
-              </button>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: 4 }}>Degrees & Qualifications *</label>
+            <input placeholder="e.g. MBBS, MD (General Medicine)" value={newDegrees} onChange={(e) => setNewDegrees(e.target.value)} style={panelInputStyle} required />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: 4 }}>Consultation Fee (₹)</label>
+              <input placeholder="500" type="number" value={newFee} onChange={(e) => setNewFee(e.target.value)} style={panelInputStyle} />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: 4 }}>PTR Trust Score %</label>
+              <input placeholder="99.5" type="number" step="0.1" value={newPtr} onChange={(e) => setNewPtr(e.target.value)} style={panelInputStyle} />
+            </div>
+          </div>
+
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: '#10b981', display: 'block', marginBottom: 6 }}>Select Specialties (Multiple Allowed):</label>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {SPECIALTIES.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => toggleSpecialty(s, newSpecialties, setNewSpecialties)}
+                  style={{
+                    padding: '5px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                    border: 'none',
+                    background: newSpecialties.includes(s) ? '#10b981' : 'rgba(255,255,255,0.05)',
+                    color: newSpecialties.includes(s) ? '#fff' : '#94a3b8',
+                  }}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ background: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: '#fff', margin: '0 0 8px 0' }}>🕒 Day-wise Custom Timings</p>
+            {DAYS.map((day) => (
+              <div key={day} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, background: 'rgba(255,255,255,0.02)', padding: 6, borderRadius: 8 }}>
+                <label style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', width: 35 }}>{day}</label>
+                <input
+                  type="checkbox"
+                  checked={daySchedules[day].active}
+                  onChange={(e) => setDaySchedules({ ...daySchedules, [day]: { ...daySchedules[day], active: e.target.checked } })}
+                />
+                <input
+                  type="time"
+                  value={daySchedules[day].start}
+                  onChange={(e) => setDaySchedules({ ...daySchedules, [day]: { ...daySchedules[day], start: e.target.value } })}
+                  style={{ ...panelInputStyle, padding: '4px 6px', fontSize: 11, flex: 1 }}
+                />
+                <span>to</span>
+                <input
+                  type="time"
+                  value={daySchedules[day].end}
+                  onChange={(e) => setDaySchedules({ ...daySchedules, [day]: { ...daySchedules[day], end: e.target.value } })}
+                  style={{ ...panelInputStyle, padding: '4px 6px', fontSize: 11, flex: 1 }}
+                />
+              </div>
             ))}
           </div>
 
-          <p style={{ fontSize: 12, fontWeight: 700, color: '#10b981', margin: '8px 0 0' }}>Day-wise Custom Timings:</p>
-          {DAYS.map(day => (
-            <div key={day} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.02)', padding: 8, borderRadius: 10 }}>
-              <label style={{ fontSize: 12, fontWeight: 700, width: 40 }}>{day}</label>
-              <input type="checkbox" checked={daySchedules[day].active} onChange={(e) => setDaySchedules({ ...daySchedules, [day]: { ...daySchedules[day], active: e.target.checked } })} />
-              <input type="time" value={daySchedules[day].start} onChange={(e) => setDaySchedules({ ...daySchedules, [day]: { ...daySchedules[day], start: e.target.value } })} style={{ ...panelInputStyle, padding: '4px 8px', fontSize: 12 }} />
-              <span>to</span>
-              <input type="time" value={daySchedules[day].end} onChange={(e) => setDaySchedules({ ...daySchedules, [day]: { ...daySchedules[day], end: e.target.value } })} style={{ ...panelInputStyle, padding: '4px 8px', fontSize: 12 }} />
-            </div>
-          ))}
-
-          <button type="submit" disabled={savingDoctor} style={{ ...pillPrimaryBtn, padding: 14, fontSize: 14, marginTop: 10 }}>
-            {savingDoctor ? 'Saving...' : '✓ Save Doctor Profile'}
+          <button
+            type="submit"
+            disabled={savingDoctor}
+            style={{ ...pillPrimaryBtn, padding: 14, fontSize: 14, marginTop: 6 }}
+          >
+            {savingDoctor ? 'Saving Doctor...' : '✓ Save Doctor Profile'}
           </button>
         </form>
       )}
+
+      {/* QR Code Modal */}
+      {showQrModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 1000,
+        }}>
+          <div style={{ background: '#14161d', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 28, padding: 24, width: '100%', maxWidth: 360, textAlign: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: '4px 10px', borderRadius: 12 }}>CLINIC PAYMENT QR</span>
+              <button onClick={() => setShowQrModal(false)} style={{ border: 'none', background: 'rgba(255,255,255,0.06)', borderRadius: '50%', width: 28, height: 28, color: '#94a3b8', fontWeight: 700, cursor: 'pointer' }}>✕</button>
+            </div>
+
+            <div style={{ background: '#fff', padding: 16, borderRadius: 20, display: 'inline-block', marginBottom: 16 }}>
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`upi://pay?pa=${upiId}&pn=${encodeURIComponent(clinicName)}&cu=INR`)}`}
+                alt="Clinic UPI QR Code"
+                style={{ width: 180, height: 180, display: 'block', margin: '0 auto' }}
+              />
+            </div>
+            <button onClick={() => setShowQrModal(false)} style={{ ...pillGhostBtn, width: '100%', padding: 14, fontSize: 14 }}>Close</button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
