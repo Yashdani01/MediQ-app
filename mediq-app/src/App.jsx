@@ -99,25 +99,22 @@ export default function App() {
   const initialCity = patientProfile?.city || '';
 
   return (
-    <div className="device">
-      <main>
-        {activeTab === 'home' && (
-          <HospitalFlow
-            user={session?.user || null}
-            isGuest={isGuest}
-            onLogout={handleLogout}
-            displayName={displayName}
-            initialCity={initialCity}
-          />
-        )}
-        {activeTab === 'token' && (
-          <MyToken user={session?.user || null} />
-        )}
-        {activeTab === 'reports' && (
-          <Reports user={session?.user || null} />
-        )}
-      </main>
-
+    <>
+      {activeTab === 'home' && (
+        <HospitalFlow
+          user={session?.user || null}
+          isGuest={isGuest}
+          onLogout={handleLogout}
+          displayName={displayName}
+          initialCity={initialCity}
+        />
+      )}
+      {activeTab === 'token' && (
+        <MyToken user={session?.user || null} />
+      )}
+      {activeTab === 'reports' && (
+        <Reports user={session?.user || null} />
+      )}
       <nav className="tabbar">
         <button
           className={`tabbar-item ${activeTab === 'home' ? 'active' : ''}`}
@@ -153,6 +150,6 @@ export default function App() {
           My Token
         </button>
       </nav>
-    </div>
+    </>
   );
 }
