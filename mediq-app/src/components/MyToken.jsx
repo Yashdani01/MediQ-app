@@ -40,7 +40,7 @@ export default function MyToken({ user }) {
     return (
       <div className="token-page">
         <div className="token-empty-state">
-          <div className="token-empty-icon">???</div>
+          <div className="token-empty-icon">🎟️</div>
           <h3 style={{ color: '#0f172a', margin: '0 0 6px' }}>No active token</h3>
           <p style={{ margin: 0 }}>You haven't booked a queue token yet.</p>
         </div>
@@ -68,10 +68,13 @@ export default function MyToken({ user }) {
     <div className="token-page">
       <div className="token-topbar">
         <div className="token-topbar-inner">
-          <p className="token-hospital-name">{booking.hospital?.name}</p>
+          <div>
+            <p className="token-hospital-name">{booking.hospital?.name}</p>
+            <h2 style={{ margin: '2px 0 0', fontSize: '18px', color: '#fff' }}>Live Queue Command Center</h2>
+          </div>
           <span className="token-live-badge">
             <span className="token-live-dot" />
-            {refreshing ? 'Refreshing...' : 'Live Queue'}
+            {refreshing ? 'Refreshing...' : 'Live'}
           </span>
         </div>
       </div>
@@ -137,9 +140,31 @@ export default function MyToken({ user }) {
           </div>
           {mapsUrl && (
             <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="token-directions-btn">
-              ?? Directions
+              📍 Directions
             </a>
           )}
+        </div>
+
+        {/* Quick Action Strip */}
+        <div style={{ display: 'flex', gap: '10px', marginTop: '4px', marginBottom: '30px' }}>
+          <button 
+            onClick={() => alert(`Contact phone for clinic: ${booking.contact_phone || 'Available at clinic reception'}`)}
+            style={{
+              flex: 1, padding: '12px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px',
+              fontWeight: 600, fontSize: '13px', color: '#0f172a', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+            }}
+          >
+            📞 Clinic Info
+          </button>
+          <button 
+            onClick={() => window.location.reload()}
+            style={{
+              flex: 1, padding: '12px', background: '#0d9488', border: 'none', borderRadius: '12px',
+              fontWeight: 600, fontSize: '13px', color: '#fff', cursor: 'pointer', boxShadow: '0 4px 12px rgba(13, 148, 136, 0.2)'
+            }}
+          >
+            🔄 Refresh Status
+          </button>
         </div>
       </div>
     </div>
