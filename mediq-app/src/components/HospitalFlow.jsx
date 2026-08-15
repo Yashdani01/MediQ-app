@@ -130,6 +130,9 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
 
+  // Voice Search States
+  const [isListening, setIsListening] = useState(false);
+
   const isSearchActive = searchTerm.trim() !== '' || activeSpecialty !== '';
 
   useEffect(() => {
@@ -199,6 +202,41 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
     }, 300);
     return () => clearTimeout(delay);
   }, [searchTerm, activeSpecialty, currentCity]);
+
+  // Handle Voice Search Recognition
+  const startVoiceSearch = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Voice search is not supported on this browser. Try Chrome or Safari.');
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-IN'; // Can support multi-language config later
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+    };
+
+    recognition.onresult = (event) => {
+      const spokenText = event.results[0][0].transcript;
+      setSearchTerm(spokenText);
+      setActiveSpecialty('');
+      setIsListening(false);
+    };
+
+    recognition.onerror = () => {
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.start();
+  };
 
   const openPaymentChoice = async (doc, hospitalId) => {
     if (isGuest || !user) {
@@ -352,14 +390,40 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
       <div className="flow-content" style={{ paddingBottom: '30px' }}>
         {!selectedHospital && (
           <div>
-            <div className="search-bar-wrap">
+            <div className="search-bar-wrap" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
               <input
                 type="text"
                 className="search-bar"
-                placeholder="Search doctor or specialty..."
+                placeholder={isListening ? "Listening... Speak now" : "Search doctor or specialty..."}
                 value={searchTerm}
                 onChange={(e) => { setSearchTerm(e.target.value); setActiveSpecialty(''); }}
+                style={{ paddingRight: '45px' }}
               />
+              <button
+                type="button"
+                onClick={startVoiceSearch}
+                title="Search with Voice"
+                style={{
+                  position: 'absolute',
+                  right: isSearchActive ? '65px' : '12px',
+                  background: isListening ? '#ef4444' : 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '6px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'background 0.2s',
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={isListening ? "#fff" : "#64748b"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                  <path d="M19 10v1a7 7 0 0 1-14 0v-1"></path>
+                  <line x1="12" y1="19" x2="12" y2="23"></line>
+                  <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+              </button>
               {isSearchActive && (
                 <button className="search-clear-btn" onClick={clearSearch}>Clear</button>
               )}
