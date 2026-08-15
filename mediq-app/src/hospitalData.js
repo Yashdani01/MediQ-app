@@ -484,18 +484,14 @@ export async function updateHospitalLocation(pin, location) {
 }
 
 export async function cancelAppointment(appointmentId) {
-  const { data, error } = await supabase
-    .from('appointments')
-    .update({ status: 'cancelled' })
-    .eq('id', appointmentId)
-    .select()
-    .single();
+  const { error } = await supabase
+    .rpc('cancel_any_appointment', { appointment_id: appointmentId });
 
   if (error) {
     console.error('Error cancelling appointment:', error);
     return { error };
   }
-  return { data };
+  return { success: true };
 }
 
 const DAY_ABBR_COUNT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
