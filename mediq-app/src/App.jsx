@@ -4,16 +4,17 @@ import Login from './components/Login';
 import HospitalFlow from './components/HospitalFlow';
 import MyToken from './components/MyToken';
 import Reports from './components/Reports';
+import SymptomTriage from './components/SymptomTriage';
 import ClinicPortal from './components/ClinicPortal';
 import './components/MyToken.css';
 
-// Multi-language dictionary for bottom navigation & app shells
 const translations = {
   en: {
     loading: 'Loading MediQ...',
     home: 'Home',
     reports: 'Reports',
     myToken: 'My Token',
+    triage: 'Triage',
     greeting: 'Good Morning,',
     guest: 'Guest',
     browsingAs: 'Browsing as',
@@ -24,6 +25,7 @@ const translations = {
     home: 'হোম',
     reports: 'রিপোর্টস',
     myToken: 'আমার টোকেন',
+    triage: 'পরামর্শ',
     greeting: 'সুপ্রভাত,',
     guest: 'অতিথি',
     browsingAs: 'অতিথি হিসেবে দেখছেন',
@@ -34,6 +36,7 @@ const translations = {
     home: 'होम',
     reports: 'रिपोर्ट्स',
     myToken: 'मेरा टोकन',
+    triage: 'सलाह',
     greeting: 'सुप्रभात,',
     guest: 'अतिथि',
     browsingAs: 'अतिथि के रूप में देख रहे हैं',
@@ -54,7 +57,6 @@ export default function App() {
   const [patientProfile, setPatientProfile] = useState(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
   
-  // Language state ('en', 'bn', or 'hi')
   const [lang, setLang] = useState(localStorage.getItem('mediq_lang') || 'en');
 
   const changeLanguage = (newLang) => {
@@ -144,7 +146,6 @@ export default function App() {
 
   return (
     <>
-      {/* Global Language Selector Float or Top Bar Extension */}
       <div style={{ position: 'fixed', top: 12, right: 16, zIndex: 9999 }}>
         <select
           value={lang}
@@ -176,15 +177,38 @@ export default function App() {
           initialCity={initialCity}
           lang={lang}
           t={t}
+          externalSpecialtyFilter={null}
         />
       )}
-      {activeTab === 'token' && (
-        <MyToken user={session?.user || null} lang={lang} />
+      {activeTab === 'triage' && (
+        <div style={{ paddingBottom: '100px' }}>
+          <HospitalFlow
+            user={session?.user || null}
+            isGuest={isGuest}
+            onLogout={handleLogout}
+            displayName={displayName}
+            initialCity={initialCity}
+            lang={lang}
+            t={t}
+          />
+          <SymptomTriage
+            onClose={() => setActiveTab('home')}
+            onSelectSpecialty={(specialty) => {
+              setActiveTab('home');
+              // Automatically switch to home and trigger specialty search if needed
+            }}
+          />
+        </div>
       )}
       {activeTab === 'reports' && (
         <Reports user={session?.user || null} lang={lang} />
       )}
-      <nav className="tabbar">
+      {activeTab === 'token' && (
+        <MyToken user={session?.user || null} lang={lang} />
+      )}
+
+      {/* 4-Item Bottom Navigation Bar */}
+      <nav className="tabbar" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)' }}>
         <button
           className={`tabbar-item ${activeTab === 'home' ? 'active' : ''}`}
           onClick={() => setActiveTab('home')}
@@ -195,6 +219,17 @@ export default function App() {
           </svg>
           {t.home}
         </button>
+
+        <button
+          className={`tabbar-item ${activeTab === 'triage' ? 'active' : ''}`}
+          onClick={() => setActiveTab('triage')}
+        >
+          <svg className="tabbar-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+          </svg>
+          {t.triage}
+        </button>
+
         <button
           className={`tabbar-item ${activeTab === 'reports' ? 'active' : ''}`}
           onClick={() => setActiveTab('reports')}
@@ -204,10 +239,10 @@ export default function App() {
             <polyline points="14 2 14 8 20 8" />
             <line x1="16" y1="13" x2="8" y2="13" />
             <line x1="16" y1="17" x2="8" y2="17" />
-            <polyline points="10 9 9 9 8 9" />
           </svg>
           {t.reports}
         </button>
+
         <button
           className={`tabbar-item ${activeTab === 'token' ? 'active' : ''}`}
           onClick={() => setActiveTab('token')}
