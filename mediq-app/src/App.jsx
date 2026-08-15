@@ -7,6 +7,40 @@ import Reports from './components/Reports';
 import ClinicPortal from './components/ClinicPortal';
 import './components/MyToken.css';
 
+// Multi-language dictionary for bottom navigation & app shells
+const translations = {
+  en: {
+    loading: 'Loading MediQ...',
+    home: 'Home',
+    reports: 'Reports',
+    myToken: 'My Token',
+    greeting: 'Good Morning,',
+    guest: 'Guest',
+    browsingAs: 'Browsing as',
+    logout: 'Logout'
+  },
+  bn: {
+    loading: 'মেডিക് লোড হচ্ছে...',
+    home: 'হোম',
+    reports: 'রিপোর্টস',
+    myToken: 'আমার টোকেন',
+    greeting: 'সুপ্রভাত,',
+    guest: 'অতিথি',
+    browsingAs: 'অতিথি হিসেবে দেখছেন',
+    logout: 'লগআউট'
+  },
+  hi: {
+    loading: 'मेडीक्यू लोड हो रहा है...',
+    home: 'होम',
+    reports: 'रिपोर्ट्स',
+    myToken: 'मेरा टोकन',
+    greeting: 'सुप्रभात,',
+    guest: 'अतिथि',
+    browsingAs: 'अतिथि के रूप में देख रहे हैं',
+    logout: 'लॉग आउट'
+  }
+};
+
 export default function App() {
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('portal') === 'clinic') {
@@ -19,6 +53,16 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('home');
   const [patientProfile, setPatientProfile] = useState(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
+  
+  // Language state ('en', 'bn', or 'hi')
+  const [lang, setLang] = useState(localStorage.getItem('mediq_lang') || 'en');
+
+  const changeLanguage = (newLang) => {
+    setLang(newLang);
+    localStorage.setItem('mediq_lang', newLang);
+  };
+
+  const t = translations[lang] || translations.en;
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -80,7 +124,7 @@ export default function App() {
   };
 
   if (loading || (session?.user && !profileLoaded)) {
-    return <div style={{ textAlign: 'center', padding: 50 }}>Loading MediQ...</div>;
+    return <div style={{ textAlign: 'center', padding: 50 }}>{t.loading}</div>;
   }
 
   if (!session && !isGuest) {
@@ -95,11 +139,34 @@ export default function App() {
     setProfileLoaded(false);
   };
 
-  const displayName = patientProfile?.name || session?.user?.email?.split('@')[0] || 'Guest';
+  const displayName = patientProfile?.name || session?.user?.email?.split('@')[0] || t.guest;
   const initialCity = patientProfile?.city || '';
 
   return (
     <>
+      {/* Global Language Selector Float or Top Bar Extension */}
+      <div style={{ position: 'fixed', top: 12, right: 16, zIndex: 9999 }}>
+        <select
+          value={lang}
+          onChange={(e) => changeLanguage(e.target.value)}
+          style={{
+            background: 'rgba(11, 51, 44, 0.85)',
+            color: '#fff',
+            border: '1px solid rgba(255,255,255,0.2)',
+            padding: '4px 8px',
+            borderRadius: '8px',
+            fontSize: '12px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            backdropFilter: 'blur(4px)'
+          }}
+        >
+          <option value="en" style={{ color: '#000' }}>English</option>
+          <option value="bn" style={{ color: '#000' }}>বাংলা (Bengali)</option>
+          <option value="hi" style={{ color: '#000' }}>हिन्दी (Hindi)</option>
+        </select>
+      </div>
+
       {activeTab === 'home' && (
         <HospitalFlow
           user={session?.user || null}
@@ -107,13 +174,15 @@ export default function App() {
           onLogout={handleLogout}
           displayName={displayName}
           initialCity={initialCity}
+          lang={lang}
+          t={t}
         />
       )}
       {activeTab === 'token' && (
-        <MyToken user={session?.user || null} />
+        <MyToken user={session?.user || null} lang={lang} />
       )}
       {activeTab === 'reports' && (
-        <Reports user={session?.user || null} />
+        <Reports user={session?.user || null} lang={lang} />
       )}
       <nav className="tabbar">
         <button
@@ -124,7 +193,7 @@ export default function App() {
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
             <polyline points="9 22 9 12 15 12 15 22" />
           </svg>
-          Home
+          {t.home}
         </button>
         <button
           className={`tabbar-item ${activeTab === 'reports' ? 'active' : ''}`}
@@ -137,7 +206,7 @@ export default function App() {
             <line x1="16" y1="17" x2="8" y2="17" />
             <polyline points="10 9 9 9 8 9" />
           </svg>
-          Reports
+          {t.reports}
         </button>
         <button
           className={`tabbar-item ${activeTab === 'token' ? 'active' : ''}`}
@@ -147,7 +216,7 @@ export default function App() {
             <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z" />
             <line x1="13" y1="5" x2="13" y2="19" strokeDasharray="4 4" />
           </svg>
-          My Token
+          {t.myToken}
         </button>
       </nav>
     </>
