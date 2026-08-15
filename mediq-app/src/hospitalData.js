@@ -179,7 +179,7 @@ export async function getBookingHistory(patientUserId) {
   return enriched;
 }
 
-// Search doctors by name/specialty across all hospitals in a city
+// Search doctors by name/specialty or smart symptom mapping across all hospitals in a city
 export async function searchDoctors(city, searchTerm) {
   let hospitalQuery = supabase.from('hospitals').select('id, name, location, city');
   if (city) {
@@ -191,13 +191,27 @@ export async function searchDoctors(city, searchTerm) {
   const hospitalIds = hospitals.map((h) => h.id);
   const hospitalMap = Object.fromEntries(hospitals.map((h) => [h.id, h]));
 
+  let refinedTerm = searchTerm.trim();
+  const lowerTerm = refinedTerm.toLowerCase();
+
+  // Smart keyword mapping for conversational queries & symptoms
+  if (lowerTerm.includes('dant') || lowerTerm.includes('teeth') || lowerTerm.includes('tooth') || lowerTerm.includes('dental')) {
+    refinedTerm = 'Dentist';
+  } else if (lowerTerm.includes('heart') || lowerTerm.includes('chest') || lowerTerm.includes('seene')) {
+    refinedTerm = 'Cardiologist';
+  } else if (lowerTerm.includes('sugar') || lowerTerm.includes('diabetes')) {
+    refinedTerm = 'Diabetologist';
+  } else if (lowerTerm.includes('fever') || lowerTerm.includes('cold') || lowerTerm.includes('cough')) {
+    refinedTerm = 'General Physician';
+  }
+
   let doctorQuery = supabase
     .from('doctors')
     .select('id, name, specialty, avg_minutes_per_patient, hospital_id, consultation_fee')
     .in('hospital_id', hospitalIds);
 
-  if (searchTerm) {
-    doctorQuery = doctorQuery.or(`name.ilike.%${searchTerm}%,specialty.ilike.%${searchTerm}%`);
+  if (refinedTerm) {
+    doctorQuery = doctorQuery.or(`name.ilike.%${refinedTerm}%,specialty.ilike.%${refinedTerm}%`);
   }
 
   const { data: doctors, error: doctorError } = await doctorQuery;
