@@ -313,36 +313,36 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
   const avatarInitial = nameForAvatar.charAt(0).toUpperCase();
 
   return (
-    <div className="flow-page">
-      <div className="flow-topbar">
-        <div className="flow-topbar-inner">
+    <div className="flow-page" style={{ width: '100%', maxWidth: '100vw', boxSizing: 'border-box', overflowX: 'hidden' }}>
+      <div className="flow-topbar" style={{ width: '100%', boxSizing: 'border-box' }}>
+        <div className="flow-topbar-inner" style={{ width: '100%', maxWidth: '600px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxSizing: 'border-box' }}>
           <button
             className="flow-user-badge"
             onClick={() => !isGuest && setShowProfile(true)}
-            style={{ background: 'none', border: 'none', cursor: isGuest ? 'default' : 'pointer', padding: 0 }}
+            style={{ background: 'none', border: 'none', cursor: isGuest ? 'default' : 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: '10px' }}
           >
             <div className="flow-avatar">{avatarInitial}</div>
             <div style={{ textAlign: 'left' }}>
               <p className="flow-subtitle" style={{ margin: '0 0 2px' }}>
                 {isGuest ? t?.browsingAs || 'Browsing as' : t?.greeting || 'Good Morning,'}
               </p>
-              <p className="flow-greeting">
+              <p className="flow-greeting" style={{ margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '140px' }}>
                 {isGuest ? t?.guest || 'Guest' : nameForAvatar}
               </p>
             </div>
           </button>
 
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {isGuest && (
               <button className="flow-logout-btn" onClick={onLogout}>{t?.logout || 'Logout'}</button>
             )}
-            <div className="city-switcher-row" style={{ margin: 0 }}>
+            <div className="city-switcher-row" style={{ margin: 0, position: 'relative' }}>
               <button className="city-pill" onClick={() => setShowCityPicker(!showCityPicker)}>
                 {currentCity || 'All Cities'} <span style={{ opacity: 0.7 }}>&#9662;</span>
               </button>
 
               {showCityPicker && (
-                <div className="city-dropdown">
+                <div className="city-dropdown" style={{ right: 0, left: 'auto' }}>
                   <button
                     className={`city-option ${!currentCity ? 'active' : ''}`}
                     onClick={() => { setCurrentCity(''); setShowCityPicker(false); setSelectedHospital(null); }}
@@ -365,18 +365,18 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
         </div>
       </div>
 
-      <div className="flow-content" style={{ paddingBottom: '90px' }}>
+      <div className="flow-content" style={{ paddingBottom: '90px', width: '100%', maxWidth: '600px', margin: '0 auto', boxSizing: 'border-box' }}>
         {!selectedHospital && (
           <div>
-            <div className="search-bar-wrap" style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '14px' }}>
-              <div style={{ position: 'relative', flex: 1 }}>
+            <div className="search-bar-wrap" style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '14px', width: '100%', boxSizing: 'border-box' }}>
+              <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
                 <input
                   type="text"
                   className="search-bar"
                   placeholder={isListening ? "Listening... Speak now" : "Search doctor or symptom..."}
                   value={searchTerm}
                   onChange={(e) => { setSearchTerm(e.target.value); setActiveSpecialty(''); }}
-                  style={{ width: '100%', paddingRight: isSearchActive ? '50px' : '16px' }}
+                  style={{ width: '100%', paddingRight: isSearchActive ? '50px' : '16px', boxSizing: 'border-box' }}
                 />
                 {isSearchActive && (
                   <button className="search-clear-btn" onClick={clearSearch}>Clear</button>
@@ -411,7 +411,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
             </div>
 
             {specialties.length > 0 && (
-              <div className="specialty-chips">
+              <div className="specialty-chips" style={{ width: '100%', boxSizing: 'border-box' }}>
                 {specialties.map((s) => (
                   <button
                     key={s}
@@ -439,7 +439,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                         const availability = getAvailability(doc);
                         const specs = doc.specialties || [doc.specialty || 'General Physician'];
                         return (
-                          <div key={doc.id} className={`doctor-card ${availability.bookable ? '' : 'muted'}`}>
+                          <div key={doc.id} className={`doctor-card ${availability.bookable ? '' : 'muted'}`} style={{ width: '100%', boxSizing: 'border-box' }}>
                             <div className="doctor-info">
                               <DoctorAvatar bookable={availability.bookable} />
                               <div className="doctor-details">
@@ -486,13 +486,13 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
                 ) : hospitals.length === 0 ? (
                   <p className="flow-empty">No hospitals available in {currentCity || 'this area'} yet.</p>
                 ) : (
-                  <div className="hospital-list">
+                  <div className="hospital-list" style={{ width: '100%', boxSizing: 'border-box' }}>
                     {hospitals.map((hosp) => (
-                      <div key={hosp.id} className="hospital-card" onClick={() => setSelectedHospital(hosp)}>
+                      <div key={hosp.id} className="hospital-card" onClick={() => setSelectedHospital(hosp)} style={{ width: '100%', boxSizing: 'border-box' }}>
                         <div className="hospital-icon">{hosp.name.charAt(0).toUpperCase()}</div>
-                        <div className="hospital-info" style={{ flex: 1 }}>
-                          <h4>{hosp.name}</h4>
-                          {hosp.location && <p>{hosp.location}</p>}
+                        <div className="hospital-info" style={{ flex: 1, minWidth: 0 }}>
+                          <h4 style={{ wordBreak: 'break-word' }}>{hosp.name}</h4>
+                          {hosp.location && <p style={{ wordBreak: 'break-word' }}>{hosp.location}</p>}
                           {availableCounts[hosp.id] > 0 && (
                             <span style={{
                               display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 8,
@@ -544,7 +544,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
         )}
 
         {selectedHospital && (
-          <div>
+          <div style={{ width: '100%', boxSizing: 'border-box' }}>
             <button className="flow-back-btn" onClick={() => { setSelectedHospital(null); setDoctors([]); }}>
               ← Back to Hospitals
             </button>
@@ -555,12 +555,12 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
             ) : doctors.length === 0 ? (
               <p className="flow-empty">No doctors listed for this hospital yet.</p>
             ) : (
-              <div className="doctor-list">
+              <div className="doctor-list" style={{ width: '100%', boxSizing: 'border-box' }}>
                 {doctors.map((doc) => {
                   const availability = getAvailability(doc);
                   const specs = doc.specialties || [doc.specialty || 'General Physician'];
                   return (
-                    <div key={doc.id} className={`doctor-card ${availability.bookable ? '' : 'muted'}`}>
+                    <div key={doc.id} className={`doctor-card ${availability.bookable ? '' : 'muted'}`} style={{ width: '100%', boxSizing: 'border-box' }}>
                       <div className="doctor-info">
                         <DoctorAvatar bookable={availability.bookable} />
                         <div className="doctor-details">
@@ -622,7 +622,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
 
       {pendingBooking && (
         <div className="ticket-overlay">
-          <div className="ticket-card">
+          <div className="ticket-card" style={{ width: '90%', maxWidth: '400px', boxSizing: 'border-box' }}>
             <div className="ticket-header">
               <h2>Confirm Your Booking</h2>
             </div>
@@ -659,7 +659,7 @@ export default function HospitalFlow({ user, isGuest, onLogout, displayName, ini
             />
 
             <p style={{ fontSize: 13, fontWeight: 600, color: '#555', marginBottom: 8 }}>Payment Method</p>
-            <div style={{ display: 'flex', gap: 10, margin: '0 0 16px' }}>
+            <div style={{ display: 'flex', gap: 10, margin: '0 0 16px', width: '100%', boxSizing: 'border-box' }}>
               <button
                 onClick={() => setSelectedPayment('cash')}
                 style={{
