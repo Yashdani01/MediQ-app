@@ -23,7 +23,7 @@ export async function getAllCities() {
 export async function getDoctorsForHospital(hospitalId) {
   const { data, error } = await supabase
     .from('doctors')
-    .select('id, name, specialty, avg_minutes_per_patient, status, delay_minutes, status_updated_at, working_days, start_time, end_time, notes, consultation_fee')
+    .select('id, name, specialty, avg_minutes_per_patient, status, delay_minutes, status_updated_at, working_days, start_time, end_time, notes, consultation_fee, degrees, ptr_score, specialties, custom_schedule')
     .eq('hospital_id', hospitalId);
   if (error) { console.error('Error fetching doctors:', error); return []; }
   return data;
@@ -105,9 +105,9 @@ export async function getMyCurrentBooking(patientUserId) {
 
   if (error || !appointment) return null;
 
- const { data: doctor } = await supabase
+  const { data: doctor } = await supabase
     .from('doctors')
-    .select('name, specialty, avg_minutes_per_patient, status, delay_minutes')
+    .select('name, specialty, avg_minutes_per_patient, degrees, ptr_score')
     .eq('id', appointment.doctor_id)
     .single();
 
@@ -164,7 +164,7 @@ export async function getBookingHistory(patientUserId) {
     appointments.map(async (appt) => {
       const { data: doctor } = await supabase
         .from('doctors')
-        .select('name, specialty')
+        .select('name, specialty, degrees, ptr_score')
         .eq('id', appt.doctor_id)
         .single();
       const { data: hospital } = await supabase
@@ -179,7 +179,6 @@ export async function getBookingHistory(patientUserId) {
   return enriched;
 }
 
-// Enhanced search with multi-lingual symptom & keyword intelligence (English, Hindi, Bengali)
 export async function searchDoctors(city, searchTerm) {
   let hospitalQuery = supabase.from('hospitals').select('id, name, location, city');
   if (city) {
@@ -194,26 +193,25 @@ export async function searchDoctors(city, searchTerm) {
   let refinedTerm = searchTerm.trim();
   const lowerTerm = refinedTerm.toLowerCase();
 
-  // Comprehensive Multi-Lingual Symptom & Keyword Dictionary
   if (
-    lowerTerm.includes('dant') || lowerTerm.includes('teeth') || lowerTerm.includes('tooth') ||
+    lowerTerm.includes('dant') || lowerTerm.includes('teeth') || lowerTerm.includes('tooth') ||  
     lowerTerm.includes('dental') || lowerTerm.includes('danto') || lowerTerm.includes('daant')
   ) {
     refinedTerm = 'Dentist';
   } else if (
-    lowerTerm.includes('heart') || lowerTerm.includes('chest') || lowerTerm.includes('seene') ||
+    lowerTerm.includes('heart') || lowerTerm.includes('chest') || lowerTerm.includes('seene') ||  
     lowerTerm.includes('cardiologist') || lowerTerm.includes('bp') || lowerTerm.includes('blood pressure')
   ) {
     refinedTerm = 'Cardiologist';
   } else if (
-    lowerTerm.includes('sugar') || lowerTerm.includes('diabetes') || lowerTerm.includes('diabetic') ||
+    lowerTerm.includes('sugar') || lowerTerm.includes('diabetes') || lowerTerm.includes('diabetic') ||  
     lowerTerm.includes('madhumeh')
   ) {
     refinedTerm = 'Diabetologist';
   } else if (
-    lowerTerm.includes('fever') || lowerTerm.includes('cold') || lowerTerm.includes('cough') ||
-    lowerTerm.includes('bukhar') || lowerTerm.includes('jhor') || lowerTerm.includes('thanda') ||
-    lowerTerm.includes('sardi') || lowerTerm.includes('headache') || lowerTerm.includes('matha') ||
+    lowerTerm.includes('fever') || lowerTerm.includes('cold') || lowerTerm.includes('cough') ||  
+    lowerTerm.includes('bukhar') || lowerTerm.includes('jhor') || lowerTerm.includes('thanda') ||  
+    lowerTerm.includes('sardi') || lowerTerm.includes('headache') || lowerTerm.includes('matha') ||  
     lowerTerm.includes('general') || lowerTerm.includes('physician')
   ) {
     refinedTerm = 'General Physician';
@@ -221,7 +219,7 @@ export async function searchDoctors(city, searchTerm) {
 
   let doctorQuery = supabase
     .from('doctors')
-    .select('id, name, specialty, avg_minutes_per_patient, hospital_id, consultation_fee')
+    .select('id, name, specialty, avg_minutes_per_patient, hospital_id, consultation_fee, degrees, ptr_score, specialties')
     .in('hospital_id', hospitalIds);
 
   if (refinedTerm) {
@@ -292,7 +290,7 @@ export async function uploadPatientReport(patientUserId, reportName, reportType,
 
   const fileExt = file.name.split('.').pop();
   const fileName = `${patient.id}-${Date.now()}.${fileExt}`;
-
+  
   const { error: uploadError } = await supabase.storage
     .from('patient-reports')
     .upload(fileName, file);
