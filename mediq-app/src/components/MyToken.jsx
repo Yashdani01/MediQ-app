@@ -89,7 +89,9 @@ export default function MyToken({ user }) {
   }
 
   const currentServing = Math.max(booking.queue_number - booking.patientsAhead - 1, 0);
-  const estWaitMinutes = booking.patientsAhead * (booking.doctor?.avg_minutes_per_patient || 10);
+  const baseWaitMinutes = booking.patientsAhead * (booking.doctor?.avg_minutes_per_patient || 10);
+  const delayMinutes = booking.doctor?.status === 'delayed' ? (booking.doctor?.delay_minutes || 0) : 0;
+  const estWaitMinutes = baseWaitMinutes + delayMinutes;
   const statusInfo = STATUS_STYLES[booking.doctor?.status] || STATUS_STYLES.available;
 
   const isCheckedIn = apptStatus?.checked_in_at || booking.status === 'checked_in' || booking.status === 'serving';
