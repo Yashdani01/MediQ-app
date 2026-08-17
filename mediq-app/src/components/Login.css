@@ -1,285 +1,1046 @@
 :root {
-  --v2-accent: #10b981;
-  --v2-accent-dark: #059669;
-  --v2-panel: rgba(255, 255, 255, 0.04);
-  --v2-panel-border: rgba(255, 255, 255, 0.08);
-  --v2-text-muted: #94a3b8;
-  --v2-text-faint: #64748b;
+  --mediq-ink: #17332f;
+  --mediq-ink-soft: #50645f;
+  --mediq-muted: #7a8a86;
+
+  --mediq-teal: #087f73;
+  --mediq-teal-dark: #06665d;
+  --mediq-teal-soft: #e8f5f2;
+
+  --mediq-bg: #f5f8f7;
+  --mediq-card: #ffffff;
+
+  --mediq-line: #dfe9e6;
+  --mediq-line-strong: #cbdcd8;
+
+  --mediq-shadow:
+    0 24px 70px rgba(20, 52, 47, 0.1);
 }
 
-.login-page-v2 {
+/* =========================================================
+   PAGE
+   ========================================================= */
+
+.auth-page {
   min-height: 100vh;
+
+  background:
+    radial-gradient(
+      circle at 8% 8%,
+      rgba(8, 127, 115, 0.07),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 92% 90%,
+      rgba(20, 169, 153, 0.06),
+      transparent 30%
+    ),
+    var(--mediq-bg);
+
+  color: var(--mediq-ink);
+
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+
   display: flex;
   flex-direction: column;
-  align-items: center;
-  position: relative;
-  overflow: hidden;
-  background:
-    radial-gradient(circle at 50% 0%, rgba(15, 118, 110, 0.35) 0%, rgba(9, 10, 15, 0) 55%),
-    linear-gradient(180deg, #090a0f 0%, #090a0f 100%);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  padding: 24px 20px 40px;
+
+  overflow-x: hidden;
+
   box-sizing: border-box;
 }
 
-.login-topbar-v2 {
-  width: 100%;
-  max-width: 420px;
+.auth-page *,
+.auth-page *::before,
+.auth-page *::after {
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.auth-header {
+  width: min(1240px, calc(100% - 56px));
+
+  margin: 0 auto;
+
+  padding: 26px 0;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 28px;
+
+  gap: 24px;
 }
 
-.login-brand-v2 {
-  font-weight: 800;
-  font-size: 22px;
-  color: var(--v2-accent);
-  margin: 0;
-}
-
-.lang-toggle-v2 {
+.auth-brand {
   display: flex;
   align-items: center;
-  gap: 2px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--v2-panel-border);
-  border-radius: 100px;
-  padding: 3px;
+
+  gap: 12px;
 }
 
-.lang-pill-v2 {
-  border: none;
-  background: transparent;
-  color: var(--v2-text-muted);
+.brand-mark {
+  width: 38px;
+  height: 38px;
+
+  border-radius: 11px;
+
+  background: var(--mediq-teal);
+
+  color: #fff;
+
+  display: grid;
+  place-items: center;
+
+  font-weight: 800;
+  font-size: 21px;
+
+  box-shadow:
+    0 8px 18px rgba(8, 127, 115, 0.18);
+}
+
+.brand-mark span {
+  transform: translateY(-1px);
+}
+
+.brand-name {
+  margin: 0;
+
+  font-size: 20px;
+  line-height: 1;
+
+  font-weight: 800;
+
+  letter-spacing: -0.5px;
+}
+
+.brand-tagline {
+  margin: 5px 0 0;
+
+  color: var(--mediq-muted);
+
   font-size: 11px;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 100px;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
 }
 
-.lang-pill-v2.active {
-  background: linear-gradient(90deg, var(--v2-accent) 0%, var(--v2-accent-dark) 100%);
-  color: #fff;
-}
-
-.login-card-v2 {
-  width: 100%;
-  max-width: 420px;
-  background: var(--v2-panel);
-  border: 1px solid var(--v2-panel-border);
-  border-radius: 28px;
-  padding: 24px;
-  box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.25);
-  animation: cardInV2 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  box-sizing: border-box;
-}
-
-@keyframes cardInV2 {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.login-card-v2-header {
+.auth-header-actions {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin-bottom: 18px;
-}
 
-.login-avatar-v2 {
-  width: 48px;
-  height: 48px;
-  border-radius: 24px;
-  background: rgba(16, 185, 129, 0.08);
-  border: 1px solid rgba(16, 185, 129, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.login-card-v2-title {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 800;
-  color: #fff;
-}
-
-.login-card-v2-sub {
-  margin: 2px 0 0;
-  font-size: 12px;
-  color: var(--v2-text-muted);
-}
-
-.segmented-toggle-v2 {
-  display: flex;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 100px;
-  padding: 4px;
-  margin-bottom: 4px;
-}
-
-.segment-btn-v2 {
-  flex: 1;
-  padding: 9px 0;
-  border: none;
-  border-radius: 100px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  background: transparent;
-  color: var(--v2-text-muted);
-  transition: all 0.15s ease;
-}
-
-.segment-btn-v2.active {
-  background: linear-gradient(90deg, var(--v2-accent) 0%, var(--v2-accent-dark) 100%);
-  color: #fff;
-  font-weight: 700;
-}
-
-.login-card-v2-divider {
-  height: 1px;
-  background: rgba(255, 255, 255, 0.08);
-  margin: 18px 0;
-}
-
-.login-form-v2 {
-  display: flex;
-  flex-direction: column;
   gap: 16px;
 }
 
-.input-group-v2 {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  text-align: left;
-}
+.secure-label {
+  color: var(--mediq-muted);
 
-.input-label-v2 {
   font-size: 11px;
-  font-weight: 600;
-  color: var(--v2-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
 
-.login-input-v2 {
-  width: 100%;
-  height: 46px;
-  padding: 0 14px;
-  font-size: 14px;
-  color: #fff;
-  border: 1px solid var(--v2-panel-border);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.03);
-  outline: none;
-  transition: border-color 0.2s, background 0.2s;
-  box-sizing: border-box;
-}
-
-.login-input-v2:focus {
-  border-color: var(--v2-accent);
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.otp-input-v2 {
-  letter-spacing: 8px;
-  font-size: 18px;
-  font-weight: 700;
-  text-align: center;
-}
-
-.login-select-v2 {
-  cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='2' fill='none'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 14px center;
-}
-
-.login-btn-v2 {
-  height: 48px;
-  border-radius: 100px;
-  background: linear-gradient(90deg, var(--v2-accent) 0%, var(--v2-accent-dark) 100%);
-  color: #fff;
-  border: none;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.2);
   display: flex;
   align-items: center;
-  justify-content: center;
-  transition: transform 0.15s, box-shadow 0.15s, opacity 0.2s;
+
+  gap: 7px;
 }
 
-.login-btn-v2:hover:not(:disabled) {
+.secure-dot {
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+
+  background: #1ba889;
+
+  box-shadow:
+    0 0 0 4px rgba(27, 168, 137, 0.1);
+}
+
+/* =========================================================
+   LANGUAGE
+   ========================================================= */
+
+.language-switch {
+  display: flex;
+  align-items: center;
+
+  padding: 3px;
+
+  background: #fff;
+
+  border: 1px solid var(--mediq-line);
+
+  border-radius: 999px;
+}
+
+.language-button {
+  border: 0;
+
+  background: transparent;
+
+  color: var(--mediq-muted);
+
+  padding: 6px 10px;
+
+  border-radius: 999px;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
+}
+
+.language-button:hover {
+  color: var(--mediq-teal);
+}
+
+.language-button.active {
+  color: var(--mediq-teal);
+
+  background: var(--mediq-teal-soft);
+}
+
+/* =========================================================
+   MAIN
+   ========================================================= */
+
+.auth-main {
+  width: min(1160px, calc(100% - 56px));
+
+  margin: auto;
+
+  padding: 36px 0 50px;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(390px, 480px);
+
+  gap: clamp(55px, 8vw, 120px);
+
+  align-items: center;
+
+  flex: 1;
+}
+
+/* =========================================================
+   LEFT INTRO
+   ========================================================= */
+
+.auth-intro {
+  max-width: 560px;
+
+  padding: 24px 0;
+}
+
+.intro-eyebrow {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  color: var(--mediq-teal);
+
+  font-size: 10px;
+  font-weight: 800;
+
+  letter-spacing: 1.6px;
+}
+
+.eyebrow-line {
+  width: 28px;
+  height: 1px;
+
+  background: var(--mediq-teal);
+}
+
+.auth-intro h1 {
+  margin: 20px 0 22px;
+
+  font-size: clamp(48px, 6vw, 76px);
+
+  line-height: 0.98;
+
+  letter-spacing: -4px;
+
+  font-weight: 700;
+
+  color: var(--mediq-ink);
+}
+
+.auth-intro h1 em {
+  color: var(--mediq-teal);
+
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  font-weight: 400;
+}
+
+.intro-copy {
+  max-width: 510px;
+
+  margin: 0;
+
+  color: var(--mediq-ink-soft);
+
+  font-size: 15px;
+
+  line-height: 1.75;
+}
+
+/* =========================================================
+   FEATURES
+   ========================================================= */
+
+.intro-features {
+  margin-top: 34px;
+
+  display: grid;
+
+  gap: 15px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+
+  gap: 13px;
+}
+
+.feature-icon {
+  width: 32px;
+  height: 32px;
+
+  border: 1px solid var(--mediq-line);
+
+  border-radius: 9px;
+
+  background: #fff;
+
+  color: var(--mediq-teal);
+
+  display: grid;
+  place-items: center;
+
+  font-weight: 800;
+  font-size: 14px;
+
+  flex-shrink: 0;
+}
+
+.feature-item strong,
+.feature-item span {
+  display: block;
+}
+
+.feature-item strong {
+  color: var(--mediq-ink);
+
+  font-size: 12px;
+
+  margin-bottom: 2px;
+}
+
+.feature-item span {
+  color: var(--mediq-muted);
+
+  font-size: 11px;
+}
+
+/* =========================================================
+   AUTH PANEL
+   ========================================================= */
+
+.auth-panel {
+  width: 100%;
+
+  background: var(--mediq-card);
+
+  border: 1px solid var(--mediq-line);
+
+  border-radius: 18px;
+
+  box-shadow: var(--mediq-shadow);
+
+  animation:
+    mediq-panel-in 0.45s
+    cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes mediq-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.auth-panel-inner {
+  padding: 42px;
+}
+
+/* =========================================================
+   PANEL HEADING
+   ========================================================= */
+
+.panel-heading {
+  margin-bottom: 30px;
+}
+
+.panel-heading.compact {
+  margin-top: 24px;
+
+  margin-bottom: 25px;
+}
+
+.panel-kicker {
+  color: var(--mediq-teal);
+
+  font-size: 9px;
+
+  font-weight: 800;
+
+  letter-spacing: 1.5px;
+}
+
+.panel-heading h2 {
+  margin: 9px 0 7px;
+
+  font-size: 26px;
+
+  line-height: 1.15;
+
+  letter-spacing: -0.7px;
+
+  color: var(--mediq-ink);
+}
+
+.panel-heading p {
+  margin: 0;
+
+  color: var(--mediq-muted);
+
+  font-size: 12px;
+
+  line-height: 1.6;
+}
+
+/* =========================================================
+   REGISTER / LOGIN CHOICES
+   ========================================================= */
+
+.auth-choice-list {
+  display: grid;
+
+  gap: 11px;
+}
+
+.auth-choice {
+  width: 100%;
+
+  display: grid;
+
+  grid-template-columns:
+    40px
+    minmax(0, 1fr)
+    auto;
+
+  align-items: center;
+
+  gap: 13px;
+
+  padding: 16px;
+
+  border: 1px solid var(--mediq-line);
+
+  border-radius: 13px;
+
+  background: #fff;
+
+  color: var(--mediq-ink);
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.auth-choice:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 16px rgba(16, 185, 129, 0.3);
+
+  border-color: var(--mediq-line-strong);
+
+  box-shadow:
+    0 10px 25px rgba(20, 52, 47, 0.07);
 }
 
-.login-btn-v2:disabled {
-  opacity: 0.5;
+.auth-choice.primary {
+  border-color:
+    rgba(8, 127, 115, 0.24);
+
+  background: #f4fbf9;
+}
+
+.choice-icon {
+  width: 40px;
+  height: 40px;
+
+  border-radius: 11px;
+
+  background: var(--mediq-teal-soft);
+
+  color: var(--mediq-teal);
+
+  display: grid;
+  place-items: center;
+
+  font-size: 19px;
+
+  font-weight: 500;
+}
+
+.choice-copy strong,
+.choice-copy small {
+  display: block;
+}
+
+.choice-copy strong {
+  font-size: 13px;
+
+  margin-bottom: 3px;
+}
+
+.choice-copy small {
+  color: var(--mediq-muted);
+
+  font-size: 10.5px;
+
+  line-height: 1.4;
+}
+
+.choice-arrow {
+  color: var(--mediq-teal);
+
+  font-size: 17px;
+
+  transition:
+    transform 0.18s ease;
+}
+
+.auth-choice:hover .choice-arrow {
+  transform: translateX(3px);
+}
+
+/* =========================================================
+   GUEST
+   ========================================================= */
+
+.guest-divider {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  margin: 25px 0 13px;
+
+  color: #a0afab;
+
+  font-size: 10px;
+}
+
+.guest-divider::before,
+.guest-divider::after {
+  content: "";
+
+  height: 1px;
+
+  flex: 1;
+
+  background: var(--mediq-line);
+}
+
+.guest-action {
+  width: 100%;
+
+  border: 0;
+
+  background: transparent;
+
+  color: var(--mediq-teal);
+
+  font-size: 12px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  padding: 7px;
+}
+
+.guest-action span {
+  margin-left: 5px;
+
+  transition:
+    margin-left 0.18s ease;
+}
+
+.guest-action:hover span {
+  margin-left: 9px;
+}
+
+/* =========================================================
+   BACK BUTTON
+   ========================================================= */
+
+.back-action {
+  border: 0;
+
+  background: transparent;
+
+  padding: 0;
+
+  color: var(--mediq-muted);
+
+  font-size: 11px;
+
+  cursor: pointer;
+}
+
+.back-action:hover {
+  color: var(--mediq-teal);
+}
+
+/* =========================================================
+   FORM
+   ========================================================= */
+
+.auth-form {
+  display: grid;
+
+  gap: 16px;
+}
+
+.field-group {
+  display: grid;
+
+  gap: 7px;
+}
+
+.field-group label {
+  color: var(--mediq-ink-soft);
+
+  font-size: 11px;
+
+  font-weight: 700;
+}
+
+.field-group input,
+.field-group select {
+  width: 100%;
+
+  height: 46px;
+
+  padding: 0 13px;
+
+  border: 1px solid var(--mediq-line);
+
+  border-radius: 10px;
+
+  background: #fbfdfc;
+
+  color: var(--mediq-ink);
+
+  font: inherit;
+
+  font-size: 13px;
+
+  outline: none;
+
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.field-group input:focus,
+.field-group select:focus {
+  border-color:
+    rgba(8, 127, 115, 0.55);
+
+  box-shadow:
+    0 0 0 3px rgba(8, 127, 115, 0.08);
+
+  background: #fff;
+}
+
+.field-group select {
+  appearance: none;
+
+  background-image:
+    linear-gradient(
+      45deg,
+      transparent 50%,
+      #7a8a86 50%
+    ),
+    linear-gradient(
+      135deg,
+      #7a8a86 50%,
+      transparent 50%
+    );
+
+  background-position:
+    calc(100% - 16px) 20px,
+    calc(100% - 11px) 20px;
+
+  background-size:
+    5px 5px,
+    5px 5px;
+
+  background-repeat: no-repeat;
+}
+
+/* =========================================================
+   SUBMIT BUTTON
+   ========================================================= */
+
+.submit-action {
+  width: 100%;
+
+  height: 47px;
+
+  margin-top: 3px;
+
+  border: 0;
+
+  border-radius: 10px;
+
+  background: var(--mediq-teal);
+
+  color: #fff;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 8px;
+
+  font-size: 12px;
+
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.submit-action:hover:not(:disabled) {
+  background: var(--mediq-teal-dark);
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 9px 18px rgba(8, 127, 115, 0.18);
+}
+
+.submit-action:disabled {
+  opacity: 0.55;
+
   cursor: not-allowed;
 }
 
-.guest-btn-v2 {
-  width: 100%;
-  margin-top: 14px;
-  padding: 10px;
-  background: none;
-  border: none;
-  color: var(--v2-accent);
-  font-size: 13px;
-  font-weight: 600;
+/* =========================================================
+   FORM SWITCH
+   ========================================================= */
+
+.form-switch {
+  margin: 19px 0 0;
+
+  color: var(--mediq-muted);
+
+  font-size: 11px;
+
+  text-align: center;
+}
+
+.form-switch button {
+  border: 0;
+
+  background: transparent;
+
+  padding: 0;
+
+  margin-left: 5px;
+
+  color: var(--mediq-teal);
+
+  font: inherit;
+
+  font-weight: 800;
+
   cursor: pointer;
 }
 
-.login-link-v2 {
+.form-switch.secondary {
   width: 100%;
-  margin-top: 10px;
-  padding: 8px;
-  background: none;
-  border: none;
-  color: var(--v2-text-muted);
-  font-size: 12px;
+
+  display: block;
+
   cursor: pointer;
 }
 
-.spinner-v2 {
-  display: inline-block;
+/* =========================================================
+   OTP
+   ========================================================= */
+
+.otp-field {
+  letter-spacing: 7px;
+
+  text-align: center;
+
+  font-size: 20px !important;
+
+  font-weight: 700;
+}
+
+/* =========================================================
+   SPINNER
+   ========================================================= */
+
+.spinner {
   width: 16px;
   height: 16px;
+
   border: 2px solid rgba(255, 255, 255, 0.4);
+
   border-top-color: #fff;
+
   border-radius: 50%;
-  animation: spinV2 0.6s linear infinite;
+
+  animation:
+    mediq-spin 0.65s linear infinite;
 }
 
-@keyframes spinV2 {
-  to { transform: rotate(360deg); }
+@keyframes mediq-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.login-error-v2 {
-  margin: 14px 0 0;
-  font-size: 12px;
-  color: #fca5a5;
-  background: rgba(220, 38, 38, 0.12);
-  border: 1px solid rgba(220, 38, 38, 0.25);
-  padding: 10px;
-  border-radius: 10px;
-  text-align: center;
-}
+/* =========================================================
+   ERROR
+   ========================================================= */
 
-.login-footer-v2 {
-  margin-top: 20px;
+.auth-error {
+  margin: 16px 0 0;
+
+  padding: 10px 12px;
+
+  border: 1px solid #f2caca;
+
+  border-radius: 9px;
+
+  background: #fff5f5;
+
+  color: #a63d3d;
+
   font-size: 11px;
-  color: var(--v2-text-faint);
+
+  line-height: 1.5;
+
   text-align: center;
+}
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.auth-footer {
+  width: min(1160px, calc(100% - 56px));
+
+  margin: 0 auto;
+
+  padding: 17px 0 22px;
+
+  border-top: 1px solid var(--mediq-line);
+
+  color: var(--mediq-muted);
+
+  display: flex;
+
+  justify-content: space-between;
+
+  gap: 15px;
+
+  font-size: 10px;
+}
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .auth-main {
+    grid-template-columns: 1fr;
+
+    max-width: 620px;
+
+    gap: 20px;
+
+    padding-top: 15px;
+  }
+
+  .auth-intro {
+    max-width: none;
+
+    padding-bottom: 0;
+  }
+
+  .auth-intro h1 {
+    font-size:
+      clamp(43px, 9vw, 62px);
+  }
+
+  .intro-copy {
+    max-width: 620px;
+  }
+
+  .intro-features {
+    grid-template-columns:
+      repeat(3, 1fr);
+
+    gap: 10px;
+  }
+
+  .feature-item {
+    align-items: flex-start;
+  }
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 650px) {
+  .auth-header,
+  .auth-main,
+  .auth-footer {
+    width:
+      min(100% - 30px, 520px);
+  }
+
+  .auth-header {
+    padding: 18px 0;
+  }
+
+  .secure-label {
+    display: none;
+  }
+
+  .brand-tagline {
+    display: none;
+  }
+
+  .auth-main {
+    padding: 15px 0 30px;
+  }
+
+  .auth-intro {
+    padding-top: 10px;
+  }
+
+  .auth-intro h1 {
+    margin-top: 15px;
+
+    font-size: 46px;
+
+    letter-spacing: -2.5px;
+  }
+
+  .intro-copy {
+    font-size: 13px;
+
+    line-height: 1.65;
+  }
+
+  .intro-features {
+    display: none;
+  }
+
+  .auth-panel-inner {
+    padding: 28px 22px;
+  }
+
+  .panel-heading h2 {
+    font-size: 23px;
+  }
+
+  .auth-footer {
+    flex-wrap: wrap;
+
+    justify-content: center;
+
+    text-align: center;
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 420px) {
+  .auth-header {
+    align-items: flex-start;
+  }
+
+  .auth-panel-inner {
+    padding: 25px 18px;
+  }
+
+  .auth-choice {
+    grid-template-columns:
+      36px
+      minmax(0, 1fr)
+      auto;
+
+    padding: 13px;
+  }
+
+  .choice-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .choice-copy small {
+    font-size: 10px;
+  }
+
+  .language-button {
+    padding: 5px 8px;
+  }
 }
