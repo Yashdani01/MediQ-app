@@ -1,28 +1,33 @@
 import { useState } from 'react';
+import { supabase } from '../supabaseClient';
 import './Login.css';
 
 export default function Login({ onLoginSuccess, onContinueAsGuest }) {
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
-  const [otp, setOtp] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSendOtp = (e) => {
+  const handleEmailLogin = async (e) => {
     e.preventDefault();
-    if (phoneNumber.length < 10) {
-      alert('Please enter a valid 10-digit mobile number.');
+    setLoading(true);
+    setError('');
+
+    const { data, error: authError } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+
+    if (authError) {
+      setLoading(false);
+      setError(authError.message || 'Invalid email or password.');
       return;
     }
-    setOtpSent(true);
-  };
 
-  const handleVerifyOtp = (e) => {
-    e.preventDefault();
-    if (otp.length < 4) {
-      alert('Please enter the verification code.');
-      return;
+    setLoading(false);
+    if (data?.user) {
+      onLoginSuccess(data.user, data.user.email);
     }
-    // Simulate successful login with user object
-    onLoginSuccess({ id: 'user_' + Date.now(), phone: phoneNumber }, 'Yash Dani');
   };
 
   return (
@@ -35,65 +40,49 @@ export default function Login({ onLoginSuccess, onContinueAsGuest }) {
           <p>Instant Healthcare & Queue Management</p>
         </div>
 
-        {/* Form Section */}
-        {!otpSent ? (
-          <form onSubmit={handleSendOtp} className="login-form">
-            <div className="input-group">
-              <label>Mobile Number</label>
-              <div className="phone-input-wrap">
-                <span className="country-code">+91</span>
-                <input
-                  type="tel"
-                  placeholder="Enter 10-digit mobile number"
-                  maxLength={10}
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
-                  required
-                />
-              </div>
-            </div>
-
-            <button type="submit" className="login-primary-btn">
-              Continue with OTP →
-            </button>
-          </form>
-        ) : (
-          <form onSubmit={handleVerifyOtp} className="login-form">
-            <p className="otp-subtitle">
-              Enter the 4-digit verification code sent to <strong>+91 {phoneNumber}</strong>
-            </p>
-            <div className="input-group">
+        {/* Gmail / Email Login Form */}
+        <form onSubmit={handleEmailLogin} className="login-form">
+          <div className="input-group">
+            <label>Email Address</label>
+            <div className="phone-input-wrap" style={{ paddingLeft: '14px' }}>
               <input
-                type="text"
-                placeholder="• • • •"
-                maxLength={4}
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                className="otp-pin-input"
+                type="email"
+                placeholder="Enter your email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
+                style={{ paddingLeft: 0 }}
               />
             </div>
+          </div>
 
-            <button type="submit" className="login-primary-btn">
-              Verify & Sign In
-            </button>
-            
-            <button
-              type="button"
-              className="login-text-btn"
-              onClick={() => setOtpSent(false)}
-            >
-              ← Change Mobile Number
-            </button>
-          </form>
-        )}
+          <div className="input-group">
+            <label>Password</label>
+            <div className="phone-input-wrap" style={{ paddingLeft: '14px' }}>
+              <input
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                style={{ paddingLeft: 0 }}
+              />
+            </div>
+          </div>
+
+          {error && <p style={{ color: '#ef4444', fontSize: 12, fontWeight: 700, margin: '2px 0 0', textAlign: 'left' }}>{error}</p>}
+
+          <button type="submit" className="login-primary-btn" disabled={loading} style={{ marginTop: '6px' }}>
+            {loading ? 'Signing in...' : 'Sign In →'}
+          </button>
+        </form>
 
         {/* Divider */}
         <div className="login-divider">
           <span>or</span>
         </div>
 
-        {/* Guest Action */}
+        {/* Guest Action with Working Redirect */}
         <button className="login-guest-btn" onClick={onContinueAsGuest}>
           Browse as Guest
         </button>
