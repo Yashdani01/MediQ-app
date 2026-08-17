@@ -5,12 +5,23 @@ import { getAllCities } from '../hospitalData';
 import './Login.css';
 
 export default function Login({ onGuestContinue }) {
-  const [mode, setMode] = useState('register');
+  const [mode, setMode] = useState('entry');
   const [lang, setLang] = useState('en');
-  const [name, setName] = useState(() => sessionStorage.getItem('mediq_name') || '');
-  const [city, setCity] = useState(() => sessionStorage.getItem('mediq_city') || '');
+
+  const [name, setName] = useState(
+    () => sessionStorage.getItem('mediq_name') || ''
+  );
+
+  const [city, setCity] = useState(
+    () => sessionStorage.getItem('mediq_city') || ''
+  );
+
   const [cities, setCities] = useState([]);
-  const [email, setEmail] = useState(() => sessionStorage.getItem('mediq_email') || '');
+
+  const [email, setEmail] = useState(
+    () => sessionStorage.getItem('mediq_email') || ''
+  );
+
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -23,6 +34,7 @@ export default function Login({ onGuestContinue }) {
   useEffect(() => {
     getAllCities().then((list) => {
       setCities(list);
+
       setCity((current) => {
         if (current) return current;
         if (list.includes('Balgona')) return 'Balgona';
@@ -31,24 +43,44 @@ export default function Login({ onGuestContinue }) {
     });
   }, []);
 
-  useEffect(() => { sessionStorage.setItem('mediq_name', name); }, [name]);
-  useEffect(() => { sessionStorage.setItem('mediq_city', city); }, [city]);
-  useEffect(() => { sessionStorage.setItem('mediq_email', email); }, [email]);
+  useEffect(() => {
+    sessionStorage.setItem('mediq_name', name);
+  }, [name]);
 
-  const switchMode = (newMode) => {
+  useEffect(() => {
+    sessionStorage.setItem('mediq_city', city);
+  }, [city]);
+
+  useEffect(() => {
+    sessionStorage.setItem('mediq_email', email);
+  }, [email]);
+
+  const chooseMode = (newMode) => {
     setMode(newMode);
     setError('');
     setSent(false);
+    setOtp('');
+  };
+
+  const goBack = () => {
+    setMode('entry');
+    setSent(false);
+    setOtp('');
+    setError('');
   };
 
   const sendMagicLink = async (e) => {
     e.preventDefault();
+
     setLoading(true);
     setError('');
 
     const isRegister = mode === 'register';
+
     const redirectUrl = isRegister
-      ? `${window.location.origin}?name=${encodeURIComponent(name)}&city=${encodeURIComponent(city)}`
+      ? `${window.location.origin}?name=${encodeURIComponent(
+          name
+        )}&city=${encodeURIComponent(city)}`
       : `${window.location.origin}`;
 
     const { error } = await supabase.auth.signInWithOtp({
@@ -58,10 +90,14 @@ export default function Login({ onGuestContinue }) {
         emailRedirectTo: redirectUrl,
       },
     });
+
     setLoading(false);
+
     if (error) {
       if (!isRegister) {
-        setError('No account found with this email. Please use Register to create one.');
+        setError(
+          'No account found with this email. Please use Create an account.'
+        );
       } else {
         setError(error.message);
       }
@@ -72,162 +108,526 @@ export default function Login({ onGuestContinue }) {
 
   const verifyCode = async (e) => {
     e.preventDefault();
+
     setVerifying(true);
     setError('');
+
     const { error } = await supabase.auth.verifyOtp({
       email,
       token: otp,
       type: 'email',
     });
+
     setVerifying(false);
+
     if (error) {
       setError(error.message);
+      return;
+    }
+
+    sessionStorage.removeItem('mediq_name');
+    sessionStorage.removeItem('mediq_city');
+    sessionStorage.removeItem('mediq_email');
+
+    if (mode === 'register') {
+      const url = new URL(window.location.href);
+
+      url.searchParams.set('name', name);
+      url.searchParams.set('city', city);
+
+      window.location.href = url.toString();
     } else {
-      sessionStorage.removeItem('mediq_name');
-      sessionStorage.removeItem('mediq_city');
-      sessionStorage.removeItem('mediq_email');
-      if (mode === 'register') {
-        const url = new URL(window.location.href);
-        url.searchParams.set('name', name);
-        url.searchParams.set('city', city);
-        window.location.href = url.toString();
-      } else {
-        window.location.href = window.location.origin;
-      }
+      window.location.href = window.location.origin;
     }
   };
 
-  return (
-    <div className="login-page-v2">
-      <div className="login-topbar-v2">
-        <p className="login-brand-v2">MediQ</p>
-        <div className="lang-toggle-v2">
-          {languages.map((l) => (
-            <button
-              key={l.code}
-              className={`lang-pill-v2 ${lang === l.code ? 'active' : ''}`}
-              onClick={() => setLang(l.code)}
-            >
-              {l.label}
-            </button>
-          ))}
-        </div>
-      </div>
+  const renderLanguageToggle = () => (
+    <div className="language-switch">
+      {languages.map((l) => (
+        <button
+          key={l.code}
+          type="button"
+          className={`language-button ${
+            lang === l.code ? 'active' : ''
+          }`}
+          onClick={() => setLang(l.code)}
+          aria-label={`Switch language to ${l.label}`}
+        >
+          {l.label}
+        </button>
+      ))}
+    </div>
+  );
 
-      <div className="login-card-v2">
-        <div className="login-card-v2-header">
-          <div className="login-avatar-v2">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Z" stroke="#10b981" strokeWidth="1.6" />
-              <path d="M4 20.5c1.4-3.6 4.6-5.5 8-5.5s6.6 1.9 8 5.5" stroke="#10b981" strokeWidth="1.6" strokeLinecap="round" />
-            </svg>
+  return (
+    <div className="auth-page">
+      {/* HEADER */}
+      <header className="auth-header">
+        <div className="auth-brand">
+          <div className="brand-mark" aria-hidden="true">
+            <span>+</span>
           </div>
+
           <div>
-            <p className="login-card-v2-title">{sent ? t.signInTitle : (mode === 'register' ? 'Create your account' : 'Welcome back')}</p>
-            <p className="login-card-v2-sub">
-              {sent ? '' : (mode === 'register' ? 'Join MediQ for live queue tracking' : 'Sign in to continue')}
+            <p className="brand-name">MediQ</p>
+            <p className="brand-tagline">
+              Healthcare, without the waiting.
             </p>
           </div>
         </div>
 
-        {!sent && (
-          <div className="segmented-toggle-v2">
-            <button
-              className={`segment-btn-v2 ${mode === 'register' ? 'active' : ''}`}
-              onClick={() => switchMode('register')}
-            >
-              Register
-            </button>
-            <button
-              className={`segment-btn-v2 ${mode === 'login' ? 'active' : ''}`}
-              onClick={() => switchMode('login')}
-            >
-              Log In
-            </button>
+        <div className="auth-header-actions">
+          <span className="secure-label">
+            <span className="secure-dot" aria-hidden="true" />
+            Secure access
+          </span>
+
+          {renderLanguageToggle()}
+        </div>
+      </header>
+
+      {/* MAIN */}
+      <main className="auth-main">
+
+        {/* LEFT SIDE */}
+        <section
+          className="auth-intro"
+          aria-label="MediQ overview"
+        >
+          <div className="intro-eyebrow">
+            <span className="eyebrow-line" />
+            SMARTER HEALTHCARE
           </div>
-        )}
 
-        <div className="login-card-v2-divider" />
+          <h1>
+            Spend less time
+            <br />
+            <em>waiting.</em>
+          </h1>
 
-        {!sent ? (
-          <>
-            <form onSubmit={sendMagicLink} className="login-form-v2">
-              {mode === 'register' && (
-                <>
-                  <div className="input-group-v2">
-                    <label htmlFor="name" className="input-label-v2">{t.nameLabel}</label>
-                    <input
-                      id="name" type="text" className="login-input-v2"
-                      value={name} onChange={(e) => setName(e.target.value)} required
-                    />
-                  </div>
+          <p className="intro-copy">
+            Find hospitals, discover services, and keep track of
+            your place in the queue — all from one simple healthcare
+            platform.
+          </p>
 
-                  <div className="input-group-v2">
-                    <label htmlFor="city" className="input-label-v2">Your City</label>
-                    <select
-                      id="city" className="login-input-v2 login-select-v2"
-                      value={city} onChange={(e) => setCity(e.target.value)} required
+          <div className="intro-features">
+
+            <div className="feature-item">
+              <span className="feature-icon" aria-hidden="true">
+                +
+              </span>
+
+              <div>
+                <strong>Live queue visibility</strong>
+                <span>
+                  Know your position before you arrive.
+                </span>
+              </div>
+            </div>
+
+            <div className="feature-item">
+              <span className="feature-icon" aria-hidden="true">
+                +
+              </span>
+
+              <div>
+                <strong>Find the right care</strong>
+                <span>
+                  Explore hospitals and available services.
+                </span>
+              </div>
+            </div>
+
+            <div className="feature-item">
+              <span className="feature-icon" aria-hidden="true">
+                ✓
+              </span>
+
+              <div>
+                <strong>Private by design</strong>
+                <span>
+                  Your account stays tied to your verified email.
+                </span>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        {/* RIGHT AUTH PANEL */}
+        <section
+          className="auth-panel"
+          aria-label="MediQ authentication"
+        >
+          <div className="auth-panel-inner">
+
+            {/* INITIAL CHOICE SCREEN */}
+            {!sent && mode === 'entry' && (
+              <>
+                <div className="panel-heading">
+                  <span className="panel-kicker">
+                    WELCOME TO MEDIQ
+                  </span>
+
+                  <h2>
+                    How would you like to continue?
+                  </h2>
+
+                  <p>
+                    Choose an option below to get started.
+                  </p>
+                </div>
+
+                <div className="auth-choice-list">
+
+                  <button
+                    type="button"
+                    className="auth-choice primary"
+                    onClick={() => chooseMode('register')}
+                  >
+                    <span
+                      className="choice-icon"
+                      aria-hidden="true"
                     >
-                      <option value="" disabled hidden></option>
-                      {cities.map((c) => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                    </select>
+                      +
+                    </span>
+
+                    <span className="choice-copy">
+                      <strong>Create an account</strong>
+                      <small>
+                        New to MediQ? Register with your email.
+                      </small>
+                    </span>
+
+                    <span
+                      className="choice-arrow"
+                      aria-hidden="true"
+                    >
+                      →
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="auth-choice"
+                    onClick={() => chooseMode('login')}
+                  >
+                    <span
+                      className="choice-icon"
+                      aria-hidden="true"
+                    >
+                      ↗
+                    </span>
+
+                    <span className="choice-copy">
+                      <strong>Sign in</strong>
+                      <small>
+                        Already registered? Continue securely.
+                      </small>
+                    </span>
+
+                    <span
+                      className="choice-arrow"
+                      aria-hidden="true"
+                    >
+                      →
+                    </span>
+                  </button>
+
+                </div>
+
+                <div className="guest-divider">
+                  <span>or</span>
+                </div>
+
+                <button
+                  type="button"
+                  className="guest-action"
+                  onClick={onGuestContinue}
+                >
+                  Continue as guest
+                  <span aria-hidden="true">→</span>
+                </button>
+              </>
+            )}
+
+            {/* REGISTER / LOGIN FORM */}
+            {!sent &&
+              (mode === 'register' || mode === 'login') && (
+                <>
+                  <button
+                    type="button"
+                    className="back-action"
+                    onClick={goBack}
+                  >
+                    <span aria-hidden="true">←</span>
+                    {' '}Back
+                  </button>
+
+                  <div className="panel-heading compact">
+                    <span className="panel-kicker">
+                      {mode === 'register'
+                        ? 'NEW ACCOUNT'
+                        : 'WELCOME BACK'}
+                    </span>
+
+                    <h2>
+                      {mode === 'register'
+                        ? 'Create your account'
+                        : 'Sign in to MediQ'}
+                    </h2>
+
+                    <p>
+                      {mode === 'register'
+                        ? 'A few details, then we will verify your email.'
+                        : 'Enter your email and we will send you a secure code.'}
+                    </p>
                   </div>
+
+                  <form
+                    onSubmit={sendMagicLink}
+                    className="auth-form"
+                  >
+
+                    {mode === 'register' && (
+                      <>
+                        <div className="field-group">
+                          <label htmlFor="name">
+                            Full name
+                          </label>
+
+                          <input
+                            id="name"
+                            type="text"
+                            value={name}
+                            onChange={(e) =>
+                              setName(e.target.value)
+                            }
+                            autoComplete="name"
+                            required
+                          />
+                        </div>
+
+                        <div className="field-group">
+                          <label htmlFor="city">
+                            Your city
+                          </label>
+
+                          <select
+                            id="city"
+                            value={city}
+                            onChange={(e) =>
+                              setCity(e.target.value)
+                            }
+                            required
+                          >
+                            <option
+                              value=""
+                              disabled
+                            >
+                              Select your city
+                            </option>
+
+                            {cities.map((c) => (
+                              <option
+                                key={c}
+                                value={c}
+                              >
+                                {c}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </>
+                    )}
+
+                    <div className="field-group">
+                      <label htmlFor="email">
+                        Email address
+                      </label>
+
+                      <input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) =>
+                          setEmail(e.target.value)
+                        }
+                        autoComplete="email"
+                        required
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="submit-action"
+                      disabled={
+                        loading ||
+                        !email ||
+                        (mode === 'register' &&
+                          (!name || !city))
+                      }
+                    >
+                      {loading ? (
+                        <span className="spinner" />
+                      ) : (
+                        <>
+                          {mode === 'register'
+                            ? 'Continue with email'
+                            : 'Send login code'}
+
+                          <span aria-hidden="true">
+                            →
+                          </span>
+                        </>
+                      )}
+                    </button>
+
+                  </form>
+
+                  <p className="form-switch">
+                    {mode === 'register'
+                      ? 'Already have an account?'
+                      : 'New to MediQ?'}
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        chooseMode(
+                          mode === 'register'
+                            ? 'login'
+                            : 'register'
+                        )
+                      }
+                    >
+                      {mode === 'register'
+                        ? 'Sign in'
+                        : 'Create an account'}
+                    </button>
+                  </p>
                 </>
               )}
 
-              <div className="input-group-v2">
-                <label htmlFor="email" className="input-label-v2">{t.emailLabel}</label>
-                <input
-                  id="email" type="email" className="login-input-v2"
-                  value={email} onChange={(e) => setEmail(e.target.value)} required
-                />
-              </div>
+            {/* OTP SCREEN */}
+            {sent && (
+              <>
+                <button
+                  type="button"
+                  className="back-action"
+                  onClick={() => {
+                    setSent(false);
+                    setOtp('');
+                    setError('');
+                  }}
+                >
+                  <span aria-hidden="true">←</span>
+                  {' '}Change email
+                </button>
 
-              <button
-                type="submit" className="login-btn-v2"
-                disabled={loading || !email || (mode === 'register' && (!name || !city))}
+                <div className="panel-heading compact">
+                  <span className="panel-kicker">
+                    VERIFY EMAIL
+                  </span>
+
+                  <h2>
+                    Check your inbox
+                  </h2>
+
+                  <p>
+                    {t.checkEmail
+                      ? t.checkEmail(email)
+                      : `We sent a 6-digit code to ${email}.`}
+                  </p>
+                </div>
+
+                <form
+                  onSubmit={verifyCode}
+                  className="auth-form"
+                >
+                  <div className="field-group">
+                    <label htmlFor="otp">
+                      6-digit verification code
+                    </label>
+
+                    <input
+                      id="otp"
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      maxLength={6}
+                      className="otp-field"
+                      value={otp}
+                      onChange={(e) =>
+                        setOtp(
+                          e.target.value.replace(/\D/g, '')
+                        )
+                      }
+                      required
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="submit-action"
+                    disabled={
+                      verifying || otp.length !== 6
+                    }
+                  >
+                    {verifying ? (
+                      <span className="spinner" />
+                    ) : (
+                      <>
+                        Verify & continue
+                        <span aria-hidden="true">
+                          →
+                        </span>
+                      </>
+                    )}
+                  </button>
+                </form>
+
+                <button
+                  type="button"
+                  className="form-switch secondary"
+                  onClick={() => {
+                    setSent(false);
+                    setOtp('');
+                    setError('');
+                  }}
+                >
+                  Use a different email
+                </button>
+              </>
+            )}
+
+            {error && (
+              <p
+                className="auth-error"
+                role="alert"
               >
-                {loading ? <span className="spinner-v2" /> : (mode === 'register' ? 'Continue with Email' : 'Send Login Code')}
-              </button>
-            </form>
+                {error}
+              </p>
+            )}
 
-            <button className="guest-btn-v2" onClick={onGuestContinue}>
-              Continue as Guest →
-            </button>
-          </>
-        ) : (
-          <>
-            <p className="login-card-v2-sub" style={{ marginBottom: 16 }}>{t.checkEmail(email)}</p>
+          </div>
+        </section>
+      </main>
 
-            <form onSubmit={verifyCode} className="login-form-v2">
-              <div className="input-group-v2">
-                <label htmlFor="otp" className="input-label-v2">Enter 6-digit code</label>
-                <input
-                  id="otp" type="text" inputMode="numeric" maxLength={6}
-                  className="login-input-v2 otp-input-v2"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                  required
-                />
-              </div>
+      {/* FOOTER */}
+      <footer className="auth-footer">
+        <span>
+          © {new Date().getFullYear()} MediQ
+        </span>
 
-              <button type="submit" className="login-btn-v2" disabled={verifying || otp.length !== 6}>
-                {verifying ? <span className="spinner-v2" /> : 'Verify & Continue'}
-              </button>
-            </form>
+        <span>
+          Secure healthcare access
+        </span>
 
-            <button className="login-link-v2" onClick={() => { setSent(false); setOtp(''); setError(''); }}>
-              {t.differentEmail}
-            </button>
-          </>
-        )}
-
-        {error && <p className="login-error-v2">{error}</p>}
-      </div>
-
-      <p className="login-footer-v2">By registering, you agree to our Terms and Privacy Policy.</p>
+        <span>
+          Terms · Privacy
+        </span>
+      </footer>
     </div>
   );
 }
