@@ -1,867 +1,646 @@
-/* =========================================
-   MEDIQ – HOSPITAL FLOW
-   Premium unified design system
-   ========================================= */
+/* src/components/HospitalFlow.css */
 
-.flow-page {
-  min-height: 100vh;
-  width: 100%;
-  background:
-    radial-gradient(circle at 15% 10%, rgba(20, 125, 116, 0.08), transparent 28%),
-    radial-gradient(circle at 85% 85%, rgba(20, 125, 116, 0.05), transparent 30%),
-    #f4f5f2;
-  font-family: 'Inter', sans-serif;
-  color: #203735;
-  padding-bottom: 100px;
-  box-sizing: border-box;
-}
+/* =========================================================
+   CONTAINER
+========================================================= */
 
-
-/* =========================================
-   TOP BAR
-   ========================================= */
-
-.flow-topbar {
-  width: 100%;
-  background: rgba(248, 249, 247, 0.88);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border-bottom: 1px solid rgba(32, 55, 53, 0.09);
-  padding: 18px 20px;
-  margin-bottom: 28px;
-  box-sizing: border-box;
-}
-
-.flow-topbar-inner {
-  width: 100%;
-  max-width: 600px;
+.hospital-flow {
+  padding: 24px 32px;
+  max-width: 1180px;
   margin: 0 auto;
+  min-height: 100vh;
+  overflow-y: auto;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.hospital-flow-header {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  align-items: center;
-  box-sizing: border-box;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
-.flow-user-badge {
-  display: flex;
-  align-items: center;
-  gap: 11px;
+.hospital-flow-greeting h1 {
+  color: #fff;
+  font-size: 28px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  font-family: 'Fraunces', serif;
 }
 
-.flow-avatar {
-  width: 42px;
-  height: 42px;
-  border-radius: 13px;
-  background: linear-gradient(
-    135deg,
-    #147d74,
-    #0f675f
-  );
-  color: #ffffff;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 15px;
-  box-shadow: 0 8px 20px rgba(20, 125, 116, 0.18);
+.greeting-name {
+  color: #10b981;
+  margin-left: 8px;
+}
+
+.hospital-flow-subtitle {
+  color: #94a3b8;
+  font-size: 14px;
+  margin: 0;
+}
+
+.hospital-flow-city-selector {
   flex-shrink: 0;
 }
 
-.flow-subtitle {
-  font-size: 11px;
-  color: #71817f;
-  margin: 0;
-  letter-spacing: 0.02em;
-}
-
-.flow-greeting {
-  font-size: 15px;
-  font-weight: 700;
-  color: #203735;
-  margin: 0;
-}
-
-.flow-logout-btn {
-  background: #ffffff;
-  border: 1px solid rgba(32, 55, 53, 0.12);
-  color: #39514e;
-  padding: 8px 12px;
-  border-radius: 10px;
-  font-size: 11.5px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.flow-logout-btn:hover {
-  border-color: #147d74;
-  color: #147d74;
-  box-shadow: 0 5px 14px rgba(20, 125, 116, 0.08);
-}
-
-
-/* =========================================
-   CITY SWITCHER
-   ========================================= */
-
-.city-switcher-row {
-  position: relative;
-}
-
-.city-pill {
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(32, 55, 53, 0.12);
-  color: #39514e;
-  padding: 9px 14px;
+.city-select {
+  padding: 10px 16px;
   border-radius: 12px;
-  font-size: 12px;
-  font-weight: 650;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.city-pill:hover {
-  border-color: rgba(20, 125, 116, 0.35);
-  background: #ffffff;
-  color: #147d74;
-}
-
-.city-dropdown {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 8px);
-  background: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(16px);
-  border-radius: 14px;
-  box-shadow:
-    0 18px 45px rgba(32, 55, 53, 0.12),
-    0 2px 8px rgba(32, 55, 53, 0.05);
-  overflow: hidden;
-  z-index: 100;
-  min-width: 170px;
-  border: 1px solid rgba(32, 55, 53, 0.1);
-  padding: 5px;
-}
-
-.city-option {
-  width: 100%;
-  padding: 10px 12px;
-  background: transparent;
-  border: none;
-  border-radius: 9px;
-  text-align: left;
-  font-size: 12.5px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+  font-size: 14px;
   font-weight: 500;
-  color: #526461;
+  outline: none;
   cursor: pointer;
-  transition: all 0.18s ease;
+  min-width: 140px;
+  transition: all 0.2s ease;
 }
 
-.city-option:hover,
-.city-option.active {
-  background: rgba(20, 125, 116, 0.08);
-  color: #147d74;
-  font-weight: 650;
+.city-select:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
-
-/* =========================================
-   MAIN CONTENT
-   ========================================= */
-
-.flow-content {
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 0 18px 100px;
-  box-sizing: border-box;
+.city-select:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
+.city-select option {
+  background: #090a0f;
+  color: #fff;
+}
 
-/* =========================================
-   SEARCH
-   ========================================= */
+/* =========================================================
+   CONTROLS
+========================================================= */
 
-.search-bar-wrap {
-  position: relative;
+.hospital-flow-controls {
   display: flex;
-  align-items: center;
-  margin-bottom: 16px;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 28px;
 }
 
 .search-bar {
-  width: 100%;
-  padding: 14px 50px 14px 16px;
-  border-radius: 15px;
-  border: 1px solid rgba(32, 55, 53, 0.13);
-  background: rgba(255, 255, 255, 0.92);
-  color: #203735;
-  font-size: 14px;
-  box-sizing: border-box;
-  outline: none;
-  box-shadow: 0 5px 18px rgba(32, 55, 53, 0.035);
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 0 14px;
   transition: all 0.2s ease;
 }
 
-.search-bar::placeholder {
-  color: #94a19f;
+.search-bar:focus-within {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.08);
 }
 
-.search-bar:focus {
-  border-color: rgba(20, 125, 116, 0.55);
-  background: #ffffff;
-  box-shadow:
-    0 0 0 4px rgba(20, 125, 116, 0.08),
-    0 8px 22px rgba(32, 55, 53, 0.05);
+.search-icon {
+  color: #64748b;
+  font-size: 16px;
+  margin-right: 10px;
 }
 
-.search-clear-btn {
-  position: absolute;
-  right: 10px;
-  background: rgba(32, 55, 53, 0.07);
+.search-input {
+  flex: 1;
+  padding: 12px 0;
   border: none;
-  font-size: 10.5px;
-  font-weight: 700;
-  color: #61716e;
-  padding: 5px 8px;
-  border-radius: 7px;
+  background: transparent;
+  color: #fff;
+  font-size: 14px;
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: #64748b;
+}
+
+.search-clear {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 16px;
   cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
   transition: all 0.2s ease;
 }
 
-.search-clear-btn:hover {
-  background: rgba(20, 125, 116, 0.1);
-  color: #147d74;
+.search-clear:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.04);
 }
 
+/* =========================================================
+   SPECIALTY FILTERS
+========================================================= */
 
-/* =========================================
-   SPECIALTY CHIPS
-   ========================================= */
-
-.specialty-chips {
+.specialty-filters {
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  margin-bottom: 28px;
-  padding: 2px 1px 6px;
-  scrollbar-width: none;
+  padding-bottom: 4px;
+  flex-wrap: nowrap;
 }
 
-.specialty-chips::-webkit-scrollbar {
-  display: none;
+.specialty-filters::-webkit-scrollbar {
+  height: 2px;
+}
+
+.specialty-filters::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
 }
 
 .specialty-chip {
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(32, 55, 53, 0.11);
-  color: #60716e;
-  font-size: 11.5px;
-  font-weight: 650;
-  padding: 8px 14px;
+  padding: 6px 16px;
   border-radius: 100px;
-  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 500;
   white-space: nowrap;
+  cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .specialty-chip:hover {
-  border-color: rgba(20, 125, 116, 0.35);
-  color: #147d74;
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
 }
 
 .specialty-chip.active {
-  background: #147d74;
-  color: #ffffff;
-  border-color: #147d74;
-  box-shadow: 0 6px 16px rgba(20, 125, 116, 0.16);
+  background: rgba(16, 185, 129, 0.08);
+  border-color: #10b981;
+  color: #10b981;
 }
 
-
-/* =========================================
-   SECTION TITLE
-   ========================================= */
-
-.flow-section-title {
-  font-family: 'Fraunces', Georgia, serif;
-  font-size: 21px;
-  font-weight: 600;
-  color: #263d3a;
-  margin: 0 0 15px;
-  letter-spacing: -0.02em;
-}
-
-
-/* =========================================
+/* =========================================================
    HOSPITAL LIST
-   ========================================= */
+========================================================= */
 
-.hospital-list,
-.doctor-list {
+.hospital-list {
   display: grid;
-  gap: 13px;
-}
-
-
-/* =========================================
-   HOSPITAL CARD
-   ========================================= */
-
-.hospital-card {
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(32, 55, 53, 0.09);
-  border-radius: 19px;
-  padding: 17px;
-  box-shadow:
-    0 7px 24px rgba(32, 55, 53, 0.045);
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  cursor: pointer;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    border-color 0.2s ease;
-}
-
-.hospital-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(20, 125, 116, 0.2);
-  box-shadow:
-    0 14px 32px rgba(32, 55, 53, 0.08);
-}
-
-.hospital-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 15px;
-  background: linear-gradient(
-    135deg,
-    rgba(20, 125, 116, 0.16),
-    rgba(20, 125, 116, 0.07)
-  );
-  color: #147d74;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  font-weight: 750;
-  flex-shrink: 0;
-  border: 1px solid rgba(20, 125, 116, 0.08);
-}
-
-.hospital-info {
-  min-width: 0;
-}
-
-.hospital-info h4 {
-  margin: 0 0 4px;
-  font-size: 15.5px;
-  font-weight: 700;
-  color: #263d3a;
-  line-height: 1.35;
-}
-
-.hospital-info p {
-  margin: 0;
-  font-size: 12px;
-  color: #81908d;
-  line-height: 1.5;
-}
-
-
-/* =========================================
-   DOCTOR CARD
-   ========================================= */
-
-.doctor-card {
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(32, 55, 53, 0.09);
-  border-radius: 19px;
-  padding: 17px;
-  box-shadow:
-    0 7px 24px rgba(32, 55, 53, 0.045);
-  display: flex;
-  flex-direction: column;
-  gap: 13px;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    border-color 0.2s ease;
-}
-
-.doctor-card:hover {
-  border-color: rgba(20, 125, 116, 0.18);
-  box-shadow:
-    0 12px 30px rgba(32, 55, 53, 0.07);
-}
-
-.doctor-card.muted {
-  opacity: 0.78;
-}
-
-.doctor-info {
-  display: flex;
-  align-items: center;
   gap: 12px;
 }
 
-.doctor-avatar {
-  width: 47px;
-  height: 47px;
-  border-radius: 15px;
-  background: rgba(20, 125, 116, 0.09);
+.hospital-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 16px;
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hospital-card:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
+}
+
+.hospital-card-content {
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  border: 1px solid rgba(20, 125, 116, 0.07);
+  justify-content: space-between;
+  gap: 16px;
 }
 
-.doctor-avatar.muted {
-  background: rgba(100, 116, 139, 0.07);
-  border-color: rgba(100, 116, 139, 0.08);
-}
-
-.doctor-details {
+.hospital-info {
   flex: 1;
   min-width: 0;
 }
 
-.doctor-details-top {
+.hospital-name {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0 0 4px 0;
+}
+
+.hospital-location {
+  color: #94a3b8;
+  font-size: 13px;
+  margin: 0;
+}
+
+.hospital-meta {
   display: flex;
-  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.hospital-doctor-count {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.hospital-arrow {
+  color: #10b981;
+  font-size: 18px;
+  transition: transform 0.2s ease;
+}
+
+.hospital-card:hover .hospital-arrow {
+  transform: translateX(4px);
+}
+
+/* =========================================================
+   DOCTOR LIST VIEW
+========================================================= */
+
+.doctor-list-view {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.doctor-list-header {
+  margin-bottom: 24px;
+}
+
+.back-button {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px 0;
+  transition: all 0.2s ease;
+}
+
+.back-button:hover {
+  color: #10b981;
+}
+
+.doctor-list-title {
+  color: #fff;
+  font-size: 22px;
+  font-weight: 600;
+  margin: 8px 0 2px 0;
+  font-family: 'Fraunces', serif;
+}
+
+.doctor-list-subtitle {
+  color: #94a3b8;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* =========================================================
+   DOCTOR CARDS
+========================================================= */
+
+.doctor-list {
+  display: grid;
+  gap: 14px;
+}
+
+.doctor-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 16px;
+  padding: 18px 20px;
+  transition: all 0.2s ease;
+}
+
+.doctor-card:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.doctor-card-header {
+  display: flex;
   align-items: flex-start;
-  gap: 8px;
-  margin-bottom: 3px;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.doctor-info {
+  flex: 1;
+  min-width: 0;
 }
 
 .doctor-name {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 750;
-  color: #263d3a;
-  line-height: 1.35;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0 0 2px 0;
 }
 
 .doctor-specialty {
-  margin: 3px 0 0;
-  font-size: 11.8px;
-  color: #758481;
-  line-height: 1.45;
+  color: #94a3b8;
+  font-size: 13px;
+  margin: 0;
 }
 
-.doctor-hospital-tag {
-  margin: 4px 0 0;
-  font-size: 11px;
-  color: #147d74;
-  font-weight: 650;
+.doctor-degrees {
+  color: #64748b;
+  font-size: 12px;
+  margin: 2px 0 0 0;
 }
 
+/* =========================================================
+   STATUS BADGES
+========================================================= */
 
-/* =========================================
-   STATUS PILLS
-   ========================================= */
-
-.status-pill {
-  font-size: 10px;
-  font-weight: 750;
-  padding: 5px 9px;
+.doctor-status-badge {
+  padding: 4px 12px;
   border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
   white-space: nowrap;
 }
 
-.status-pill.green {
-  background: rgba(34, 197, 94, 0.11);
-  color: #16803a;
+.status-available {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: #10b981;
 }
 
-.status-pill.amber {
+.status-busy {
   background: rgba(245, 158, 11, 0.12);
-  color: #a15c00;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
 }
 
-.status-pill.gray {
-  background: rgba(100, 116, 139, 0.1);
+.status-paused {
+  background: rgba(100, 116, 139, 0.12);
+  border: 1px solid rgba(100, 116, 139, 0.2);
+  color: #94a3b8;
+}
+
+.status-unavailable {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.status-completed {
+  background: rgba(100, 116, 139, 0.12);
+  border: 1px solid rgba(100, 116, 139, 0.2);
   color: #64748b;
 }
 
-.status-pill.red {
-  background: rgba(239, 68, 68, 0.1);
-  color: #b42318;
+.status-on-leave {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #ef4444;
 }
 
+/* =========================================================
+   DOCTOR DETAILS
+========================================================= */
 
-/* =========================================
-   DOCTOR INFORMATION
-   ========================================= */
-
-.doctor-card-divider {
-  height: 1px;
-  background: rgba(32, 55, 53, 0.07);
-  width: 100%;
+.doctor-details {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  margin-bottom: 12px;
 }
 
-.doc-stats {
+.doctor-detail-item {
   display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  font-size: 12px;
+  flex-direction: column;
 }
 
-.doc-stats-label {
-  margin: 0 0 4px;
-  color: #8a9895;
-  font-size: 10.5px;
+.detail-label {
+  color: #64748b;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-value {
+  color: #fff;
+  font-size: 14px;
   font-weight: 500;
+  margin-top: 2px;
 }
 
-.doc-schedule-value {
-  margin: 0;
-  font-size: 11.5px;
-  font-weight: 650;
-  color: #465a57;
-  line-height: 1.45;
-}
-
-.doc-stats-value.green {
-  color: #16803a;
-  font-weight: 750;
-  margin: 0;
-}
-
-.doc-footer {
+.doctor-working-days {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 15px;
-  margin-top: 1px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
 }
 
-.doc-fee-label {
-  margin: 0 0 3px;
-  font-size: 10.5px;
-  color: #8a9895;
-}
-
-.doc-fee-value {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 750;
-  color: #263d3a;
-}
-
-
-/* =========================================
-   BUTTONS
-   ========================================= */
-
-.book-btn {
-  background: #147d74;
-  color: #ffffff;
-  border: 1px solid #147d74;
-  font-weight: 700;
+.working-days-label {
+  color: #64748b;
   font-size: 12px;
-  padding: 10px 16px;
-  border-radius: 11px;
-  cursor: pointer;
-  box-shadow: 0 7px 16px rgba(20, 125, 116, 0.16);
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease,
-    background 0.18s ease;
-  white-space: nowrap;
 }
 
-.book-btn:hover {
-  background: #0f6d65;
-  transform: translateY(-1px);
-  box-shadow: 0 10px 22px rgba(20, 125, 116, 0.22);
-}
-
-.book-btn:active {
-  transform: translateY(0);
-}
-
-.book-btn-disabled {
-  background: #edf0ef;
-  border-color: #edf0ef;
-  color: #9aa5a3;
-  box-shadow: none;
-  cursor: not-allowed;
-}
-
-.book-btn-disabled:hover {
-  background: #edf0ef;
-  transform: none;
-  box-shadow: none;
-}
-
-
-/* =========================================
-   BACK BUTTON
-   ========================================= */
-
-.flow-back-btn {
-  background: rgba(255, 255, 255, 0.75);
-  border: 1px solid rgba(32, 55, 53, 0.1);
-  color: #147d74;
-  font-weight: 700;
+.working-days-list {
+  color: #94a3b8;
   font-size: 12px;
+}
+
+/* =========================================================
+   DOCTOR ACTIONS
+========================================================= */
+
+.doctor-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.doctor-book-btn {
+  padding: 10px 28px;
+  border-radius: 100px;
+  border: none;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  padding: 9px 13px;
-  border-radius: 10px;
-  margin-bottom: 18px;
   transition: all 0.2s ease;
 }
 
-.flow-back-btn:hover {
-  background: #ffffff;
-  border-color: rgba(20, 125, 116, 0.28);
-  box-shadow: 0 6px 16px rgba(32, 55, 53, 0.05);
+.doctor-book-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
 }
 
+.doctor-book-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
-/* =========================================
-   EMPTY / LOADING STATES
-   ========================================= */
+.doctor-book-btn.disabled {
+  background: rgba(255, 255, 255, 0.04);
+  color: #64748b;
+}
 
-.flow-empty {
-  background: rgba(255, 255, 255, 0.62);
-  border: 1px dashed rgba(32, 55, 53, 0.13);
-  border-radius: 18px;
+/* =========================================================
+   EMPTY STATES
+========================================================= */
+
+.hospital-empty,
+.doctor-empty {
   text-align: center;
-  padding: 38px 20px;
-  color: #7b8986;
-  font-size: 13px;
-  line-height: 1.6;
+  padding: 60px 20px;
 }
 
-.flow-booking-error {
-  background: rgba(254, 226, 226, 0.72);
-  border: 1px solid rgba(239, 68, 68, 0.18);
-  color: #b42318;
-  padding: 11px 14px;
-  border-radius: 12px;
-  font-size: 12.5px;
-  margin-top: 16px;
-  text-align: center;
+.empty-icon {
+  font-size: 48px;
+  display: block;
+  margin-bottom: 16px;
 }
 
+.hospital-empty h3,
+.doctor-empty h3 {
+  color: #fff;
+  margin: 0 0 8px 0;
+}
 
-/* =========================================
-   BOOKING MODAL
-   Used by HospitalFlow.jsx
-   ========================================= */
+.hospital-empty p,
+.doctor-empty p {
+  color: #94a3b8;
+  margin: 0;
+}
 
-.ticket-overlay {
+/* =========================================================
+   LOADING STATES
+========================================================= */
+
+.hospital-flow-loading,
+.doctor-list-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 16px;
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(255, 255, 255, 0.04);
+  border-top-color: #10b981;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.hospital-flow-loading p,
+.doctor-list-loading p {
+  color: #94a3b8;
+  margin: 0;
+}
+
+/* =========================================================
+   TICKET OVERLAY
+========================================================= */
+
+.hospital-flow-ticket-overlay {
   position: fixed;
-  inset: 0;
-  z-index: 1000;
-  background: rgba(26, 42, 39, 0.28);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 18px;
-  box-sizing: border-box;
+  padding: 20px;
+  animation: overlayIn 0.3s ease;
 }
 
-.ticket-card {
-  background: rgba(255, 255, 255, 0.97);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  border-radius: 22px;
-  padding: 22px;
-  box-shadow:
-    0 25px 70px rgba(32, 55, 53, 0.2),
-    0 3px 12px rgba(32, 55, 53, 0.06);
-  max-height: calc(100vh - 36px);
-  overflow-y: auto;
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-.ticket-header {
-  text-align: center;
-  margin-bottom: 18px;
-}
-
-.ticket-header h2 {
-  font-family: 'Fraunces', Georgia, serif;
-  font-size: 23px;
-  font-weight: 600;
-  color: #263d3a;
-  margin: 0;
-  letter-spacing: -0.02em;
-}
-
-.ticket-card input[type="text"],
-.ticket-card input:not([type]),
-.ticket-card input[type="file"] {
-  font-family: inherit;
-}
-
-.ticket-card input[type="text"],
-.ticket-card input:not([type]) {
-  background: #fbfcfb;
-  border: 1px solid rgba(32, 55, 53, 0.13);
-  color: #263d3a;
-  outline: none;
-  transition: all 0.2s ease;
-}
-
-.ticket-card input[type="text"]:focus,
-.ticket-card input:not([type]):focus {
-  background: #ffffff;
-  border-color: rgba(20, 125, 116, 0.5);
-  box-shadow: 0 0 0 4px rgba(20, 125, 116, 0.07);
-}
-
-.ticket-close-btn {
-  width: 100%;
-  border: none;
-  background: #147d74;
-  color: #ffffff;
-  padding: 12px 16px;
-  border-radius: 11px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 8px 18px rgba(20, 125, 116, 0.17);
-  transition: all 0.2s ease;
-}
-
-.ticket-close-btn:hover:not(:disabled) {
-  background: #0f6d65;
-  transform: translateY(-1px);
-}
-
-.ticket-close-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-
-/* =========================================
-   SCROLLBAR
-   ========================================= */
-
-.ticket-card::-webkit-scrollbar {
-  width: 5px;
-}
-
-.ticket-card::-webkit-scrollbar-thumb {
-  background: rgba(32, 55, 53, 0.16);
-  border-radius: 10px;
-}
-
-
-/* =========================================
+/* =========================================================
    RESPONSIVE
-   ========================================= */
+========================================================= */
 
-@media (max-width: 640px) {
-  .flow-topbar {
-    padding: 15px 16px;
-    margin-bottom: 22px;
+@media (max-width: 768px) {
+  .hospital-flow {
+    padding: 16px;
   }
 
-  .flow-content {
-    padding-left: 14px;
-    padding-right: 14px;
+  .hospital-flow-header {
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  .flow-avatar {
-    width: 39px;
-    height: 39px;
-    border-radius: 12px;
+  .hospital-flow-greeting h1 {
+    font-size: 22px;
   }
 
-  .flow-greeting {
-    font-size: 14px;
+  .city-select {
+    width: 100%;
+    min-width: unset;
   }
 
-  .city-pill {
-    padding: 8px 10px;
-    font-size: 11px;
+  .doctor-details {
+    grid-template-columns: repeat(2, 1fr);
   }
 
-  .flow-section-title {
-    font-size: 19px;
-  }
-
-  .hospital-card,
-  .doctor-card {
-    border-radius: 17px;
-    padding: 15px;
-  }
-
-  .hospital-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 13px;
-  }
-
-  .doctor-avatar {
-    width: 44px;
-    height: 44px;
-    border-radius: 13px;
-  }
-
-  .doctor-details-top {
+  .hospital-card-content {
+    flex-direction: column;
     align-items: flex-start;
   }
 
-  .status-pill {
-    font-size: 9px;
-    padding: 4px 7px;
+  .hospital-meta {
+    width: 100%;
+    justify-content: space-between;
   }
 
-  .doc-footer {
-    gap: 10px;
+  .doctor-card-header {
+    flex-direction: column;
   }
 
-  .book-btn {
-    padding: 9px 12px;
-    font-size: 11.5px;
+  .doctor-actions {
+    justify-content: stretch;
   }
 
-  .ticket-card {
-    padding: 19px;
-    border-radius: 19px;
+  .doctor-book-btn {
+    width: 100%;
+    justify-content: center;
   }
 }
 
-
 @media (max-width: 420px) {
-  .flow-topbar-inner {
-    gap: 10px;
+  .hospital-flow {
+    padding: 12px;
   }
 
-  .flow-user-badge {
-    min-width: 0;
+  .doctor-details {
+    grid-template-columns: 1fr;
   }
 
-  .flow-greeting {
-    max-width: 100px !important;
+  .specialty-filters {
+    gap: 6px;
   }
 
-  .flow-logout-btn {
-    padding: 7px 9px;
-    font-size: 10.5px;
-  }
-
-  .city-pill {
-    max-width: 105px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .doctor-name {
-    font-size: 14px;
-  }
-
-  .doctor-specialty {
+  .specialty-chip {
     font-size: 11px;
+    padding: 4px 12px;
   }
 }
