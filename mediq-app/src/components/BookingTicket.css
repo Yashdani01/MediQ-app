@@ -1,14 +1,17 @@
 /* ==========================================
-   MEDIQ — BOOKING TICKET
+   MEDIQ BOOKING TICKET
    Premium Light Theme
+   Matches Login / HospitalFlow / Profile
    ========================================== */
+
+/* ===== Existing Booking Confirmation Modal ===== */
 
 .ticket-overlay {
   position: fixed;
   inset: 0;
   min-height: 100dvh;
   background: rgba(15, 23, 42, 0.35);
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -21,12 +24,12 @@
   width: 100%;
   max-width: 400px;
   background: #ffffff;
-  border: 1px solid #e7ece9;
+  border: 1px solid #e8edf3;
   border-radius: 24px;
   padding: 28px 24px;
   text-align: center;
   box-sizing: border-box;
-  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.16);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.18);
   animation: cardIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -48,162 +51,130 @@
 
 .ticket-header h2 {
   margin: 0;
-  font-family: 'Fraunces', Georgia, serif;
-  font-size: 22px;
+  font-family: 'Fraunces', serif;
+  font-size: 23px;
   font-weight: 600;
-  color: #173c35;
-}
-
-.ticket-check {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: #e8f5ef;
-  color: #16815f;
-  font-size: 24px;
-  margin-bottom: 12px;
-}
-
-.ticket-token {
-  background: #173c35;
-  border-radius: 18px;
-  padding: 20px;
-  color: #ffffff;
-  margin-bottom: 20px;
-}
-
-.ticket-token-label {
-  display: block;
-  font-size: 12px;
-  opacity: 0.8;
-  margin-bottom: 5px;
-}
-
-.ticket-token-number {
-  font-size: 38px;
-  font-weight: 800;
-  letter-spacing: 1px;
-}
-
-.ticket-divider {
-  height: 1px;
-  background: #edf1ee;
-  margin: 16px 0;
-}
-
-.ticket-rows {
-  text-align: left;
-}
-
-.ticket-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 9px 0;
-  font-size: 14px;
-  color: #64748b;
-}
-
-.ticket-row strong {
-  color: #173c35;
-}
-
-.ticket-row.highlight {
-  background: #fdf7e8;
-  padding: 11px 13px;
-  border-radius: 12px;
-  margin-top: 4px;
-  color: #8a6818;
-}
-
-.ticket-note {
-  font-size: 12px;
-  color: #94a3b8;
-  margin: 16px 0;
+  color: #1f2937;
 }
 
 .ticket-close-btn {
   width: 100%;
-  padding: 13px;
-  background: #173c35;
+  min-height: 48px;
+  padding: 13px 16px;
+  background: #2f7a68;
   color: #ffffff;
   border: none;
-  border-radius: 12px;
+  border-radius: 14px;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.ticket-close-btn:hover {
-  background: #245248;
+.ticket-close-btn:hover:not(:disabled) {
+  background: #256756;
+  transform: translateY(-1px);
+}
+
+.ticket-close-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 
 /* ==========================================
-   LIVE QUEUE TRACKER
+   LIVE BOOKING TICKET PAGE
    ========================================== */
 
 .ticket-page-wrap {
   width: 100%;
   max-width: 560px;
+  min-height: 100vh;
   margin: 0 auto;
   padding: 24px 16px 50px;
-  min-height: 100vh;
   box-sizing: border-box;
+
   font-family: 'Inter', -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
-  background: #f8faf9;
-  color: #173c35;
+    "Segoe UI", Roboto, sans-serif;
+
+  background:
+    radial-gradient(
+      circle at top,
+      rgba(47, 122, 104, 0.08),
+      transparent 34%
+    ),
+    #f7f8fa;
+
+  color: #1f2937;
 }
+
+
+/* ===== SUCCESS BANNER ===== */
 
 .confirmed-banner {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  width: fit-content;
-  max-width: 100%;
-  margin: 0 auto 20px;
-  padding: 10px 18px;
-  border-radius: 100px;
-  background: #e8f5ef;
-  border: 1px solid #cfe8dc;
-  color: #167052;
-  font-size: 13px;
-  font-weight: 700;
+  gap: 8px;
+
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 18px;
+
   box-sizing: border-box;
+
+  border-radius: 16px;
+
+  background: #e9f7f2;
+  border: 1px solid #cfece2;
+
+  color: #25715f;
+
+  font-size: 13px;
+  font-weight: 800;
+
+  margin-bottom: 18px;
+
+  box-shadow: 0 6px 20px rgba(47, 122, 104, 0.06);
 }
 
 .confirmed-check {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   border-radius: 50%;
-  background: #16815f;
+
+  background: #2f7a68;
   color: #ffffff;
-  font-size: 11px;
+
+  font-size: 12px;
   font-weight: 800;
 }
 
 
 /* ==========================================
-   MAIN TICKET CARD
+   MAIN DASHBOARD CARD
    ========================================== */
 
 .token-dashboard-card {
   background: #ffffff;
-  border: 1px solid #e5ece8;
+
+  border: 1px solid #e8edf3;
+
   border-radius: 28px;
-  padding: 28px 20px 22px;
+
+  padding: 26px 18px 20px;
+
   text-align: center;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 10px 35px rgba(23, 60, 53, 0.07);
+
+  box-shadow:
+    0 12px 40px rgba(15, 23, 42, 0.06);
+
+  box-sizing: border-box;
 }
 
 
@@ -212,116 +183,173 @@
    ========================================== */
 
 .token-ring-container {
-  width: 190px;
-  height: 190px;
+  width: 185px;
+  height: 185px;
+
   margin: 0 auto 26px;
+
   position: relative;
+
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .token-ring-svg {
-  transform: rotate(-90deg);
   width: 100%;
   height: 100%;
+
+  transform: rotate(-90deg);
 }
 
 .token-number-display {
   position: absolute;
+
   top: 50%;
   left: 50%;
-  width: 100%;
+
   transform: translate(-50%, -50%);
+
+  width: 100%;
+
   text-align: center;
 }
 
 .token-number-label {
   display: block;
+
   font-size: 10px;
+
   font-weight: 800;
-  color: #9a7621;
+
+  letter-spacing: 0.8px;
+
   text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 6px;
+
+  color: #6b7280;
 }
 
 .token-number-big {
-  font-size: 52px;
+  font-size: 50px;
+
   font-weight: 800;
-  color: #173c35;
+
+  color: #1f2937;
+
   line-height: 1;
-  margin-bottom: 8px;
-  letter-spacing: -1px;
+
+  margin: 7px 0;
 }
 
 .token-status-tag {
   display: inline-flex;
+
   align-items: center;
+
   justify-content: center;
-  gap: 5px;
+
+  gap: 6px;
+
   padding: 5px 12px;
-  border-radius: 100px;
-  background: #e8f5ef;
-  color: #167052;
+
+  border-radius: 999px;
+
+  background: #e9f7f2;
+
+  color: #25715f;
+
+  border: 1px solid #cfece2;
+
   font-size: 11px;
+
   font-weight: 800;
-  border: 1px solid #cfe8dc;
 }
 
 .token-status-dot {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
+
   border-radius: 50%;
-  background: #16815f;
+
+  background: #2f7a68;
+
   display: inline-block;
+
+  box-shadow: 0 0 0 3px rgba(47, 122, 104, 0.12);
 }
 
 
 /* ==========================================
-   APPOINTMENT DETAILS
+   DOCTOR / QUEUE DETAILS
    ========================================== */
 
 .specs-list {
-  background: #fafcfb;
-  border: 1px solid #e7ece9;
+  width: 100%;
+
+  background: #fafbfc;
+
+  border: 1px solid #e8edf3;
+
   border-radius: 20px;
-  padding: 18px;
+
+  padding: 18px 16px;
+
   display: flex;
+
   flex-direction: column;
-  gap: 13px;
+
+  gap: 14px;
+
   text-align: left;
+
   margin-bottom: 18px;
+
+  box-sizing: border-box;
 }
 
 .specs-row {
   display: flex;
-  align-items: flex-start;
+
+  align-items: center;
+
   justify-content: space-between;
+
   gap: 16px;
+
   font-size: 13px;
 }
 
 .specs-label {
-  color: #7a8782;
+  color: #7b8490;
+
   flex-shrink: 0;
+
+  font-weight: 500;
 }
 
 .specs-value {
-  color: #173c35;
+  color: #1f2937;
+
   font-weight: 700;
+
   text-align: right;
+
   word-break: break-word;
 }
 
 .specs-value.accent {
-  color: #16815f;
+  color: #2f7a68;
+
   font-weight: 800;
 }
 
 .specs-divider {
   height: 1px;
-  background: #e8eeea;
+
+  width: 100%;
+
+  background: #e8edf3;
+
   margin: 2px 0;
 }
 
@@ -331,60 +359,89 @@
    ========================================== */
 
 .queue-timeline {
+  width: 100%;
+
   background: #ffffff;
-  border: 1px solid #e7ece9;
+
+  border: 1px solid #e8edf3;
+
   border-radius: 20px;
-  padding: 20px 18px;
+
+  padding: 18px 16px;
+
   margin-bottom: 18px;
+
   text-align: left;
+
+  box-sizing: border-box;
 }
 
 .timeline-title {
   margin: 0 0 18px;
-  font-family: 'Fraunces', Georgia, serif;
+
+  font-family: 'Fraunces', serif;
+
   font-size: 17px;
+
   font-weight: 600;
-  color: #173c35;
+
+  color: #1f2937;
 }
 
 .timeline-item {
   display: flex;
+
   gap: 13px;
 }
 
 .timeline-marker-col {
   display: flex;
+
   flex-direction: column;
+
   align-items: center;
+
   flex-shrink: 0;
 }
 
 .timeline-dot {
   width: 12px;
   height: 12px;
+
   border-radius: 50%;
-  background: #f1f4f2;
-  border: 2px solid #cfd8d3;
-  flex-shrink: 0;
+
+  background: #f1f3f5;
+
+  border: 2px solid #d9dee5;
+
   box-sizing: border-box;
+
+  flex-shrink: 0;
 }
 
 .timeline-dot.done {
-  background: #16815f;
-  border-color: #16815f;
-  box-shadow: 0 0 0 4px rgba(22, 129, 95, 0.1);
+  background: #2f7a68;
+
+  border-color: #2f7a68;
+
+  box-shadow:
+    0 0 0 4px rgba(47, 122, 104, 0.1);
 }
 
 .timeline-line {
   width: 2px;
+
   flex: 1;
-  min-height: 34px;
-  background: #e4ebe7;
-  margin: 4px 0;
+
+  min-height: 32px;
+
+  background: #e6eaee;
+
+  margin: 3px 0;
 }
 
 .timeline-line.done {
-  background: #8bc9b0;
+  background: #8fc7b9;
 }
 
 .timeline-content {
@@ -397,20 +454,26 @@
 
 .timeline-label {
   margin: 0 0 3px;
+
   font-size: 13px;
+
   font-weight: 700;
-  color: #8a9691;
+
+  color: #9aa3ad;
 }
 
 .timeline-label.done {
-  color: #173c35;
+  color: #1f2937;
 }
 
 .timeline-detail {
   margin: 0;
+
   font-size: 12px;
-  color: #7a8782;
+
   line-height: 1.5;
+
+  color: #7b8490;
 }
 
 
@@ -420,82 +483,127 @@
 
 .ticket-actions {
   display: flex;
+
   flex-direction: column;
+
   gap: 10px;
 }
 
 .ticket-action-btn {
+  width: 100%;
+
+  min-height: 50px;
+
   display: flex;
+
   align-items: center;
+
   justify-content: center;
-  min-height: 48px;
-  padding: 10px 16px;
-  border-radius: 13px;
-  background: #173c35;
-  border: 1px solid #173c35;
-  color: #ffffff;
-  font-weight: 700;
-  font-size: 14px;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
+
+  gap: 8px;
+
   box-sizing: border-box;
+
+  border-radius: 14px;
+
+  background: #f7faf9;
+
+  border: 1px solid #dce9e5;
+
+  color: #2f7a68;
+
+  font-size: 14px;
+
+  font-weight: 800;
+
+  text-decoration: none;
+
+  cursor: pointer;
+
+  transition: all 0.2s ease;
 }
 
 .ticket-action-btn:hover {
-  background: #245248;
+  background: #edf7f4;
+
+  transform: translateY(-1px);
 }
 
+
 .cancel-token-btn {
-  min-height: 48px;
-  padding: 10px 16px;
-  border-radius: 13px;
-  border: 1px solid #f2cccc;
-  background: #fffafa;
-  color: #c84b4b;
+  width: 100%;
+
+  min-height: 50px;
+
+  border-radius: 14px;
+
+  border: 1px solid #f3d5d5;
+
+  background: #fff8f8;
+
+  color: #d9534f;
+
   font-size: 14px;
+
   font-weight: 700;
+
   cursor: pointer;
+
   transition: all 0.2s ease;
 }
 
 .cancel-token-btn:hover:not(:disabled) {
-  background: #fff1f1;
+  background: #fff0f0;
+
+  border-color: #efbaba;
 }
 
 .cancel-token-btn:disabled {
   opacity: 0.6;
+
   cursor: not-allowed;
 }
 
+
 .ticket-close-link {
+  width: 100%;
+
   padding: 11px;
-  border-radius: 12px;
+
   border: none;
+
   background: transparent;
-  color: #7a8782;
+
+  color: #7b8490;
+
   font-size: 13px;
+
   font-weight: 600;
+
   cursor: pointer;
+
+  border-radius: 12px;
+
+  transition: background 0.2s ease;
 }
 
 .ticket-close-link:hover {
-  color: #173c35;
+  background: #f5f6f7;
 }
 
 
 /* ==========================================
-   MOBILE OPTIMIZATION
+   MOBILE
    ========================================== */
 
 @media (max-width: 480px) {
   .ticket-page-wrap {
-    padding: 20px 14px 40px;
+    padding: 18px 12px 40px;
   }
 
   .token-dashboard-card {
-    padding: 24px 15px 18px;
     border-radius: 24px;
+    padding: 22px 14px 18px;
   }
 
   .token-ring-container {
@@ -504,15 +612,19 @@
   }
 
   .token-number-big {
-    font-size: 48px;
+    font-size: 46px;
   }
 
   .specs-list,
   .queue-timeline {
-    padding: 16px;
+    padding: 16px 14px;
   }
 
   .specs-row {
     gap: 10px;
+  }
+
+  .specs-value {
+    max-width: 60%;
   }
 }
