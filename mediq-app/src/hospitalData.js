@@ -1,12 +1,23 @@
+// src/hospitalData.js
 import { supabase } from './supabaseClient';
 
+// ✅ STEP 1: UPDATED - Added google_maps_url
 export async function getHospitals(city) {
-  let query = supabase.from('hospitals').select('id, name, location, city');
+  let query = supabase
+    .from('hospitals')
+    .select('id, name, location, city, google_maps_url');
+
   if (city) {
     query = query.ilike('city', city);
   }
+
   const { data, error } = await query;
-  if (error) { console.error('Error fetching hospitals:', error); return []; }
+
+  if (error) {
+    console.error('Error fetching hospitals:', error);
+    return [];
+  }
+
   return data;
 }
 
@@ -85,6 +96,7 @@ export async function bookAppointment(patientUserId, doctorId, hospitalId, payme
   return { data: appointment };
 }
 
+// ✅ STEP 2: UPDATED - Added location, city, google_maps_url
 export async function getMyCurrentBooking(patientUserId) {
   const { data: patient, error: patientError } = await supabase
     .from('patients')
@@ -111,9 +123,10 @@ export async function getMyCurrentBooking(patientUserId) {
     .eq('id', appointment.doctor_id)
     .single();
 
+  // ✅ UPDATED: Added location, city, google_maps_url
   const { data: hospital } = await supabase
     .from('hospitals')
-    .select('name')
+    .select('name, location, city, google_maps_url')
     .eq('id', appointment.hospital_id)
     .single();
 
@@ -142,6 +155,7 @@ export async function getPatientProfileDetails(patientUserId) {
   return data;
 }
 
+// ✅ STEP 4: UPDATED - Added location, city, google_maps_url in getBookingHistory
 export async function getBookingHistory(patientUserId) {
   const { data: patient, error: patientError } = await supabase
     .from('patients')
@@ -167,9 +181,10 @@ export async function getBookingHistory(patientUserId) {
         .select('name, specialty, degrees, ptr_score')
         .eq('id', appt.doctor_id)
         .single();
+      // ✅ UPDATED: Added location, city, google_maps_url
       const { data: hospital } = await supabase
         .from('hospitals')
-        .select('name')
+        .select('name, location, city, google_maps_url')
         .eq('id', appt.hospital_id)
         .single();
       return { ...appt, doctor, hospital };
@@ -520,6 +535,7 @@ export async function getAvailableDoctorCounts(hospitalIds) {
   return counts;
 }
 
+// ✅ STEP 3: UPDATED - Added location, city, google_maps_url in getMyBookings
 export async function getMyBookings(patientUserId) {
   const { data: patient, error: patientError } = await supabase
     .from('patients')
@@ -545,9 +561,10 @@ export async function getMyBookings(patientUserId) {
         .select('name, specialty, consultation_fee')
         .eq('id', appt.doctor_id)
         .single();
+      // ✅ UPDATED: Added location, city, google_maps_url
       const { data: hospital } = await supabase
         .from('hospitals')
-        .select('name')
+        .select('name, location, city, google_maps_url')
         .eq('id', appt.hospital_id)
         .single();
       return { ...appt, doctor, hospital };
