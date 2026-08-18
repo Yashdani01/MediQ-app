@@ -1,210 +1,436 @@
-import { useState, useEffect } from 'react';
-import { cancelAppointment, getWaitingCount, getAppointmentStatus } from '../hospitalData';
+// src/components/BookingTicket.jsx
+import React, { useState, useEffect, useRef } from 'react';
+import { supabase } from '../supabaseClient';
+import { getAppointmentStatus, cancelAppointment } from '../hospitalData';
 import './BookingTicket.css';
 
-function formatTimestamp(ts) {
-  if (!ts) return '';
-  return new Date(ts).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-}
-
-export default function BookingTicket({ appointment, doctor, patientsAheadOverride, paymentMethod, upiInfo, onClose }) {
-  const [patientsAhead, setPatientsAhead] = useState(patientsAheadOverride ?? 0);
-  const [currentlyServing, setCurrentlyServing] = useState(0);
+const BookingTicket = ({ bookingId, onClose, onCancel, user }) => {
+  // ============================
+  // STATE
+  // ============================
+  const [booking, setBooking] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
-  const [checkedInAt, setCheckedInAt] = useState(appointment?.checked_in_at ?? null);
-  const [bookedAt, setBookedAt] = useState(appointment?.booked_at ?? appointment?.created_at ?? null);
+  const [pollingInterval, setPollingInterval] = useState(null);
+  const [timeRemaining, setTimeRemaining] = useState(null);
+  const [progress, setProgress] = useState(0);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  
+  const intervalRef = useRef(null);
 
-  useEffect(() => {
-    if (!doctor?.id) return;
-    let isMounted = true;
+  // ============================
+  // FETCH BOOKING DETAILS
+  // ============================
+  const fetchBookingDetails = async () => {
+    if (!bookingId) return;
 
-    const refreshQueue = async () => {
-      const waiting = await getWaitingCount(doctor.id);
-      if (isMounted) {
-        setPatientsAhead(waiting);
-        const tokenNum = appointment?.queue_number || 1;
-        const serving = Math.max(0, tokenNum - waiting);
-        setCurrentlyServing(serving);
-      }
-    };
+    try {
+      const { data, error } = await supabase
+        .from('appointments')
+        .select(`
+          *,
+          doctors:doctor_id (name, specialty, consultation_fee),
+          hospitals:hospital_id (name, location)
+        `)
+        .eq('id', bookingId)
+        .single();
 
-    refreshQueue();
-    const interval = setInterval(refreshQueue, 15000);
-    return () => { isMounted = false; clearInterval(interval); };
-  }, [doctor, appointment]);
-
-  useEffect(() => {
-    if (!appointment?.id) return;
-    let isMounted = true;
-
-    const refreshStatus = async () => {
-      const status = await getAppointmentStatus(appointment.id);
-      if (isMounted && status) {
-        setCheckedInAt(status.checked_in_at);
-        setBookedAt(status.booked_at);
-      }
-    };
-
-    refreshStatus();
-    const interval = setInterval(refreshStatus, 15000);
-    return () => { isMounted = false; clearInterval(interval); };
-  }, [appointment]);
-
-  const handleCancelBooking = async () => {
-    if (!window.confirm('Are you sure you want to cancel this token?')) return;
-    setCancelling(true);
-    const { error } = await cancelAppointment(appointment.id);
-    setCancelling(false);
-    if (error) {
-      alert('Could not cancel booking. Please try again.');
-    } else {
-      alert('Your token has been cancelled.');
-      if (onClose) onClose();
+      if (error) throw error;
+      setBooking(data);
+      updateProgress(data);
+    } catch (err) {
+      console.error('Error fetching booking:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const tokenNum = appointment?.queue_number || 1;
-  const isNext = patientsAhead === 0 || patientsAhead === 1;
-  const avgMins = doctor?.avg_minutes_per_patient || 10;
-  const estimatedWaitMins = patientsAhead * avgMins;
-  const isCheckedIn = !!checkedInAt;
+  // ============================
+  // FETCH STATUS (Polling)
+  // ============================
+  const fetchStatus = async () => {
+    if (!bookingId) return;
 
-  const timelineSteps = [
-    {
-      key: 'booked',
-      label: 'Booked',
-      detail: bookedAt ? `Registered in queue at ${formatTimestamp(bookedAt)}` : 'Registered in queue',
-      done: true,
-    },
-    {
-      key: 'checked_in',
-      label: 'Checked In',
-      detail: isCheckedIn ? `Clinic confirmed your arrival at ${formatTimestamp(checkedInAt)}` : 'Waiting for clinic to confirm your arrival',
-      done: isCheckedIn,
-    },
-    {
-      key: 'your_turn',
-      label: 'Your Turn',
-      detail: isNext ? 'Please head to the consultation room now' : "Enter doctor's chamber for consultation",
-      done: isNext,
-    },
-  ];
+    try {
+      const status = await getAppointmentStatus(bookingId);
+      if (status) {
+        setBooking((prev) => ({
+          ...prev,
+          status: status.status,
+          checked_in_at: status.checked_in_at,
+        }));
+        updateProgress(status);
+      }
+    } catch (err) {
+      console.error('Error fetching status:', err);
+    }
+  };
+
+  // ============================
+  // UPDATE PROGRESS
+  // ============================
+  const updateProgress = (data) => {
+    if (!data) return;
+
+    const status = data.status;
+    let progressValue = 0;
+
+    switch (status) {
+      case 'booked':
+        progressValue = 0;
+        break;
+      case 'checked-in':
+        progressValue = 50;
+        break;
+      case 'seen':
+        progressValue = 100;
+        break;
+      case 'cancelled':
+        progressValue = 0;
+        break;
+      default:
+        progressValue = 0;
+    }
+
+    setProgress(progressValue);
+  };
+
+  // ============================
+  // GET QUEUE POSITION
+  // ============================
+  const getQueuePosition = async () => {
+    if (!booking) return;
+
+    try {
+      const { count } = await supabase
+        .from('appointments')
+        .select('*', { count: 'exact', head: true })
+        .eq('doctor_id', booking.doctor_id)
+        .in('status', ['booked', 'checked-in'])
+        .lt('queue_number', booking.queue_number);
+
+      return (count || 0) + 1;
+    } catch (err) {
+      console.error('Error getting queue position:', err);
+      return 0;
+    }
+  };
+
+  // ============================
+  // EFFECTS
+  // ============================
+  useEffect(() => {
+    fetchBookingDetails();
+
+    // Set up polling every 15 seconds
+    const interval = setInterval(fetchStatus, 15000);
+    intervalRef.current = interval;
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [bookingId]);
+
+  // ============================
+  // CANCEL BOOKING
+  // ============================
+  const handleCancel = async () => {
+    setCancelling(true);
+    try {
+      await cancelAppointment(bookingId);
+      if (onCancel) {
+        onCancel(bookingId);
+      }
+      setShowCancelConfirm(false);
+      onClose();
+    } catch (err) {
+      console.error('Error cancelling:', err);
+      alert('Failed to cancel booking. Please try again.');
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  // ============================
+  // FORMAT TIME
+  // ============================
+  const formatTime = (dateStr) => {
+    if (!dateStr) return '--';
+    const date = new Date(dateStr);
+    return date.toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '--';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
+
+  // ============================
+  // GET STATUS STEP
+  // ============================
+  const getStatusStep = (status) => {
+    const steps = {
+      booked: {
+        label: 'Booked',
+        icon: '📋',
+        active: true,
+        completed: false,
+        description: 'Your booking is confirmed',
+      },
+      'checked-in': {
+        label: 'Checked In',
+        icon: '✅',
+        active: true,
+        completed: true,
+        description: 'You\'ve arrived at the clinic',
+      },
+      seen: {
+        label: 'Your Turn',
+        icon: '🏥',
+        active: true,
+        completed: true,
+        description: 'Doctor is ready to see you',
+      },
+      cancelled: {
+        label: 'Cancelled',
+        icon: '❌',
+        active: false,
+        completed: false,
+        description: 'This booking was cancelled',
+      },
+    };
+    return steps[status] || steps.booked;
+  };
+
+  // ============================
+  // RENDER
+  // ============================
+  if (loading) {
+    return (
+      <div className="ticket-loading">
+        <div className="ticket-loading-spinner"></div>
+        <p>Loading your ticket...</p>
+      </div>
+    );
+  }
+
+  if (!booking) {
+    return (
+      <div className="ticket-error">
+        <span className="ticket-error-icon">⚠️</span>
+        <h3>Booking not found</h3>
+        <p>We couldn't find your booking details</p>
+        <button className="ticket-close-btn" onClick={onClose}>
+          Close
+        </button>
+      </div>
+    );
+  }
+
+  const statusStep = getStatusStep(booking.status);
+  const isActive = booking.status !== 'cancelled' && booking.status !== 'completed';
+  const isCancelled = booking.status === 'cancelled';
 
   return (
-    <div className="ticket-page-wrap">
+    <div className="ticket-container">
+      {/* Close Button */}
+      <button className="ticket-close" onClick={onClose}>
+        ✕
+      </button>
 
-      <div className="confirmed-banner">
-        <span className="confirmed-check">✓</span>
-        Token Booked Successfully
+      {/* Header */}
+      <div className="ticket-header">
+        <div className="ticket-brand">
+          <span className="ticket-brand-icon">🏥</span>
+          <span className="ticket-brand-name">MediQ</span>
+        </div>
+        <div className="ticket-status-pill">
+          {isCancelled ? 'Cancelled' : 'Active'}
+        </div>
       </div>
 
-      <div className="token-dashboard-card">
+      {/* Token Number */}
+      <div className="ticket-token">
+        <span className="ticket-token-label">Token</span>
+        <span className="ticket-token-number">
+          #{booking.token_number || booking.queue_number}
+        </span>
+      </div>
 
-        <div className="token-ring-container">
-          <svg className="token-ring-svg" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="42" stroke="rgba(255,255,255,0.08)" strokeWidth="8" fill="none" />
+      {/* Progress Ring */}
+      <div className="ticket-progress-container">
+        <div className="ticket-progress-ring">
+          <svg className="ticket-progress-svg" viewBox="0 0 120 120">
+            {/* Background circle */}
             <circle
-              cx="50" cy="50" r="42"
-              stroke={isNext ? '#10b981' : '#059669'}
-              strokeWidth="8"
-              strokeDasharray="264"
-              strokeDashoffset={Math.max(0, 264 - (264 * (currentlyServing / tokenNum)))}
-              strokeLinecap="round"
-              fill="none"
-              style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+              className="ticket-progress-bg"
+              cx="60"
+              cy="60"
+              r="50"
             />
+            {/* Progress circle */}
+            <circle
+              className={`ticket-progress-fill ${isCancelled ? 'cancelled' : ''}`}
+              cx="60"
+              cy="60"
+              r="50"
+              style={{
+                strokeDasharray: 314.16,
+                strokeDashoffset: 314.16 - (progress / 100) * 314.16,
+              }}
+            />
+            {/* Center text */}
+            <text className="ticket-progress-text" x="60" y="56">
+              {progress}%
+            </text>
+            <text className="ticket-progress-label" x="60" y="72">
+              {booking.status === 'seen' ? 'Complete' : 'In Progress'}
+            </text>
           </svg>
-
-          <div className="token-number-display">
-            <span className="token-number-label">Your Ticket Token</span>
-            <div className="token-number-big">#{tokenNum}</div>
-            <div className="token-status-tag">
-              <span className="token-status-dot" />
-              {isNext ? 'Your Turn!' : 'In Queue'}
-            </div>
-          </div>
         </div>
 
-        <div className="specs-list">
-          <div className="specs-row">
-            <span className="specs-label">Doctor</span>
-            <span className="specs-value">{doctor?.name || 'Doctor'}</span>
+        {/* Queue Position */}
+        <div className="ticket-queue-info">
+          <span className="ticket-queue-label">Your Position</span>
+          <span className="ticket-queue-number">
+            #{booking.queue_position || '--'}
+          </span>
+          <span className="ticket-queue-status">
+            {booking.status === 'booked' && 'Waiting to be called'}
+            {booking.status === 'checked-in' && 'Checked in'}
+            {booking.status === 'seen' && 'Being seen now'}
+            {booking.status === 'cancelled' && 'Cancelled'}
+          </span>
+        </div>
+      </div>
+
+      {/* Timeline */}
+      <div className="ticket-timeline">
+        <div className={`ticket-timeline-step ${booking.status === 'booked' || booking.status === 'checked-in' || booking.status === 'seen' ? 'active' : ''}`}>
+          <span className="ticket-timeline-icon">📋</span>
+          <div className="ticket-timeline-content">
+            <p className="ticket-timeline-label">Booked</p>
+            <p className="ticket-timeline-time">
+              {formatTime(booking.booked_at || booking.created_at)}
+            </p>
           </div>
-          <div className="specs-row">
-            <span className="specs-label">Specialty</span>
-            <span className="specs-value">{doctor?.specialty || 'General'}</span>
-          </div>
-          {appointment?.hospital?.name && (
-            <div className="specs-row">
-              <span className="specs-label">Hospital</span>
-              <span className="specs-value">{appointment.hospital.name}</span>
-            </div>
+          {(booking.status === 'booked' || booking.status === 'checked-in' || booking.status === 'seen') && (
+            <span className="ticket-timeline-dot"></span>
           )}
-          <div className="specs-divider" />
-          <div className="specs-row">
-            <span className="specs-label">Currently Serving</span>
-            <span className="specs-value accent">#{currentlyServing}</span>
-          </div>
-          <div className="specs-row">
-            <span className="specs-label">Ahead of You</span>
-            <span className="specs-value accent">{patientsAhead}</span>
-          </div>
-          <div className="specs-row">
-            <span className="specs-label">Estimated Wait</span>
-            <span className="specs-value accent">{estimatedWaitMins} mins</span>
-          </div>
-          <div className="specs-row">
-            <span className="specs-label">Payment Status</span>
-            <span className="specs-value">
-              {paymentMethod === 'upi' ? 'UPI Paid' : 'Cash Pending'}
-            </span>
-          </div>
         </div>
 
-        <div className="queue-timeline">
-          <p className="timeline-title">Queue Timeline</p>
-          {timelineSteps.map((step, i) => (
-            <div key={step.key} className="timeline-item">
-              <div className="timeline-marker-col">
-                <span className={`timeline-dot ${step.done ? 'done' : ''}`} />
-                {i < timelineSteps.length - 1 && <span className={`timeline-line ${step.done ? 'done' : ''}`} />}
-              </div>
-              <div className="timeline-content">
-                <p className={`timeline-label ${step.done ? 'done' : ''}`}>{step.label}</p>
-                <p className="timeline-detail">{step.detail}</p>
-              </div>
-            </div>
-          ))}
+        <div className={`ticket-timeline-step ${booking.status === 'checked-in' || booking.status === 'seen' ? 'active' : ''}`}>
+          <span className="ticket-timeline-icon">✅</span>
+          <div className="ticket-timeline-content">
+            <p className="ticket-timeline-label">Checked In</p>
+            <p className="ticket-timeline-time">
+              {booking.checked_in_at ? formatTime(booking.checked_in_at) : 'Waiting...'}
+            </p>
+          </div>
+          {booking.status === 'checked-in' && (
+            <span className="ticket-timeline-dot pulse"></span>
+          )}
+          {booking.status === 'seen' && (
+            <span className="ticket-timeline-dot"></span>
+          )}
         </div>
 
+        <div className={`ticket-timeline-step ${booking.status === 'seen' ? 'active' : ''}`}>
+          <span className="ticket-timeline-icon">🏥</span>
+          <div className="ticket-timeline-content">
+            <p className="ticket-timeline-label">Your Turn</p>
+            <p className="ticket-timeline-time">
+              {booking.status === 'seen' ? 'Now' : 'Soon'}
+            </p>
+          </div>
+          {booking.status === 'seen' && (
+            <span className="ticket-timeline-dot"></span>
+          )}
+        </div>
+      </div>
+
+      {/* Booking Details */}
+      <div className="ticket-details">
+        <div className="ticket-detail-row">
+          <span className="ticket-detail-label">Doctor</span>
+          <span className="ticket-detail-value">{booking.doctors?.name}</span>
+        </div>
+        <div className="ticket-detail-row">
+          <span className="ticket-detail-label">Specialty</span>
+          <span className="ticket-detail-value">{booking.doctors?.specialty}</span>
+        </div>
+        <div className="ticket-detail-row">
+          <span className="ticket-detail-label">Hospital</span>
+          <span className="ticket-detail-value">{booking.hospitals?.name}</span>
+        </div>
+        <div className="ticket-detail-row">
+          <span className="ticket-detail-label">Date</span>
+          <span className="ticket-detail-value">
+            {formatDate(booking.booked_at || booking.created_at)}
+          </span>
+        </div>
+        <div className="ticket-detail-row">
+          <span className="ticket-detail-label">Status</span>
+          <span className={`ticket-detail-status ${booking.status}`}>
+            {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+          </span>
+        </div>
+      </div>
+
+      {/* Actions */}
+      {isActive && (
         <div className="ticket-actions">
-          {appointment?.hospital?.google_maps_url && (
-            <a
-              href={appointment.hospital.google_maps_url}
-              target="_blank"
-              rel="noreferrer"
-              className="ticket-action-btn"
+          {!showCancelConfirm ? (
+            <button
+              className="ticket-cancel-btn"
+              onClick={() => setShowCancelConfirm(true)}
+              disabled={cancelling}
             >
-              View on Map
-            </a>
-          )}
-
-          <button
-            onClick={handleCancelBooking}
-            disabled={cancelling}
-            className="cancel-token-btn"
-          >
-            {cancelling ? 'Cancelling Token...' : 'Cancel Booking'}
-          </button>
-
-          {onClose && (
-            <button onClick={onClose} className="ticket-close-link">
-              Close
+              Cancel Booking
             </button>
+          ) : (
+            <div className="ticket-cancel-confirm">
+              <p className="ticket-cancel-confirm-text">
+                Are you sure you want to cancel this booking?
+              </p>
+              <div className="ticket-cancel-confirm-buttons">
+                <button
+                  className="ticket-cancel-confirm-no"
+                  onClick={() => setShowCancelConfirm(false)}
+                >
+                  No, Keep it
+                </button>
+                <button
+                  className="ticket-cancel-confirm-yes"
+                  onClick={handleCancel}
+                  disabled={cancelling}
+                >
+                  {cancelling ? 'Cancelling...' : 'Yes, Cancel'}
+                </button>
+              </div>
+            </div>
           )}
         </div>
+      )}
 
+      {/* Footer */}
+      <div className="ticket-footer">
+        <span>Booking ID: {booking.id?.slice(0, 8)}</span>
+        <span>•</span>
+        <span>MediQ Secure</span>
       </div>
     </div>
   );
-}
+};
+
+export default BookingTicket;
