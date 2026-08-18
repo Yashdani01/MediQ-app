@@ -84,7 +84,6 @@ const HospitalFlow = ({
       const data = await getHospitals(selectedCity);
       setHospitals(data);
       
-      // Get doctor counts
       const ids = data.map((h) => h.id);
       if (ids.length > 0) {
         const counts = await getAvailableDoctorCounts(ids);
@@ -96,7 +95,6 @@ const HospitalFlow = ({
         );
       }
       
-      // Get specialties
       const specialtyList = await getAllSpecialties(selectedCity);
       setSpecialties(specialtyList);
     } catch (err) {
@@ -176,7 +174,6 @@ const HospitalFlow = ({
       setShowTicket(true);
       setCurrentBookingId(result.data.id);
       
-      // Refresh doctor queue
       fetchDoctors(selectedDoctor.hospital_id);
     } catch (err) {
       console.error('Booking error:', err);
@@ -195,7 +192,6 @@ const HospitalFlow = ({
       setShowTicket(false);
       setCurrentBookingId(null);
       setBookingData(null);
-      // Refresh
       if (selectedHospital) {
         fetchDoctors(selectedHospital.id);
       }
@@ -245,9 +241,6 @@ const HospitalFlow = ({
     );
   });
 
-  // ============================
-  // FILTERED HOSPITALS
-  // ============================
   const filteredHospitals = hospitals.filter((h) => {
     if (!searchTerm) return true;
     return h.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -258,7 +251,6 @@ const HospitalFlow = ({
   // ============================
   return (
     <div className="hospital-flow">
-      {/* Ticket View */}
       {showTicket && currentBookingId && (
         <div className="hospital-flow-ticket-overlay">
           <BookingTicket
@@ -270,7 +262,6 @@ const HospitalFlow = ({
         </div>
       )}
 
-      {/* Payment Modal */}
       <PaymentModal
         isOpen={showPaymentModal}
         onClose={() => {
@@ -283,7 +274,6 @@ const HospitalFlow = ({
         loading={bookingLoading}
       />
 
-      {/* Header */}
       <div className="hospital-flow-header">
         <div className="hospital-flow-greeting">
           <h1>
@@ -295,7 +285,6 @@ const HospitalFlow = ({
           </p>
         </div>
 
-        {/* City Selector */}
         <div className="hospital-flow-city-selector">
           <select
             value={selectedCity}
@@ -311,7 +300,6 @@ const HospitalFlow = ({
         </div>
       </div>
 
-      {/* Search & Filters */}
       <div className="hospital-flow-controls">
         <div className="search-bar">
           <span className="search-icon">🔍</span>
@@ -332,7 +320,6 @@ const HospitalFlow = ({
           )}
         </div>
 
-        {/* Specialty Filters */}
         {specialties.length > 0 && (
           <div className="specialty-filters">
             <button
@@ -354,14 +341,12 @@ const HospitalFlow = ({
         )}
       </div>
 
-      {/* Content */}
       {loading ? (
         <div className="hospital-flow-loading">
           <div className="loading-spinner"></div>
           <p>Loading healthcare services...</p>
         </div>
       ) : !selectedHospital ? (
-        // HOSPITAL LIST
         <div className="hospital-list">
           {filteredHospitals.length === 0 ? (
             <div className="hospital-empty">
@@ -395,7 +380,6 @@ const HospitalFlow = ({
           )}
         </div>
       ) : (
-        // DOCTOR LIST
         <div className="doctor-list-view">
           <div className="doctor-list-header">
             <button className="back-button" onClick={handleBackToHospitals}>
