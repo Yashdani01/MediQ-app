@@ -12,14 +12,13 @@ import ClinicPortal from './components/ClinicPortal';
 import './index.css';
 import './components/MyToken.css';
 
-
 const translations = {
   en: {
     loading: 'Loading MediQ...',
     home: 'Home',
     reports: 'Reports',
-    myToken: 'My Token',
     myBookings: 'My Bookings',
+    myToken: 'My Token',
     triage: 'Triage',
     greeting: 'Good Morning,',
     guest: 'Guest',
@@ -34,8 +33,8 @@ const translations = {
     loading: 'মেডিকিউ লোড হচ্ছে...',
     home: 'হোম',
     reports: 'রিপোর্টস',
-    myToken: 'আমার টোকেন',
     myBookings: 'আমার বুকিং',
+    myToken: 'আমার টোকেন',
     triage: 'পরামর্শ',
     greeting: 'সুপ্রভাত,',
     guest: 'অতিথি',
@@ -50,8 +49,8 @@ const translations = {
     loading: 'मेडीक्यू लोड हो रहा है...',
     home: 'होम',
     reports: 'रिपोर्ट्स',
-    myToken: 'मेरा टोकन',
     myBookings: 'मेरी बुकिंग',
+    myToken: 'मेरा टोकन',
     triage: 'सलाह',
     greeting: 'सुप्रभात,',
     guest: 'अतिथि',
@@ -387,14 +386,14 @@ export default function App() {
       icon: 'triage',
     },
     {
-      id: 'bookings',
-      label: t.myBookings,
-      icon: 'bookings',
-    },
-    {
       id: 'reports',
       label: t.reports,
       icon: 'reports',
+    },
+    {
+      id: 'bookings',
+      label: t.myBookings,
+      icon: 'bookings',
     },
     {
       id: 'token',
@@ -421,8 +420,8 @@ export default function App() {
   const pageTitles = {
     home: t.home,
     triage: t.triage,
-    bookings: t.myBookings,
     reports: t.reports,
+    bookings: t.myBookings,
     token: t.myToken,
   };
 
@@ -430,7 +429,9 @@ export default function App() {
   return (
     <div className="mediq-app">
 
-      {/* MOBILE HEADER */}
+      {/* =========================
+          MOBILE HEADER
+      ========================= */}
 
       <header className="mobile-app-header">
         <button
@@ -451,7 +452,9 @@ export default function App() {
       </header>
 
 
-      {/* MOBILE SIDEBAR OVERLAY */}
+      {/* =========================
+          MOBILE SIDEBAR OVERLAY
+      ========================= */}
 
       <div
         className={`sidebar-overlay ${
@@ -461,7 +464,9 @@ export default function App() {
       />
 
 
-      {/* SIDEBAR */}
+      {/* =========================
+          SIDEBAR
+      ========================= */}
 
       <aside
         className={`app-sidebar ${
@@ -555,9 +560,17 @@ export default function App() {
                 changeLanguage(e.target.value)
               }
             >
-              <option value="en">English</option>
-              <option value="bn">বাংলা</option>
-              <option value="hi">हिन्दी</option>
+              <option value="en">
+                English
+              </option>
+
+              <option value="bn">
+                বাংলা
+              </option>
+
+              <option value="hi">
+                हिन्दी
+              </option>
             </select>
           </div>
 
@@ -576,7 +589,9 @@ export default function App() {
       </aside>
 
 
-      {/* MAIN APPLICATION */}
+      {/* =========================
+          MAIN APPLICATION
+      ========================= */}
 
       <div className="app-main">
 
@@ -606,9 +621,17 @@ export default function App() {
                   changeLanguage(e.target.value)
                 }
               >
-                <option value="en">English</option>
-                <option value="bn">বাংলা</option>
-                <option value="hi">हिन्दी</option>
+                <option value="en">
+                  English
+                </option>
+
+                <option value="bn">
+                  বাংলা
+                </option>
+
+                <option value="hi">
+                  हिन्दी
+                </option>
               </select>
             </div>
 
@@ -678,18 +701,16 @@ export default function App() {
           )}
 
 
-          {/* MY BOOKINGS */}
-
-          {activeTab === 'bookings' && (
-            <MyBookings
+          {activeTab === 'reports' && (
+            <Reports
               user={session?.user || null}
               lang={lang}
             />
           )}
 
 
-          {activeTab === 'reports' && (
-            <Reports
+          {activeTab === 'bookings' && (
+            <MyBookings
               user={session?.user || null}
               lang={lang}
             />
@@ -707,7 +728,9 @@ export default function App() {
       </div>
 
 
-      {/* MOBILE BOTTOM NAV */}
+      {/* =========================
+          MOBILE BOTTOM NAV
+      ========================= */}
 
       <nav className="mobile-bottom-nav">
 
