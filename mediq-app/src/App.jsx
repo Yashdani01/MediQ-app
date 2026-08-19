@@ -4,7 +4,7 @@ import { supabase } from './supabaseClient';
 import Login from './components/Login';
 import HospitalFlow from './components/HospitalFlow';
 import MyToken from './components/MyToken';
-import MyBookings from './MyBookings';
+import MyBookings from './components/MyBookings';
 import Reports from './components/Reports';
 import SymptomTriage from './components/SymptomTriage';
 import ClinicPortal from './components/ClinicPortal';
