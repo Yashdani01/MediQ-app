@@ -1,15 +1,12 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
-import {
-  getMyBookings,
-  cancelAppointment,
-} from '../hospitalData';
-
+import { getMyBookings, cancelAppointment } from '../hospitalData';
 import './MyBookings.css';
 
-function MyBookings() {
+export default function MyBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [cancellingId, setCancellingId] = useState(null);
 
   useEffect(() => {
     loadBookings();
@@ -18,20 +15,26 @@ function MyBookings() {
   async function loadBookings() {
     setLoading(true);
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    try {
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
 
-    if (!user) {
+      if (error || !user) {
+        setBookings([]);
+        return;
+      }
+
+      const data = await getMyBookings(user.id);
+
+      setBookings(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error loading bookings:', error);
       setBookings([]);
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const data = await getMyBookings(user.id);
-
-    setBookings(data || []);
-    setLoading(false);
   }
 
   async function handleCancel(appointmentId) {
@@ -41,206 +44,304 @@ function MyBookings() {
 
     if (!confirmed) return;
 
-    const result = await cancelAppointment(appointmentId);
+    setCancellingId(appointmentId);
 
-    if (result.error) {
-      alert('Could not cancel appointment. Please try again.');
-      return;
+    try {
+      const result = await cancelAppointment(appointmentId);
+
+      if (result?.error) {
+        console.error(result.error);
+        alert('Could not cancel the appointment. Please try again.');
+        return;
+      }
+
+      alert('Appointment cancelled successfully.');
+
+      await loadBookings();
+    } catch (error) {
+      console.error('Error cancelling appointment:', error);
+      alert('Something went wrong. Please try again.');
+    } finally {
+      setCancellingId(null);
     }
+  }
 
-    alert('Appointment cancelled successfully.');
+  function formatDate(dateString) {
+    if (!dateString) return 'N/A';
 
-    loadBookings();
+    try {
+      return new Date(dateString).toLocaleString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return dateString;
+    }
+  }
+
+  function getStatusClass(status) {
+    switch (status?.toLowerCase()) {
+      case 'waiting':
+        return 'status-waiting';
+
+      case 'checked_in':
+        return 'status-checked-in';
+
+      case 'seen':
+      case 'completed':
+        return 'status-completed';
+
+      case 'cancelled':
+        return 'status-cancelled';
+
+      default:
+        return 'status-default';
+    }
   }
 
   if (loading) {
     return (
-      <div className="my-bookings-loading">
-        Loading your bookings...
+      <div className="my-bookings-page">
+        <div className="bookings-loading">
+          <div className="bookings-spinner" />
+          <p>Loading your bookings...</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="my-bookings-page">
+      <div className="my-bookings-container">
+        <div className="bookings-header">
+          <div>
+            <p className="bookings-eyebrow">
+              MEDIQ PATIENT PORTAL
+            </p>
 
-      <div className="my-bookings-header">
-        <h2 className="my-bookings-title">
-          My Bookings
-        </h2>
+            <h1>My Bookings</h1>
 
-        <p className="my-bookings-subtitle">
-          View and manage all your appointments.
-        </p>
-      </div>
-
-      {bookings.length === 0 ? (
-
-        <div className="my-bookings-empty">
-          <div className="my-bookings-empty-icon">
-            📅
+            <p className="bookings-subtitle">
+              View and manage your doctor appointments.
+            </p>
           </div>
 
-          <h3>No bookings found</h3>
-
-          <p>
-            Your booked doctor appointments will appear here.
-          </p>
+          <button
+            type="button"
+            className="refresh-bookings-btn"
+            onClick={loadBookings}
+          >
+            ↻ Refresh
+          </button>
         </div>
 
-      ) : (
+        {bookings.length === 0 ? (
+          <div className="bookings-empty">
+            <div className="bookings-empty-icon">
+              📅
+            </div>
 
-        <div className="my-bookings-list">
+            <h2>No bookings found</h2>
 
-          {bookings.map((booking) => {
+            <p>
+              You don't have any doctor appointments yet.
+              Book an appointment from the Home page.
+            </p>
+          </div>
+        ) : (
+          <div className="bookings-list">
+            {bookings.map((booking) => {
+              const doctorName =
+                booking.doctor?.name || 'Doctor';
 
-            const doctorName =
-              booking.doctor?.name || 'Doctor';
+              const specialty =
+                booking.doctor?.specialty || 'General Consultation';
 
-            const doctorInitial =
-              doctorName.charAt(0).toUpperCase();
+              const hospitalName =
+                booking.hospital?.name || 'Hospital';
 
-            return (
+              const location =
+                booking.hospital?.location || '';
 
-              <div
-                className="booking-card"
-                key={booking.id}
-              >
+              const city =
+                booking.hospital?.city || '';
 
-                {/* HEADER */}
+              const mapsUrl =
+                booking.hospital?.google_maps_url;
 
-                <div className="booking-card-header">
+              return (
+                <div
+                  className="booking-card"
+                  key={booking.id}
+                >
+                  <div className="booking-card-top">
+                    <div className="doctor-info">
+                      <div className="doctor-avatar">
+                        {doctorName.charAt(0).toUpperCase()}
+                      </div>
 
-                  <div className="booking-doctor-info">
+                      <div>
+                        <h2>{doctorName}</h2>
 
-                    <div className="booking-doctor-avatar">
-                      {doctorInitial}
+                        <p className="doctor-specialty">
+                          {specialty}
+                        </p>
+                      </div>
                     </div>
 
-                    <div>
-                      <h3 className="booking-doctor-name">
-                        {doctorName}
-                      </h3>
+                    <span
+                      className={`booking-status ${getStatusClass(
+                        booking.status
+                      )}`}
+                    >
+                      {booking.status || 'Unknown'}
+                    </span>
+                  </div>
 
-                      <p className="booking-specialty">
-                        {booking.doctor?.specialty || 'Specialist'}
-                      </p>
+                  <div className="booking-details">
+                    <div className="booking-detail">
+                      <span className="detail-icon">
+                        🏥
+                      </span>
+
+                      <div>
+                        <span className="detail-label">
+                          Hospital
+                        </span>
+
+                        <strong>
+                          {hospitalName}
+                        </strong>
+                      </div>
                     </div>
 
+                    {(location || city) && (
+                      <div className="booking-detail">
+                        <span className="detail-icon">
+                          📍
+                        </span>
+
+                        <div>
+                          <span className="detail-label">
+                            Location
+                          </span>
+
+                          <strong>
+                            {[location, city]
+                              .filter(Boolean)
+                              .join(', ')}
+                          </strong>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="booking-detail">
+                      <span className="detail-icon">
+                        🎫
+                      </span>
+
+                      <div>
+                        <span className="detail-label">
+                          Queue Number
+                        </span>
+
+                        <strong className="queue-number">
+                          #{booking.queue_number ?? 'N/A'}
+                        </strong>
+                      </div>
+                    </div>
+
+                    <div className="booking-detail">
+                      <span className="detail-icon">
+                        💳
+                      </span>
+
+                      <div>
+                        <span className="detail-label">
+                          Payment Method
+                        </span>
+
+                        <strong>
+                          {booking.payment_method || 'Not specified'}
+                        </strong>
+                      </div>
+                    </div>
+
+                    {booking.doctor?.consultation_fee && (
+                      <div className="booking-detail">
+                        <span className="detail-icon">
+                          ₹
+                        </span>
+
+                        <div>
+                          <span className="detail-label">
+                            Consultation Fee
+                          </span>
+
+                          <strong>
+                            ₹{booking.doctor.consultation_fee}
+                          </strong>
+                        </div>
+                      </div>
+                    )}
+
+                    {booking.booked_at && (
+                      <div className="booking-detail booking-date">
+                        <span className="detail-icon">
+                          🕒
+                        </span>
+
+                        <div>
+                          <span className="detail-label">
+                            Booked On
+                          </span>
+
+                          <strong>
+                            {formatDate(booking.booked_at)}
+                          </strong>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
+                  <div className="booking-actions">
+                    {mapsUrl && (
+                      <a
+                        href={mapsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="directions-btn"
+                      >
+                        📍 Get Directions
+                      </a>
+                    )}
 
-                  <div
-                    className={`booking-status ${
-                      booking.status || ''
-                    }`}
-                  >
-                    {booking.status || 'Unknown'}
+                    {booking.status === 'waiting' && (
+                      <button
+                        type="button"
+                        className="cancel-booking-btn"
+                        onClick={() =>
+                          handleCancel(booking.id)
+                        }
+                        disabled={
+                          cancellingId === booking.id
+                        }
+                      >
+                        {cancellingId === booking.id
+                          ? 'Cancelling...'
+                          : 'Cancel Appointment'}
+                      </button>
+                    )}
                   </div>
-
                 </div>
-
-
-                {/* DETAILS */}
-
-                <div className="booking-details">
-
-                  <div className="booking-detail">
-                    <span className="booking-detail-label">
-                      Hospital
-                    </span>
-
-                    <span className="booking-detail-value">
-                      {booking.hospital?.name || 'N/A'}
-                    </span>
-                  </div>
-
-
-                  <div className="booking-detail">
-                    <span className="booking-detail-label">
-                      Queue Number
-                    </span>
-
-                    <span className="booking-detail-value">
-                      #{booking.queue_number || 'N/A'}
-                    </span>
-                  </div>
-
-
-                  <div className="booking-detail">
-                    <span className="booking-detail-label">
-                      City
-                    </span>
-
-                    <span className="booking-detail-value">
-                      {booking.hospital?.city || 'N/A'}
-                    </span>
-                  </div>
-
-
-                  <div className="booking-detail">
-                    <span className="booking-detail-label">
-                      Payment
-                    </span>
-
-                    <span className="booking-detail-value">
-                      {booking.payment_method || 'N/A'}
-                    </span>
-                  </div>
-
-
-                  <div className="booking-detail full-width">
-                    <span className="booking-detail-label">
-                      Location
-                    </span>
-
-                    <span className="booking-detail-value">
-                      {booking.hospital?.location || 'N/A'}
-                    </span>
-                  </div>
-
-                </div>
-
-
-                {/* ACTION BUTTONS */}
-
-                <div className="booking-actions">
-
-                  {booking.hospital?.google_maps_url && (
-                    <a
-                      href={booking.hospital.google_maps_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="booking-map-button"
-                    >
-                      📍 Open in Maps
-                    </a>
-                  )}
-
-
-                  {booking.status === 'waiting' && (
-                    <button
-                      className="booking-cancel-button"
-                      onClick={() =>
-                        handleCancel(booking.id)
-                      }
-                    >
-                      Cancel Appointment
-                    </button>
-                  )}
-
-                </div>
-
-              </div>
-            );
-          })}
-
-        </div>
-
-      )}
-
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
-
-export default MyBookings;
