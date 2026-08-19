@@ -4,7 +4,7 @@ import { supabase } from './supabaseClient';
 import Login from './components/Login';
 import HospitalFlow from './components/HospitalFlow';
 import MyToken from './components/MyToken';
-import MyBookings from './components/MyBookings';
+import MyBookings from './MyBookings';
 import Reports from './components/Reports';
 import SymptomTriage from './components/SymptomTriage';
 import ClinicPortal from './components/ClinicPortal';
@@ -17,8 +17,8 @@ const translations = {
     loading: 'Loading MediQ...',
     home: 'Home',
     reports: 'Reports',
-    myBookings: 'My Bookings',
     myToken: 'My Token',
+    myBookings: 'My Bookings',
     triage: 'Triage',
     greeting: 'Good Morning,',
     guest: 'Guest',
@@ -33,8 +33,8 @@ const translations = {
     loading: 'মেডিকিউ লোড হচ্ছে...',
     home: 'হোম',
     reports: 'রিপোর্টস',
-    myBookings: 'আমার বুকিং',
     myToken: 'আমার টোকেন',
+    myBookings: 'আমার বুকিং',
     triage: 'পরামর্শ',
     greeting: 'সুপ্রভাত,',
     guest: 'অতিথি',
@@ -49,8 +49,8 @@ const translations = {
     loading: 'मेडीक्यू लोड हो रहा है...',
     home: 'होम',
     reports: 'रिपोर्ट्स',
-    myBookings: 'मेरी बुकिंग',
     myToken: 'मेरा टोकन',
+    myBookings: 'मेरी बुकिंग',
     triage: 'सलाह',
     greeting: 'सुप्रभात,',
     guest: 'अतिथि',
@@ -80,6 +80,7 @@ function AppIcon({ type, size = 20 }) {
   };
 
   const icons = {
+
     home: (
       <>
         <path d="M3 10.5 12 3l9 7.5" />
@@ -112,12 +113,11 @@ function AppIcon({ type, size = 20 }) {
 
     bookings: (
       <>
-        <rect x="3" y="5" width="18" height="16" rx="2" />
-        <path d="M16 3v4" />
-        <path d="M8 3v4" />
+        <rect x="3" y="4" width="18" height="17" rx="2" />
+        <path d="M16 2v4" />
+        <path d="M8 2v4" />
         <path d="M3 10h18" />
-        <path d="M8 14h3" />
-        <path d="M8 17h6" />
+        <path d="m8 15 2 2 5-5" />
       </>
     ),
 
@@ -169,8 +169,10 @@ function AppIcon({ type, size = 20 }) {
 ========================= */
 
 export default function App() {
+
   const urlParams = new URLSearchParams(window.location.search);
 
+  /* Clinic portal remains separate */
   if (urlParams.get('portal') === 'clinic') {
     return <ClinicPortal />;
   }
@@ -208,7 +210,13 @@ export default function App() {
   ========================= */
 
   useEffect(() => {
+
+    let mounted = true;
+
     supabase.auth.getSession().then(({ data: { session } }) => {
+
+      if (!mounted) return;
+
       setSession(session);
       setLoading(false);
 
@@ -222,6 +230,9 @@ export default function App() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+
+      if (!mounted) return;
+
       setSession(session);
       setLoading(false);
 
@@ -232,7 +243,11 @@ export default function App() {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+
   }, []);
 
 
@@ -241,10 +256,11 @@ export default function App() {
   ========================= */
 
   const loadPatientProfile = async (user) => {
-    const urlParams = new URLSearchParams(window.location.search);
 
-    const pendingName = urlParams.get('name');
-    const pendingCity = urlParams.get('city');
+    const params = new URLSearchParams(window.location.search);
+
+    const pendingName = params.get('name');
+    const pendingCity = params.get('city');
 
     const { data: existing } = await supabase
       .from('patients')
@@ -253,7 +269,9 @@ export default function App() {
       .maybeSingle();
 
     if (existing) {
+
       if (pendingName) {
+
         const { data: updated } = await supabase
           .from('patients')
           .update({
@@ -271,10 +289,14 @@ export default function App() {
           '',
           window.location.pathname
         );
+
       } else {
+
         setPatientProfile(existing);
       }
+
     } else {
+
       const patientCode =
         'MDQ-' + Math.floor(1000 + Math.random() * 9000);
 
@@ -311,8 +333,10 @@ export default function App() {
   ========================= */
 
   if (loading || (session?.user && !profileLoaded)) {
+
     return (
       <div className="app-loading-screen">
+
         <div className="app-loading-logo">
           Medi<span>Q</span>.
         </div>
@@ -320,6 +344,7 @@ export default function App() {
         <div className="app-loading-spinner" />
 
         <p>{t.loading}</p>
+
       </div>
     );
   }
@@ -330,6 +355,7 @@ export default function App() {
   ========================= */
 
   if (!session && !isGuest) {
+
     return (
       <Login
         onGuestContinue={() => setIsGuest(true)}
@@ -343,6 +369,7 @@ export default function App() {
   ========================= */
 
   const handleLogout = async () => {
+
     setSidebarOpen(false);
 
     await supabase.auth.signOut();
@@ -375,34 +402,42 @@ export default function App() {
   ========================= */
 
   const navigationItems = [
+
     {
       id: 'home',
       label: t.home,
       icon: 'home',
     },
+
     {
       id: 'triage',
       label: t.triage,
       icon: 'triage',
     },
+
     {
       id: 'reports',
       label: t.reports,
       icon: 'reports',
     },
-    {
-      id: 'bookings',
-      label: t.myBookings,
-      icon: 'bookings',
-    },
+
     {
       id: 'token',
       label: t.myToken,
       icon: 'token',
     },
+
+    {
+      id: 'bookings',
+      label: t.myBookings,
+      icon: 'bookings',
+    },
+
   ];
 
+
   const handleNavigation = (tab) => {
+
     setActiveTab(tab);
     setSidebarOpen(false);
 
@@ -418,22 +453,31 @@ export default function App() {
   ========================= */
 
   const pageTitles = {
+
     home: t.home,
+
     triage: t.triage,
+
     reports: t.reports,
-    bookings: t.myBookings,
+
     token: t.myToken,
+
+    bookings: t.myBookings,
+
   };
 
 
   return (
+
     <div className="mediq-app">
+
 
       {/* =========================
           MOBILE HEADER
       ========================= */}
 
       <header className="mobile-app-header">
+
         <button
           className="mobile-menu-btn"
           onClick={() => setSidebarOpen(true)}
@@ -449,6 +493,7 @@ export default function App() {
         <div className="mobile-user-avatar">
           {userInitial}
         </div>
+
       </header>
 
 
@@ -473,9 +518,11 @@ export default function App() {
           sidebarOpen ? 'open' : ''
         }`}
       >
+
         <div className="sidebar-top">
 
           <div className="sidebar-brand-row">
+
             <div className="sidebar-brand">
               Medi<span>Q</span>.
             </div>
@@ -487,36 +534,45 @@ export default function App() {
             >
               <AppIcon type="close" />
             </button>
+
           </div>
 
 
           {/* USER CARD */}
 
           <div className="sidebar-user-card">
+
             <div className="sidebar-avatar">
               {userInitial}
             </div>
 
             <div className="sidebar-user-info">
+
               <span className="sidebar-user-label">
-                {isGuest ? t.browsingAs : 'Welcome back'}
+                {isGuest
+                  ? t.browsingAs
+                  : 'Welcome back'}
               </span>
 
               <strong>
                 {displayName}
               </strong>
+
             </div>
+
           </div>
 
 
           {/* NAVIGATION */}
 
           <nav className="sidebar-nav">
+
             <span className="sidebar-nav-label">
               Navigation
             </span>
 
             {navigationItems.map((item) => (
+
               <button
                 key={item.id}
                 className={`sidebar-nav-item ${
@@ -528,6 +584,7 @@ export default function App() {
                   handleNavigation(item.id)
                 }
               >
+
                 <span className="sidebar-nav-icon">
                   <AppIcon type={item.icon} />
                 </span>
@@ -539,9 +596,13 @@ export default function App() {
                 {activeTab === item.id && (
                   <span className="sidebar-active-dot" />
                 )}
+
               </button>
+
             ))}
+
           </nav>
+
         </div>
 
 
@@ -550,6 +611,7 @@ export default function App() {
         <div className="sidebar-footer">
 
           <div className="language-selector">
+
             <div className="language-selector-icon">
               <AppIcon type="globe" size={17} />
             </div>
@@ -560,6 +622,7 @@ export default function App() {
                 changeLanguage(e.target.value)
               }
             >
+
               <option value="en">
                 English
               </option>
@@ -571,7 +634,9 @@ export default function App() {
               <option value="hi">
                 हिन्दी
               </option>
+
             </select>
+
           </div>
 
 
@@ -579,13 +644,17 @@ export default function App() {
             className="sidebar-logout"
             onClick={handleLogout}
           >
+
             <AppIcon type="logout" size={18} />
 
             <span>
               {t.logout}
             </span>
+
           </button>
+
         </div>
+
       </aside>
 
 
@@ -595,11 +664,15 @@ export default function App() {
 
       <div className="app-main">
 
-        {/* DESKTOP HEADER */}
+
+        {/* =========================
+            DESKTOP HEADER
+        ========================= */}
 
         <header className="desktop-app-header">
 
           <div className="desktop-page-info">
+
             <span className="desktop-page-eyebrow">
               MediQ Patient Portal
             </span>
@@ -607,12 +680,14 @@ export default function App() {
             <h1>
               {pageTitles[activeTab]}
             </h1>
+
           </div>
 
 
           <div className="desktop-header-actions">
 
             <div className="desktop-language">
+
               <AppIcon type="globe" size={17} />
 
               <select
@@ -621,6 +696,7 @@ export default function App() {
                   changeLanguage(e.target.value)
                 }
               >
+
                 <option value="en">
                   English
                 </option>
@@ -632,16 +708,20 @@ export default function App() {
                 <option value="hi">
                   हिन्दी
                 </option>
+
               </select>
+
             </div>
 
 
             <div className="desktop-profile">
+
               <div className="desktop-profile-avatar">
                 {userInitial}
               </div>
 
               <div className="desktop-profile-info">
+
                 <strong>
                   {displayName}
                 </strong>
@@ -651,17 +731,27 @@ export default function App() {
                     ? 'Guest access'
                     : 'Patient'}
                 </span>
+
               </div>
+
             </div>
+
           </div>
+
         </header>
 
 
-        {/* PAGE CONTENT */}
+        {/* =========================
+            PAGE CONTENT
+        ========================= */}
 
         <main className="app-content">
 
+
+          {/* HOME */}
+
           {activeTab === 'home' && (
+
             <HospitalFlow
               user={session?.user || null}
               isGuest={isGuest}
@@ -672,10 +762,14 @@ export default function App() {
               t={t}
               externalSpecialtyFilter={null}
             />
+
           )}
 
 
+          {/* TRIAGE */}
+
           {activeTab === 'triage' && (
+
             <div className="app-triage-page">
 
               <HospitalFlow
@@ -698,33 +792,47 @@ export default function App() {
               />
 
             </div>
+
           )}
 
 
+          {/* REPORTS */}
+
           {activeTab === 'reports' && (
+
             <Reports
               user={session?.user || null}
               lang={lang}
             />
+
           )}
 
 
-          {activeTab === 'bookings' && (
-            <MyBookings
-              user={session?.user || null}
-              lang={lang}
-            />
-          )}
-
+          {/* MY TOKEN */}
 
           {activeTab === 'token' && (
+
             <MyToken
               user={session?.user || null}
               lang={lang}
             />
+
+          )}
+
+
+          {/* MY BOOKINGS */}
+
+          {activeTab === 'bookings' && (
+
+            <MyBookings
+              user={session?.user || null}
+              lang={lang}
+            />
+
           )}
 
         </main>
+
       </div>
 
 
@@ -735,6 +843,7 @@ export default function App() {
       <nav className="mobile-bottom-nav">
 
         {navigationItems.map((item) => (
+
           <button
             key={item.id}
             className={
@@ -746,17 +855,22 @@ export default function App() {
               handleNavigation(item.id)
             }
           >
+
             <span className="mobile-nav-icon">
+
               <AppIcon
                 type={item.icon}
                 size={21}
               />
+
             </span>
 
             <span>
               {item.label}
             </span>
+
           </button>
+
         ))}
 
       </nav>
