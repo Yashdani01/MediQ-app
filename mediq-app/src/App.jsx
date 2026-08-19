@@ -4,6 +4,7 @@ import { supabase } from './supabaseClient';
 import Login from './components/Login';
 import HospitalFlow from './components/HospitalFlow';
 import MyToken from './components/MyToken';
+import MyBookings from './components/MyBookings';
 import Reports from './components/Reports';
 import SymptomTriage from './components/SymptomTriage';
 import ClinicPortal from './components/ClinicPortal';
@@ -11,12 +12,14 @@ import ClinicPortal from './components/ClinicPortal';
 import './index.css';
 import './components/MyToken.css';
 
+
 const translations = {
   en: {
     loading: 'Loading MediQ...',
     home: 'Home',
     reports: 'Reports',
     myToken: 'My Token',
+    myBookings: 'My Bookings',
     triage: 'Triage',
     greeting: 'Good Morning,',
     guest: 'Guest',
@@ -32,6 +35,7 @@ const translations = {
     home: 'হোম',
     reports: 'রিপোর্টস',
     myToken: 'আমার টোকেন',
+    myBookings: 'আমার বুকিং',
     triage: 'পরামর্শ',
     greeting: 'সুপ্রভাত,',
     guest: 'অতিথি',
@@ -47,6 +51,7 @@ const translations = {
     home: 'होम',
     reports: 'रिपोर्ट्स',
     myToken: 'मेरा टोकन',
+    myBookings: 'मेरी बुकिंग',
     triage: 'सलाह',
     greeting: 'सुप्रभात,',
     guest: 'अतिथि',
@@ -103,6 +108,17 @@ function AppIcon({ type, size = 20 }) {
       <>
         <path d="M3 8.5A2.5 2.5 0 0 1 5.5 6H18.5A2.5 2.5 0 0 1 21 8.5v1.2a2.5 2.5 0 0 0 0 4.6v1.2a2.5 2.5 0 0 1-2.5 2.5H5.5A2.5 2.5 0 0 1 3 15.5v-1.2a2.5 2.5 0 0 0 0-4.6z" />
         <path d="M13 6v12" strokeDasharray="3 3" />
+      </>
+    ),
+
+    bookings: (
+      <>
+        <rect x="3" y="5" width="18" height="16" rx="2" />
+        <path d="M16 3v4" />
+        <path d="M8 3v4" />
+        <path d="M3 10h18" />
+        <path d="M8 14h3" />
+        <path d="M8 17h6" />
       </>
     ),
 
@@ -371,6 +387,11 @@ export default function App() {
       icon: 'triage',
     },
     {
+      id: 'bookings',
+      label: t.myBookings,
+      icon: 'bookings',
+    },
+    {
       id: 'reports',
       label: t.reports,
       icon: 'reports',
@@ -400,6 +421,7 @@ export default function App() {
   const pageTitles = {
     home: t.home,
     triage: t.triage,
+    bookings: t.myBookings,
     reports: t.reports,
     token: t.myToken,
   };
@@ -408,9 +430,7 @@ export default function App() {
   return (
     <div className="mediq-app">
 
-      {/* =========================
-          MOBILE HEADER
-      ========================= */}
+      {/* MOBILE HEADER */}
 
       <header className="mobile-app-header">
         <button
@@ -431,9 +451,7 @@ export default function App() {
       </header>
 
 
-      {/* =========================
-          MOBILE SIDEBAR OVERLAY
-      ========================= */}
+      {/* MOBILE SIDEBAR OVERLAY */}
 
       <div
         className={`sidebar-overlay ${
@@ -443,9 +461,7 @@ export default function App() {
       />
 
 
-      {/* =========================
-          SIDEBAR
-      ========================= */}
+      {/* SIDEBAR */}
 
       <aside
         className={`app-sidebar ${
@@ -539,17 +555,9 @@ export default function App() {
                 changeLanguage(e.target.value)
               }
             >
-              <option value="en">
-                English
-              </option>
-
-              <option value="bn">
-                বাংলা
-              </option>
-
-              <option value="hi">
-                हिन्दी
-              </option>
+              <option value="en">English</option>
+              <option value="bn">বাংলা</option>
+              <option value="hi">हिन्दी</option>
             </select>
           </div>
 
@@ -568,9 +576,7 @@ export default function App() {
       </aside>
 
 
-      {/* =========================
-          MAIN APPLICATION
-      ========================= */}
+      {/* MAIN APPLICATION */}
 
       <div className="app-main">
 
@@ -600,17 +606,9 @@ export default function App() {
                   changeLanguage(e.target.value)
                 }
               >
-                <option value="en">
-                  English
-                </option>
-
-                <option value="bn">
-                  বাংলা
-                </option>
-
-                <option value="hi">
-                  हिन्दी
-                </option>
+                <option value="en">English</option>
+                <option value="bn">বাংলা</option>
+                <option value="hi">हिन्दी</option>
               </select>
             </div>
 
@@ -680,6 +678,16 @@ export default function App() {
           )}
 
 
+          {/* MY BOOKINGS */}
+
+          {activeTab === 'bookings' && (
+            <MyBookings
+              user={session?.user || null}
+              lang={lang}
+            />
+          )}
+
+
           {activeTab === 'reports' && (
             <Reports
               user={session?.user || null}
@@ -699,9 +707,7 @@ export default function App() {
       </div>
 
 
-      {/* =========================
-          MOBILE BOTTOM NAV
-      ========================= */}
+      {/* MOBILE BOTTOM NAV */}
 
       <nav className="mobile-bottom-nav">
 
