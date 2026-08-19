@@ -194,8 +194,13 @@ export async function getBookingHistory(patientUserId) {
   return enriched;
 }
 
+// ✅ STEP 5: UPDATED - Added google_maps_url to searchDoctors()
 export async function searchDoctors(city, searchTerm) {
-  let hospitalQuery = supabase.from('hospitals').select('id, name, location, city');
+  // ✅ UPDATED: Added google_maps_url
+  let hospitalQuery = supabase
+    .from('hospitals')
+    .select('id, name, location, city, google_maps_url');
+    
   if (city) {
     hospitalQuery = hospitalQuery.ilike('city', city);
   }
