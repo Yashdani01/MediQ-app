@@ -2,23 +2,20 @@
 import { supabase } from './supabaseClient';
 
 // ✅ STEP 1: UPDATED - Added google_maps_url
-export async function getHospitals(city) {
-  let query = supabase
+export async function getHospitals() {
+  const { data, error } = await supabase
     .from('hospitals')
-    .select('id, name, location, city, google_maps_url');
-
-  if (city) {
-    query = query.ilike('city', city);
-  }
-
-  const { data, error } = await query;
+    .select('id, name, location, city, google_maps_url')
+    .order('name', { ascending: true });
 
   if (error) {
     console.error('Error fetching hospitals:', error);
     return [];
   }
 
-  return data;
+  console.log('Hospitals fetched:', data);
+
+  return data || [];
 }
 
 export async function getAllCities() {
