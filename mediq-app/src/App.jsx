@@ -380,11 +380,11 @@ export default function App() {
       label: t.reports,
       icon: 'reports',
     },
-    {
-      id: 'bookings',
-      label: t.myBookings,
-      icon: 'bookings',
-    },
+   {
+  id: 'bookings',
+  label: 'My Bookings',
+  icon: 'token',
+},
   ];
 
 
