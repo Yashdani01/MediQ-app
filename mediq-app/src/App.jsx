@@ -10,7 +10,6 @@ import ClinicPortal from './components/ClinicPortal';
 
 import './index.css';
 
-
 const translations = {
   en: {
     loading: 'Loading MediQ...',
@@ -58,7 +57,6 @@ const translations = {
   },
 };
 
-
 /* =========================
    ICON COMPONENT
 ========================= */
@@ -101,13 +99,7 @@ function AppIcon({ type, size = 20 }) {
 
     bookings: (
       <>
-        <rect
-          x="3"
-          y="4"
-          width="18"
-          height="17"
-          rx="2"
-        />
+        <rect x="3" y="4" width="18" height="17" rx="2" />
         <path d="M8 2v4" />
         <path d="M16 2v4" />
         <path d="M3 10h18" />
@@ -153,7 +145,6 @@ function AppIcon({ type, size = 20 }) {
   return <svg {...common}>{icons[type]}</svg>;
 }
 
-
 /* =========================
    APP
 ========================= */
@@ -180,55 +171,12 @@ export default function App() {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-
-  /* =========================
-     LANGUAGE
-  ========================= */
-
   const changeLanguage = (newLang) => {
     setLang(newLang);
     localStorage.setItem('mediq_lang', newLang);
   };
 
   const t = translations[lang] || translations.en;
-
-
-  /* =========================
-     AUTH SESSION
-  ========================= */
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-
-      if (session?.user) {
-        loadPatientProfile(session.user);
-      } else {
-        setProfileLoaded(true);
-      }
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setLoading(false);
-
-      if (session?.user) {
-        loadPatientProfile(session.user);
-      } else {
-        setProfileLoaded(true);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-
-  /* =========================
-     PATIENT PROFILE
-  ========================= */
 
   const loadPatientProfile = async (user) => {
     const params = new URLSearchParams(window.location.search);
@@ -254,7 +202,7 @@ export default function App() {
           .select('name, city')
           .single();
 
-        setPatientProfile(updated);
+        setPatientProfile(updated || existing);
 
         window.history.replaceState(
           {},
@@ -288,17 +236,45 @@ export default function App() {
 
       setPatientProfile(created);
 
-      localStorage.removeItem('mediq_pending_name');
-      localStorage.removeItem('mediq_pending_city');
+      window.history.replaceState(
+        {},
+        '',
+        window.location.pathname
+      );
     }
 
     setProfileLoaded(true);
   };
 
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
 
-  /* =========================
-     LOADING
-  ========================= */
+      if (session?.user) {
+        loadPatientProfile(session.user);
+      } else {
+        setProfileLoaded(true);
+      }
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+      setLoading(false);
+
+      if (newSession?.user) {
+        setProfileLoaded(false);
+        loadPatientProfile(newSession.user);
+      } else {
+        setPatientProfile(null);
+        setProfileLoaded(true);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   if (loading || (session?.user && !profileLoaded)) {
     return (
@@ -314,11 +290,6 @@ export default function App() {
     );
   }
 
-
-  /* =========================
-     LOGIN
-  ========================= */
-
   if (!session && !isGuest) {
     return (
       <Login
@@ -326,11 +297,6 @@ export default function App() {
       />
     );
   }
-
-
-  /* =========================
-     LOGOUT
-  ========================= */
 
   const handleLogout = async () => {
     setSidebarOpen(false);
@@ -343,11 +309,6 @@ export default function App() {
     setProfileLoaded(false);
   };
 
-
-  /* =========================
-     USER INFO
-  ========================= */
-
   const displayName =
     patientProfile?.name ||
     session?.user?.email?.split('@')[0] ||
@@ -358,11 +319,6 @@ export default function App() {
 
   const userInitial =
     displayName?.charAt(0)?.toUpperCase() || 'G';
-
-
-  /* =========================
-     NAVIGATION
-  ========================= */
 
   const navigationItems = [
     {
@@ -380,13 +336,12 @@ export default function App() {
       label: t.reports,
       icon: 'reports',
     },
-   {
-  id: 'bookings',
-  label: 'My Bookings',
-  icon: 'token',
-},
+    {
+      id: 'bookings',
+      label: t.myBookings,
+      icon: 'bookings',
+    },
   ];
-
 
   const handleNavigation = (tab) => {
     setActiveTab(tab);
@@ -398,11 +353,6 @@ export default function App() {
     });
   };
 
-
-  /* =========================
-     PAGE TITLES
-  ========================= */
-
   const pageTitles = {
     home: t.home,
     triage: t.triage,
@@ -410,11 +360,8 @@ export default function App() {
     bookings: t.myBookings,
   };
 
-
   return (
     <div className="mediq-app">
-
-      {/* MOBILE HEADER */}
 
       <header className="mobile-app-header">
         <button
@@ -434,23 +381,13 @@ export default function App() {
         </div>
       </header>
 
-
-      {/* MOBILE SIDEBAR OVERLAY */}
-
       <div
-        className={`sidebar-overlay ${
-          sidebarOpen ? 'show' : ''
-        }`}
+        className={`sidebar-overlay ${sidebarOpen ? 'show' : ''}`}
         onClick={() => setSidebarOpen(false)}
       />
 
-
-      {/* SIDEBAR */}
-
       <aside
-        className={`app-sidebar ${
-          sidebarOpen ? 'open' : ''
-        }`}
+        className={`app-sidebar ${sidebarOpen ? 'open' : ''}`}
       >
         <div className="sidebar-top">
 
@@ -468,9 +405,6 @@ export default function App() {
             </button>
           </div>
 
-
-          {/* USER CARD */}
-
           <div className="sidebar-user-card">
             <div className="sidebar-avatar">
               {userInitial}
@@ -481,14 +415,9 @@ export default function App() {
                 {isGuest ? t.browsingAs : 'Welcome back'}
               </span>
 
-              <strong>
-                {displayName}
-              </strong>
+              <strong>{displayName}</strong>
             </div>
           </div>
-
-
-          {/* NAVIGATION */}
 
           <nav className="sidebar-nav">
             <span className="sidebar-nav-label">
@@ -499,21 +428,15 @@ export default function App() {
               <button
                 key={item.id}
                 className={`sidebar-nav-item ${
-                  activeTab === item.id
-                    ? 'active'
-                    : ''
+                  activeTab === item.id ? 'active' : ''
                 }`}
-                onClick={() =>
-                  handleNavigation(item.id)
-                }
+                onClick={() => handleNavigation(item.id)}
               >
                 <span className="sidebar-nav-icon">
                   <AppIcon type={item.icon} />
                 </span>
 
-                <span>
-                  {item.label}
-                </span>
+                <span>{item.label}</span>
 
                 {activeTab === item.id && (
                   <span className="sidebar-active-dot" />
@@ -522,9 +445,6 @@ export default function App() {
             ))}
           </nav>
         </div>
-
-
-        {/* SIDEBAR FOOTER */}
 
         <div className="sidebar-footer">
 
@@ -535,44 +455,25 @@ export default function App() {
 
             <select
               value={lang}
-              onChange={(e) =>
-                changeLanguage(e.target.value)
-              }
+              onChange={(e) => changeLanguage(e.target.value)}
             >
-              <option value="en">
-                English
-              </option>
-
-              <option value="bn">
-                বাংলা
-              </option>
-
-              <option value="hi">
-                हिन्दी
-              </option>
+              <option value="en">English</option>
+              <option value="bn">বাংলা</option>
+              <option value="hi">हिन्दी</option>
             </select>
           </div>
-
 
           <button
             className="sidebar-logout"
             onClick={handleLogout}
           >
             <AppIcon type="logout" size={18} />
-
-            <span>
-              {t.logout}
-            </span>
+            <span>{t.logout}</span>
           </button>
         </div>
       </aside>
 
-
-      {/* MAIN APPLICATION */}
-
       <div className="app-main">
-
-        {/* DESKTOP HEADER */}
 
         <header className="desktop-app-header">
 
@@ -581,11 +482,8 @@ export default function App() {
               MediQ Patient Portal
             </span>
 
-            <h1>
-              {pageTitles[activeTab]}
-            </h1>
+            <h1>{pageTitles[activeTab]}</h1>
           </div>
-
 
           <div className="desktop-header-actions">
 
@@ -594,24 +492,13 @@ export default function App() {
 
               <select
                 value={lang}
-                onChange={(e) =>
-                  changeLanguage(e.target.value)
-                }
+                onChange={(e) => changeLanguage(e.target.value)}
               >
-                <option value="en">
-                  English
-                </option>
-
-                <option value="bn">
-                  বাংলা
-                </option>
-
-                <option value="hi">
-                  हिन्दी
-                </option>
+                <option value="en">English</option>
+                <option value="bn">বাংলা</option>
+                <option value="hi">हिन्दी</option>
               </select>
             </div>
-
 
             <div className="desktop-profile">
               <div className="desktop-profile-avatar">
@@ -619,22 +506,16 @@ export default function App() {
               </div>
 
               <div className="desktop-profile-info">
-                <strong>
-                  {displayName}
-                </strong>
+                <strong>{displayName}</strong>
 
                 <span>
-                  {isGuest
-                    ? 'Guest access'
-                    : 'Patient'}
+                  {isGuest ? 'Guest access' : 'Patient'}
                 </span>
               </div>
             </div>
+
           </div>
         </header>
-
-
-        {/* PAGE CONTENT */}
 
         <main className="app-content">
 
@@ -651,7 +532,6 @@ export default function App() {
             />
           )}
 
-
           {activeTab === 'triage' && (
             <div className="app-triage-page">
 
@@ -666,9 +546,7 @@ export default function App() {
               />
 
               <SymptomTriage
-                onClose={() =>
-                  handleNavigation('home')
-                }
+                onClose={() => handleNavigation('home')}
                 onSelectSpecialty={() => {
                   handleNavigation('home');
                 }}
@@ -677,14 +555,12 @@ export default function App() {
             </div>
           )}
 
-
           {activeTab === 'reports' && (
             <Reports
               user={session?.user || null}
               lang={lang}
             />
           )}
-
 
           {activeTab === 'bookings' && (
             <MyBookings />
@@ -693,22 +569,13 @@ export default function App() {
         </main>
       </div>
 
-
-      {/* MOBILE BOTTOM NAV */}
-
       <nav className="mobile-bottom-nav">
 
         {navigationItems.map((item) => (
           <button
             key={item.id}
-            className={
-              activeTab === item.id
-                ? 'active'
-                : ''
-            }
-            onClick={() =>
-              handleNavigation(item.id)
-            }
+            className={activeTab === item.id ? 'active' : ''}
+            onClick={() => handleNavigation(item.id)}
           >
             <span className="mobile-nav-icon">
               <AppIcon
@@ -717,9 +584,7 @@ export default function App() {
               />
             </span>
 
-            <span>
-              {item.label}
-            </span>
+            <span>{item.label}</span>
           </button>
         ))}
 
