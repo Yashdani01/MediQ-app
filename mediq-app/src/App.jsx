@@ -195,7 +195,7 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Interactive Popup Modal States
-  const [activeModal, setActiveModal] = useState(null); // 'family' | 'symptom' | 'sos' | null
+  const [activeModal, setActiveModal] = useState(null); // 'family' | 'symptoms' | 'sos' | null
 
   // Feature Data States
   const [familyMembers, setFamilyMembers] = useState([
@@ -204,12 +204,31 @@ export default function App() {
   const [newFamilyName, setNewFamilyName] = useState('');
   const [newFamilyRelation, setNewFamilyRelation] = useState('Parent');
 
-  const [symptomLogs] = useState([
-    { date: 'Today', text: 'Fever & Headache -> General Physician' },
-    { date: 'Recent', text: 'Joint pain -> Orthopedic' }
-  ]);
-
   const [doctorAlerts] = useState([]);
+
+  // 20 Common Symptoms Directory Data
+  const commonSymptoms = [
+    { symptom: 'Severe Chest Pain & Tightness', meaning: 'Possible cardiac distress or angina', specialist: 'Cardiologist' },
+    { symptom: 'Joint Pain & Knee Swelling', meaning: 'Arthritis, ligament strain, or cartilage wear', specialist: 'Orthopedic' },
+    { symptom: 'Persistent Skin Rash & Itching', meaning: 'Allergic dermatitis, eczema, or fungal infection', specialist: 'Dermatologist' },
+    { symptom: 'Earache & Throat Pain', meaning: 'Tonsillitis, ear infection, or upper respiratory cold', specialist: 'ENT Specialist' },
+    { symptom: 'Irregular Periods & Pelvic Cramps', meaning: 'Hormonal imbalance, PCOS, or menstrual complications', specialist: 'Gynecologist' },
+    { symptom: 'High Fever & Body Fatigue', meaning: 'Viral infection, flu, or systemic inflammation', specialist: 'General Physician' },
+    { symptom: 'Chronic Migraine & Throbbing Headache', meaning: 'Vascular headache, tension, or neurological fatigue', specialist: 'Neurologist' },
+    { symptom: 'Blurry Vision & Eye Strain', meaning: 'Refractive error, dry eyes, or digital fatigue', specialist: 'Ophthalmologist' },
+    { symptom: 'Acid Reflux & Severe Stomach Bloating', meaning: 'Gastritis, indigestion, or acidity issues', specialist: 'Gastroenterologist' },
+    { symptom: 'Shortness of Breath & Wheezing', meaning: 'Asthma, bronchitis, or respiratory obstruction', specialist: 'Pulmonologist' },
+    { symptom: 'Frequent Urination & Excessive Thirst', meaning: 'Indicative of blood sugar fluctuations or UTI', specialist: 'General Physician' },
+    { symptom: 'Persistent Low Back Pain', meaning: 'Lumbar strain, sciatica, or posture stress', specialist: 'Orthopedic' },
+    { symptom: 'Severe Toothache & Gum Bleeding', meaning: 'Dental caries, gingivitis, or root infection', specialist: 'Dentist' },
+    { symptom: 'Chronic Anxiety & Sleep Insomnia', meaning: 'Stress overload, sleep disorder, or anxiety', specialist: 'General Physician' },
+    { symptom: 'Sudden Hair Loss & Scalp Flaking', meaning: 'Alopecia, severe dandruff, or nutritional deficiency', specialist: 'Dermatologist' },
+    { symptom: 'Nasal Congestion & Sinus Pressure', meaning: 'Sinusitis, allergic rhinitis, or nasal blockage', specialist: 'ENT Specialist' },
+    { symptom: 'Dizziness & Vertigo Spells', meaning: 'Inner ear imbalance or low blood pressure', specialist: 'General Physician' },
+    { symptom: 'Swollen Lymph Nodes in Neck', meaning: 'Local infection or immune response', specialist: 'ENT Specialist' },
+    { symptom: 'Chronic Fatigue & Paleness', meaning: 'Anemia or iron deficiency', specialist: 'General Physician' },
+    { symptom: 'Persistent Ankle Sprain & Stiffness', meaning: 'Ligament sprain or tendonitis', specialist: 'Orthopedic' }
+  ];
 
 
   /* =========================
@@ -392,7 +411,7 @@ export default function App() {
 
 
   /* =========================
-     NAVIGATION (MOBILE BOTTOM BAR)
+     NAVIGATION ITEMS
   ========================= */
 
   const navigationItems = [
@@ -476,7 +495,7 @@ export default function App() {
       />
 
 
-      {/* SIDEBAR (UTILITY COMMAND CENTER) */}
+      {/* SIDEBAR (DESKTOP NAV + UTILITIES HUB) */}
 
       <aside
         className={`app-sidebar ${
@@ -519,11 +538,46 @@ export default function App() {
           </div>
 
 
-          {/* INTERACTIVE UTILITY CARDS (CLICKABLE MODALS) */}
+          {/* DESKTOP NAVIGATION TABS IN SIDEBAR */}
+
+          <nav className="sidebar-nav" style={{ marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+            <span className="sidebar-nav-label">
+              Navigation
+            </span>
+
+            {navigationItems.map((item) => (
+              <button
+                key={item.id}
+                className={`sidebar-nav-item ${
+                  activeTab === item.id
+                    ? 'active'
+                    : ''
+                }`}
+                onClick={() =>
+                  handleNavigation(item.id)
+                }
+              >
+                <span className="sidebar-nav-icon">
+                  <AppIcon type={item.icon} />
+                </span>
+
+                <span>
+                  {item.label}
+                </span>
+
+                {activeTab === item.id && (
+                  <span className="sidebar-active-dot" />
+                )}
+              </button>
+            ))}
+          </nav>
+
+
+          {/* UTILITY CARDS HUB (CARE CIRCLE, SYMPTOMS, DOCTOR ALERTS, SOS) */}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
 
-            {/* 1. CARE CIRCLE CARD */}
+            {/* 1. CARE CIRCLE MODAL TRIGGER */}
             <div 
               onClick={() => setActiveModal('family')}
               style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'background 0.2s' }}
@@ -538,22 +592,22 @@ export default function App() {
               <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>→</span>
             </div>
 
-            {/* 2. SYMPTOM LOG CARD */}
+            {/* 2. 20 SYMPTOMS DIRECTORY MODAL TRIGGER */}
             <div 
-              onClick={() => setActiveModal('symptom')}
+              onClick={() => setActiveModal('symptoms')}
               style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'background 0.2s' }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
                 <span style={{ color: 'var(--gold)' }}><AppIcon type="history" size={17} /></span>
                 <div>
-                  <div style={{ fontSize: '12px', fontWeight: '600', color: '#fff' }}>Symptom History</div>
-                  <div style={{ fontSize: '10.5px', color: 'rgba(255,255,255,0.5)' }}>{symptomLogs.length} recent logs</div>
+                  <div style={{ fontSize: '12px', fontWeight: '600', color: '#fff' }}>Know Your Symptoms</div>
+                  <div style={{ fontSize: '10.5px', color: 'rgba(255,255,255,0.5)' }}>20 common health guides</div>
                 </div>
               </div>
               <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>→</span>
             </div>
 
-            {/* 3. DOCTOR ALERTS CARD */}
+            {/* 3. DOCTOR STATUS CARD */}
             <div 
               style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', padding: '10px 12px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
             >
@@ -567,7 +621,7 @@ export default function App() {
               <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: doctorAlerts.length > 0 ? '#4ade80' : 'rgba(255,255,255,0.3)' }}></span>
             </div>
 
-            {/* 4. EMERGENCY SOS CARD */}
+            {/* 4. EMERGENCY SOS HUB MODAL TRIGGER */}
             <div 
               onClick={() => setActiveModal('sos')}
               style={{ background: 'rgba(195, 79, 61, 0.12)', border: '1px solid rgba(195, 79, 61, 0.25)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}
@@ -635,7 +689,7 @@ export default function App() {
 
       {activeModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(6, 43, 37, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-          <div style={{ background: 'var(--white)', width: '100%', maxWidth: '400px', borderRadius: '24px', padding: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', position: 'relative' }}>
+          <div style={{ background: 'var(--white)', width: '100%', maxWidth: activeModal === 'symptoms' ? '550px' : '400px', borderRadius: '24px', padding: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', position: 'relative', maxHeight: '85vh', overflowY: 'auto' }}>
             
             {/* CLOSE BUTTON */}
             <button 
@@ -649,13 +703,13 @@ export default function App() {
             {activeModal === 'family' && (
               <div>
                 <h3 style={{ margin: '0 0 4px', fontFamily: 'Fraunces, serif', fontSize: '20px', color: 'var(--teal-900)' }}>Care Circle</h3>
-                <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--ink-soft)' }}>Manage healthcare profiles for your household.</p>
+                <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--ink-soft)' }}>Add household members so you can select who your token is booked for during checkout.</p>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
                   {familyMembers.map((m) => (
                     <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--sand-50)', padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--line)' }}>
                       <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--ink)' }}>{m.name}</span>
-                      <span style={{ fontSize: '11px', color: 'var(--teal-700)', fontWeight: '700', background: 'var(--sand-200)', padding: '2px 8px', borderRadius: '6px' }}>{m.relation || 'Member'}</span>
+                      <span style={{ fontSize: '11px', color: 'var(--teal-700)', fontWeight: '700', background: 'var(--sand-200)', padding: '2px 8px', borderRadius: '6px' }}>{m.relation || 'Self'}</span>
                     </div>
                   ))}
                 </div>
@@ -676,6 +730,7 @@ export default function App() {
                     <option value="Parent">Parent</option>
                     <option value="Spouse">Spouse</option>
                     <option value="Child">Child</option>
+                    <option value="Other">Other</option>
                   </select>
                 </div>
                 <button 
@@ -692,17 +747,22 @@ export default function App() {
               </div>
             )}
 
-            {/* MODAL 2: SYMPTOM HISTORY LOG */}
-            {activeModal === 'symptom' && (
+            {/* MODAL 2: 20 SYMPTOMS MEDICAL DIRECTORY */}
+            {activeModal === 'symptoms' && (
               <div>
-                <h3 style={{ margin: '0 0 4px', fontFamily: 'Fraunces, serif', fontSize: '20px', color: 'var(--teal-900)' }}>Symptom History</h3>
-                <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--ink-soft)' }}>Chronological log of your recent triage sessions.</p>
+                <h3 style={{ margin: '0 0 4px', fontFamily: 'Fraunces, serif', fontSize: '20px', color: 'var(--teal-900)' }}>Know Your Symptoms</h3>
+                <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--ink-soft)' }}>Common health signs, what they indicate, and the exact specialist to consult.</p>
                 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '250px', overflowY: 'auto' }}>
-                  {symptomLogs.map((log, idx) => (
-                    <div key={idx} style={{ background: 'var(--sand-50)', padding: '12px', borderRadius: '12px', border: '1px solid var(--line)' }}>
-                      <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--gold)', marginBottom: '2px' }}>{log.date}</div>
-                      <div style={{ fontSize: '13px', color: 'var(--ink)', fontWeight: '600' }}>{log.text}</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {commonSymptoms.map((item, idx) => (
+                    <div key={idx} style={{ background: 'var(--sand-50)', padding: '12px', borderRadius: '12px', border: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+                      <div>
+                        <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--teal-900)', marginBottom: '2px' }}>{item.symptom}</div>
+                        <div style={{ fontSize: '11.5px', color: 'var(--ink-soft)' }}>{item.meaning}</div>
+                      </div>
+                      <span style={{ background: 'var(--teal-900)', color: 'var(--gold)', fontSize: '10.5px', fontWeight: '700', padding: '4px 10px', borderRadius: '100px', whiteSpace: 'nowrap' }}>
+                        {item.specialist}
+                      </span>
                     </div>
                   ))}
                 </div>
