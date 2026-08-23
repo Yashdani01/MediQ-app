@@ -194,21 +194,22 @@ export default function App() {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Feature States inside Sidebar
+  // Interactive Popup Modal States
+  const [activeModal, setActiveModal] = useState(null); // 'family' | 'symptom' | 'sos' | null
+
+  // Feature Data States
   const [familyMembers, setFamilyMembers] = useState([
-    { id: 1, name: 'Self (Primary)' }
+    { id: 1, name: 'Self (Primary)', relation: 'Self' }
   ]);
   const [newFamilyName, setNewFamilyName] = useState('');
-  const [showAddFamily, setShowAddFamily] = useState(false);
+  const [newFamilyRelation, setNewFamilyRelation] = useState('Parent');
 
   const [symptomLogs] = useState([
     { date: 'Today', text: 'Fever & Headache -> General Physician' },
     { date: 'Recent', text: 'Joint pain -> Orthopedic' }
   ]);
 
-  const [doctorAlerts] = useState([
-    { id: 'doc_1', name: 'Dr. Sharma', status: 'Available' }
-  ]);
+  const [doctorAlerts] = useState([]);
 
 
   /* =========================
@@ -518,104 +519,69 @@ export default function App() {
           </div>
 
 
-          {/* UTILITY SECTION: HOUSEHOLD CARE CIRCLE */}
-          <div style={{ padding: '8px 4px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)', marginBottom: '14px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <AppIcon type="family" size={15} /> Care Circle
-              </span>
-              <button 
-                onClick={() => setShowAddFamily(!showAddFamily)}
-                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}
-              >
-                {showAddFamily ? 'Cancel' : '+ Add'}
-              </button>
-            </div>
-            {showAddFamily && (
-              <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
-                <input 
-                  type="text" 
-                  placeholder="Member Name" 
-                  value={newFamilyName}
-                  onChange={(e) => setNewFamilyName(e.target.value)}
-                  style={{ flex: 1, padding: '6px 10px', fontSize: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: '#fff', outline: 'none' }}
-                />
-                <button 
-                  onClick={() => {
-                    if (newFamilyName.trim()) {
-                      setFamilyMembers([...familyMembers, { id: Date.now(), name: newFamilyName }]);
-                      setNewFamilyName('');
-                      setShowAddFamily(false);
-                    }
-                  }}
-                  style={{ background: 'var(--gold)', color: 'var(--teal-950)', border: 'none', padding: '6px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}
-                >
-                  Save
-                </button>
-              </div>
-            )}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
-              {familyMembers.map((m) => (
-                <span key={m.id} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', padding: '3px 9px', borderRadius: '10px', fontSize: '11px', fontWeight: '500', color: 'rgba(255,255,255,0.85)' }}>
-                  {m.name}
-                </span>
-              ))}
-            </div>
-          </div>
+          {/* INTERACTIVE UTILITY CARDS (CLICKABLE MODALS) */}
 
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
 
-          {/* UTILITY SECTION: SMART SYMPTOM HISTORY LOG */}
-          <div style={{ padding: '0 4px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)', marginBottom: '14px' }}>
-            <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-              <AppIcon type="history" size={15} /> Symptom Log
-            </span>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              {symptomLogs.map((log, idx) => (
-                <div key={idx} style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', background: 'rgba(255,255,255,0.04)', padding: '6px 9px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <strong style={{ color: '#fff' }}>{log.date}:</strong> {log.text}
-                </div>
-              ))}
-            </div>
-          </div>
-
-
-          {/* UTILITY SECTION: DOCTOR AVAILABILITY NOTIFICATION BELL */}
-          <div style={{ padding: '0 4px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)', marginBottom: '14px' }}>
-            <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-              <AppIcon type="bell" size={15} /> Doctor Alerts
-            </span>
-            {doctorAlerts.map((doc) => (
-              <div key={doc.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11.5px', background: 'rgba(255,255,255,0.04)', padding: '7px 10px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <span style={{ color: 'rgba(255,255,255,0.9)' }}>{doc.name}</span>
-                <span style={{ color: '#4ade80', fontWeight: '600' }}>● {doc.status}</span>
-              </div>
-            ))}
-          </div>
-
-
-          {/* UTILITY SECTION: EMERGENCY SOS & AMBULANCE */}
-          <div style={{ padding: '0 4px' }}>
-            <a 
-              href="tel:102"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                background: 'rgba(195, 79, 61, 0.15)',
-                border: '1px solid rgba(195, 79, 61, 0.3)',
-                color: '#ffd8d2',
-                padding: '11px',
-                borderRadius: '12px',
-                fontSize: '11.5px',
-                fontWeight: '700',
-                textDecoration: 'none',
-                textAlign: 'center',
-                letterSpacing: '0.04em'
-              }}
+            {/* 1. CARE CIRCLE CARD */}
+            <div 
+              onClick={() => setActiveModal('family')}
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'background 0.2s' }}
             >
-              <AppIcon type="sos" size={16} /> EMERGENCY SOS & AMBULANCE
-            </a>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+                <span style={{ color: 'var(--gold)' }}><AppIcon type="family" size={17} /></span>
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: '600', color: '#fff' }}>Care Circle</div>
+                  <div style={{ fontSize: '10.5px', color: 'rgba(255,255,255,0.5)' }}>{familyMembers.length} member(s) added</div>
+                </div>
+              </div>
+              <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>→</span>
+            </div>
+
+            {/* 2. SYMPTOM LOG CARD */}
+            <div 
+              onClick={() => setActiveModal('symptom')}
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'background 0.2s' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+                <span style={{ color: 'var(--gold)' }}><AppIcon type="history" size={17} /></span>
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: '600', color: '#fff' }}>Symptom History</div>
+                  <div style={{ fontSize: '10.5px', color: 'rgba(255,255,255,0.5)' }}>{symptomLogs.length} recent logs</div>
+                </div>
+              </div>
+              <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>→</span>
+            </div>
+
+            {/* 3. DOCTOR ALERTS CARD */}
+            <div 
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', padding: '10px 12px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+                <span style={{ color: 'var(--gold)' }}><AppIcon type="bell" size={17} /></span>
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: '600', color: '#fff' }}>Doctor Status</div>
+                  <div style={{ fontSize: '10.5px', color: 'rgba(255,255,255,0.5)' }}>{doctorAlerts.length > 0 ? `${doctorAlerts.length} tracking` : 'No active bookings'}</div>
+                </div>
+              </div>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: doctorAlerts.length > 0 ? '#4ade80' : 'rgba(255,255,255,0.3)' }}></span>
+            </div>
+
+            {/* 4. EMERGENCY SOS CARD */}
+            <div 
+              onClick={() => setActiveModal('sos')}
+              style={{ background: 'rgba(195, 79, 61, 0.12)', border: '1px solid rgba(195, 79, 61, 0.25)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+                <span style={{ color: '#ffd8d2' }}><AppIcon type="sos" size={17} /></span>
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: '700', color: '#ffd8d2' }}>Emergency & SOS</div>
+                  <div style={{ fontSize: '10.5px', color: 'rgba(255,255,255,0.6)' }}>Ambulance & Services</div>
+                </div>
+              </div>
+              <span style={{ fontSize: '12px', color: '#ffd8d2' }}>→</span>
+            </div>
+
           </div>
 
         </div>
@@ -663,6 +629,112 @@ export default function App() {
           </button>
         </div>
       </aside>
+
+
+      {/* INTERACTIVE POPUP MODALS */}
+
+      {activeModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(6, 43, 37, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div style={{ background: 'var(--white)', width: '100%', maxWidth: '400px', borderRadius: '24px', padding: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', position: 'relative' }}>
+            
+            {/* CLOSE BUTTON */}
+            <button 
+              onClick={() => setActiveModal(null)}
+              style={{ position: 'absolute', top: '20px', right: '20px', background: 'var(--sand-100)', border: 'none', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--ink)' }}
+            >
+              ✕
+            </button>
+
+            {/* MODAL 1: CARE CIRCLE */}
+            {activeModal === 'family' && (
+              <div>
+                <h3 style={{ margin: '0 0 4px', fontFamily: 'Fraunces, serif', fontSize: '20px', color: 'var(--teal-900)' }}>Care Circle</h3>
+                <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--ink-soft)' }}>Manage healthcare profiles for your household.</p>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                  {familyMembers.map((m) => (
+                    <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--sand-50)', padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--line)' }}>
+                      <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--ink)' }}>{m.name}</span>
+                      <span style={{ fontSize: '11px', color: 'var(--teal-700)', fontWeight: '700', background: 'var(--sand-200)', padding: '2px 8px', borderRadius: '6px' }}>{m.relation || 'Member'}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input 
+                    type="text" 
+                    placeholder="Enter family member name" 
+                    value={newFamilyName}
+                    onChange={(e) => setNewFamilyName(e.target.value)}
+                    style={{ flex: 1, padding: '10px 12px', borderRadius: '12px', border: '1px solid var(--line)', fontSize: '13px', outline: 'none' }}
+                  />
+                  <select 
+                    value={newFamilyRelation}
+                    onChange={(e) => setNewFamilyRelation(e.target.value)}
+                    style={{ padding: '10px', borderRadius: '12px', border: '1px solid var(--line)', fontSize: '12px', background: 'var(--white)' }}
+                  >
+                    <option value="Parent">Parent</option>
+                    <option value="Spouse">Spouse</option>
+                    <option value="Child">Child</option>
+                  </select>
+                </div>
+                <button 
+                  onClick={() => {
+                    if (newFamilyName.trim()) {
+                      setFamilyMembers([...familyMembers, { id: Date.now(), name: newFamilyName, relation: newFamilyRelation }]);
+                      setNewFamilyName('');
+                    }
+                  }}
+                  style={{ width: '100%', marginTop: '10px', background: 'var(--teal-900)', color: '#fff', border: 'none', padding: '11px', borderRadius: '12px', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}
+                >
+                  Add Family Member
+                </button>
+              </div>
+            )}
+
+            {/* MODAL 2: SYMPTOM HISTORY LOG */}
+            {activeModal === 'symptom' && (
+              <div>
+                <h3 style={{ margin: '0 0 4px', fontFamily: 'Fraunces, serif', fontSize: '20px', color: 'var(--teal-900)' }}>Symptom History</h3>
+                <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--ink-soft)' }}>Chronological log of your recent triage sessions.</p>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '250px', overflowY: 'auto' }}>
+                  {symptomLogs.map((log, idx) => (
+                    <div key={idx} style={{ background: 'var(--sand-50)', padding: '12px', borderRadius: '12px', border: '1px solid var(--line)' }}>
+                      <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--gold)', marginBottom: '2px' }}>{log.date}</div>
+                      <div style={{ fontSize: '13px', color: 'var(--ink)', fontWeight: '600' }}>{log.text}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* MODAL 3: EMERGENCY SOS & AMBULANCE */}
+            {activeModal === 'sos' && (
+              <div>
+                <h3 style={{ margin: '0 0 4px', fontFamily: 'Fraunces, serif', fontSize: '20px', color: '#c34f3d' }}>Emergency & SOS Hub</h3>
+                <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--ink-soft)' }}>Tap any emergency service below to instantly invoke your phone dialer:</p>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <a href="tel:102" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fbe8e4', border: '1px solid #fca5a5', padding: '14px', borderRadius: '14px', textDecoration: 'none', color: '#c34f3d', fontWeight: '700', fontSize: '14px' }}>
+                    <span>🚑 National Ambulance</span>
+                    <span>102 →</span>
+                  </a>
+                  <a href="tel:112" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fbe8e4', border: '1px solid #fca5a5', padding: '14px', borderRadius: '14px', textDecoration: 'none', color: '#c34f3d', fontWeight: '700', fontSize: '14px' }}>
+                    <span>🚨 Emergency Response (ERSS)</span>
+                    <span>112 →</span>
+                  </a>
+                  <a href="tel:101" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fbe8e4', border: '1px solid #fca5a5', padding: '14px', borderRadius: '14px', textDecoration: 'none', color: '#c34f3d', fontWeight: '700', fontSize: '14px' }}>
+                    <span>🚒 Fire Department</span>
+                    <span>101 →</span>
+                  </a>
+                </div>
+              </div>
+            )}
+
+          </div>
+        </div>
+      )}
 
 
       {/* MAIN APPLICATION */}
