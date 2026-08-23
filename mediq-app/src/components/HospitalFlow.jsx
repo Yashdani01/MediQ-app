@@ -797,16 +797,6 @@ export default function HospitalFlow({
     setActiveSpecialty('');
   };
 
-  const nameForAvatar =
-    isGuest
-      ? t?.guest || 'Guest'
-      : displayName || 'Patient';
-
-  const avatarInitial =
-    nameForAvatar
-      .charAt(0)
-      .toUpperCase();
-
   return (
 
     <div
@@ -820,159 +810,92 @@ export default function HospitalFlow({
     >
 
       <div
-        className="flow-topbar"
+        className="flow-content"
         style={{
+          paddingBottom: '90px',
           width: '100%',
+          maxWidth: '600px',
+          margin: '0 auto',
           boxSizing: 'border-box',
         }}
       >
 
+        {/* CITY SELECTOR */}
+
         <div
-          className="flow-topbar-inner"
+          className="city-switcher-row"
           style={{
-            width: '100%',
-            maxWidth: '600px',
-            margin: '0 auto',
+            marginBottom: '20px',
+            position: 'relative',
             display: 'flex',
-            justifyContent:
-              'space-between',
-            alignItems: 'center',
-            boxSizing: 'border-box',
+            justifyContent: 'flex-end',
           }}
         >
 
           <button
-            className="flow-user-badge"
+            className="city-pill"
             onClick={() =>
-              !isGuest &&
-              setShowProfile(true)
+              setShowCityPicker(
+                !showCityPicker
+              )
             }
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor:
-                isGuest
-                  ? 'default'
-                  : 'pointer',
-              padding: 0,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-            }}
           >
-
-            <div className="flow-avatar">
-              {avatarInitial}
-            </div>
-
-            <div
+            {currentCity || 'All Cities'}{' '}
+            <span
               style={{
-                textAlign: 'left',
+                opacity: 0.7,
               }}
             >
-
-              <p
-                className="flow-subtitle"
-                style={{
-                  margin:
-                    '0 0 2px',
-                }}
-              >
-                {isGuest
-                  ? t?.browsingAs ||
-                    'Browsing as'
-                  : t?.greeting ||
-                    'Good Morning,'}
-              </p>
-
-              <p
-                className="flow-greeting"
-                style={{
-                  margin: 0,
-                  whiteSpace:
-                    'nowrap',
-                  overflow:
-                    'hidden',
-                  textOverflow:
-                    'ellipsis',
-                  maxWidth:
-                    '140px',
-                }}
-              >
-                {isGuest
-                  ? t?.guest ||
-                    'Guest'
-                  : nameForAvatar}
-              </p>
-
-            </div>
-
+              ▼
+            </span>
           </button>
 
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-            }}
-          >
-
-            {isGuest && (
-              <button
-                className="flow-logout-btn"
-                onClick={onLogout}
-              >
-                {t?.logout ||
-                  'Logout'}
-              </button>
-            )}
+          {showCityPicker && (
 
             <div
-              className="city-switcher-row"
+              className="city-dropdown"
               style={{
-                margin: 0,
-                position: 'relative',
+                right: 0,
+                left: 'auto',
               }}
             >
 
               <button
-                className="city-pill"
-                onClick={() =>
+                className={`city-option ${
+                  !currentCity
+                    ? 'active'
+                    : ''
+                }`}
+                onClick={() => {
+
+                  setCurrentCity('');
+
                   setShowCityPicker(
-                    !showCityPicker
-                  )
-                }
+                    false
+                  );
+
+                  setSelectedHospital(
+                    null
+                  );
+
+                }}
               >
-                {currentCity ||
-                  'All Cities'}{' '}
-                <span
-                  style={{
-                    opacity: 0.7,
-                  }}
-                >
-                  ▼
-                </span>
+                All Cities
               </button>
 
-              {showCityPicker && (
-
-                <div
-                  className="city-dropdown"
-                  style={{
-                    right: 0,
-                    left: 'auto',
-                  }}
-                >
+              {allCities.map(
+                (c) => (
 
                   <button
+                    key={c}
                     className={`city-option ${
-                      !currentCity
+                      currentCity === c
                         ? 'active'
                         : ''
                     }`}
                     onClick={() => {
 
-                      setCurrentCity('');
+                      setCurrentCity(c);
 
                       setShowCityPicker(
                         false
@@ -984,62 +907,17 @@ export default function HospitalFlow({
 
                     }}
                   >
-                    All Cities
+                    {c}
                   </button>
 
-                  {allCities.map(
-                    (c) => (
-
-                      <button
-                        key={c}
-                        className={`city-option ${
-                          currentCity === c
-                            ? 'active'
-                            : ''
-                        }`}
-                        onClick={() => {
-
-                          setCurrentCity(c);
-
-                          setShowCityPicker(
-                            false
-                          );
-
-                          setSelectedHospital(
-                            null
-                          );
-
-                        }}
-                      >
-                        {c}
-                      </button>
-
-                    )
-                  )}
-
-                </div>
-
+                )
               )}
 
             </div>
 
-          </div>
+          )}
 
         </div>
-
-      </div>
-
-      <div
-        className="flow-content"
-        style={{
-          paddingBottom: '90px',
-          width: '100%',
-          maxWidth: '600px',
-          margin: '0 auto',
-          boxSizing:
-            'border-box',
-        }}
-      >
 
         {!selectedHospital && (
 
@@ -1051,18 +929,15 @@ export default function HospitalFlow({
                 display: 'flex',
                 gap: '8px',
                 alignItems: 'center',
-                marginBottom:
-                  '14px',
+                marginBottom: '14px',
                 width: '100%',
-                boxSizing:
-                  'border-box',
+                boxSizing: 'border-box',
               }}
             >
 
               <div
                 style={{
-                  position:
-                    'relative',
+                  position: 'relative',
                   flex: 1,
                   minWidth: 0,
                 }}
@@ -1092,8 +967,7 @@ export default function HospitalFlow({
                       isSearchActive
                         ? '50px'
                         : '16px',
-                    boxSizing:
-                      'border-box',
+                    boxSizing: 'border-box',
                   }}
                 />
 
@@ -1123,13 +997,10 @@ export default function HospitalFlow({
                   border: 'none',
                   cursor: 'pointer',
                   padding: '12px',
-                  borderRadius:
-                    '14px',
+                  borderRadius: '14px',
                   display: 'flex',
-                  alignItems:
-                    'center',
-                  justifyContent:
-                    'center',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   flexShrink: 0,
                   boxShadow:
                     '0 4px 12px rgba(11, 51, 44, 0.15)',
@@ -1179,8 +1050,7 @@ export default function HospitalFlow({
                 className="specialty-chips"
                 style={{
                   width: '100%',
-                  boxSizing:
-                    'border-box',
+                  boxSizing: 'border-box',
                 }}
               >
 
@@ -1289,14 +1159,10 @@ export default function HospitalFlow({
 
                                     <p
                                       style={{
-                                        margin:
-                                          '0 0 2px',
-                                        fontSize:
-                                          '11px',
-                                        color:
-                                          '#10b981',
-                                        fontWeight:
-                                          700,
+                                        margin: '0 0 2px',
+                                        fontSize: '11px',
+                                        color: '#10b981',
+                                        fontWeight: 700,
                                       }}
                                     >
                                       {doc.degrees ||
@@ -1319,14 +1185,10 @@ export default function HospitalFlow({
 
                                 <p
                                   style={{
-                                    fontSize:
-                                      '11px',
-                                    color:
-                                      '#d97706',
-                                    fontWeight:
-                                      700,
-                                    margin:
-                                      '2px 0 0',
+                                    fontSize: '11px',
+                                    color: '#d97706',
+                                    fontWeight: 700,
+                                    margin: '2px 0 0',
                                   }}
                                 >
                                   ⭐ PTR Trust Score:{' '}
@@ -1357,9 +1219,7 @@ export default function HospitalFlow({
                                 </p>
 
                                 <p className="doc-stats-value green">
-                                  {
-                                    doc.liveQueue
-                                  }{' '}
+                                  {doc.liveQueue}{' '}
                                   Patients
                                 </p>
 
@@ -1519,9 +1379,7 @@ export default function HospitalFlow({
                                             📍
                                           </span>
 
-                                          {
-                                            hosp.location
-                                          }
+                                          {hosp.location}
 
                                         </p>
 
@@ -1759,14 +1617,10 @@ export default function HospitalFlow({
 
                                 <p
                                   style={{
-                                    margin:
-                                      '0 0 2px',
-                                    fontSize:
-                                      '11px',
-                                    color:
-                                      '#10b981',
-                                    fontWeight:
-                                      700,
+                                    margin: '0 0 2px',
+                                    fontSize: '11px',
+                                    color: '#10b981',
+                                    fontWeight: 700,
                                   }}
                                 >
                                   {doc.degrees ||
@@ -1789,14 +1643,10 @@ export default function HospitalFlow({
 
                             <p
                               style={{
-                                fontSize:
-                                  '11px',
-                                color:
-                                  '#d97706',
-                                fontWeight:
-                                  700,
-                                margin:
-                                  '2px 0 0',
+                                fontSize: '11px',
+                                color: '#d97706',
+                                fontWeight: 700,
+                                margin: '2px 0 0',
                               }}
                             >
                               ⭐ PTR Trust Score:{' '}
@@ -1827,8 +1677,7 @@ export default function HospitalFlow({
 
                           <div
                             style={{
-                              textAlign:
-                                'right',
+                              textAlign: 'right',
                             }}
                           >
 
@@ -1938,8 +1787,7 @@ export default function HospitalFlow({
             style={{
               width: '90%',
               maxWidth: '400px',
-              boxSizing:
-                'border-box',
+              boxSizing: 'border-box',
             }}
           >
 
@@ -1954,19 +1802,14 @@ export default function HospitalFlow({
 
               <div
                 style={{
-                  background:
-                    '#fef2f2',
-                  border:
-                    '1px solid #fca5a5',
-                  padding:
-                    '8px 12px',
+                  background: '#fef2f2',
+                  border: '1px solid #fca5a5',
+                  padding: '8px 12px',
                   borderRadius: 8,
                   marginBottom: 10,
                   fontSize: 13,
-                  color:
-                    '#991b1b',
-                  textAlign:
-                    'left',
+                  color: '#991b1b',
+                  textAlign: 'left',
                 }}
               >
                 ℹ️{' '}
@@ -1985,19 +1828,14 @@ export default function HospitalFlow({
 
               <div
                 style={{
-                  background:
-                    '#fffbeb',
-                  border:
-                    '1px solid #fde68a',
-                  padding:
-                    '8px 12px',
+                  background: '#fffbeb',
+                  border: '1px solid #fde68a',
+                  padding: '8px 12px',
                   borderRadius: 8,
                   marginBottom: 10,
                   fontSize: 13,
-                  color:
-                    '#92400e',
-                  textAlign:
-                    'left',
+                  color: '#92400e',
+                  textAlign: 'left',
                 }}
               >
                 ℹ️{' '}
@@ -2017,19 +1855,14 @@ export default function HospitalFlow({
 
               <div
                 style={{
-                  background:
-                    '#f3f4f6',
-                  border:
-                    '1px solid #d1d5db',
-                  padding:
-                    '8px 12px',
+                  background: '#f3f4f6',
+                  border: '1px solid #d1d5db',
+                  padding: '8px 12px',
                   borderRadius: 8,
                   marginBottom: 10,
                   fontSize: 13,
-                  color:
-                    '#374151',
-                  textAlign:
-                    'left',
+                  color: '#374151',
+                  textAlign: 'left',
                 }}
               >
                 ℹ️{' '}
@@ -2048,12 +1881,10 @@ export default function HospitalFlow({
 
               <p
                 style={{
-                  textAlign:
-                    'center',
+                  textAlign: 'center',
                   fontSize: 15,
                   fontWeight: 700,
-                  color:
-                    '#22c55e',
+                  color: '#22c55e',
                   marginBottom: 10,
                 }}
               >
@@ -2078,12 +1909,10 @@ export default function HospitalFlow({
                 width: '100%',
                 padding: 10,
                 borderRadius: 8,
-                border:
-                  '1px solid #e0e0e0',
+                border: '1px solid #e0e0e0',
                 fontSize: 14,
                 marginBottom: 14,
-                boxSizing:
-                  'border-box',
+                boxSizing: 'border-box',
               }}
             />
 
@@ -2102,11 +1931,9 @@ export default function HospitalFlow({
               style={{
                 display: 'flex',
                 gap: 10,
-                margin:
-                  '0 0 16px',
+                margin: '0 0 16px',
                 width: '100%',
-                boxSizing:
-                  'border-box',
+                boxSizing: 'border-box',
               }}
             >
 
@@ -2190,8 +2017,7 @@ export default function HospitalFlow({
                 style={{
                   fontSize: 13,
                   color: '#999',
-                  textAlign:
-                    'center',
+                  textAlign: 'center',
                 }}
               >
                 This clinic hasn't set up UPI yet —
@@ -2209,8 +2035,7 @@ export default function HospitalFlow({
 
                 <p
                   style={{
-                    textAlign:
-                      'center',
+                    textAlign: 'center',
                     fontSize: 14,
                     marginBottom: 4,
                   }}
@@ -2249,8 +2074,7 @@ export default function HospitalFlow({
 
                 <p
                   style={{
-                    textAlign:
-                      'center',
+                    textAlign: 'center',
                     fontSize: 13,
                     color:
                       timeLeft <= 20
@@ -2282,12 +2106,10 @@ export default function HospitalFlow({
                     width: '100%',
                     padding: 10,
                     borderRadius: 8,
-                    border:
-                      '1px solid #e0e0e0',
+                    border: '1px solid #e0e0e0',
                     fontSize: 14,
                     marginBottom: 8,
-                    boxSizing:
-                      'border-box',
+                    boxSizing: 'border-box',
                   }}
                 />
 
@@ -2317,10 +2139,8 @@ export default function HospitalFlow({
 
               <p
                 style={{
-                  textAlign:
-                    'center',
-                  color:
-                    '#ef4444',
+                  textAlign: 'center',
+                  color: '#ef4444',
                   fontWeight: 600,
                   marginBottom: 12,
                 }}
@@ -2359,12 +2179,9 @@ export default function HospitalFlow({
                 marginTop: 8,
                 padding: 10,
                 borderRadius: 8,
-                border:
-                  '1px solid #ddd',
-                background:
-                  'white',
-                cursor:
-                  'pointer',
+                border: '1px solid #ddd',
+                background: 'white',
+                cursor: 'pointer',
               }}
             >
               Cancel
