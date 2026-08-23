@@ -7,6 +7,7 @@ import MyBookings from './components/MyBookings';
 import Reports from './components/Reports';
 import SymptomTriage from './components/SymptomTriage';
 import ClinicPortal from './components/ClinicPortal';
+import PhysioGuideModal from './components/PhysioGuideModal';
 
 import './index.css';
 
@@ -199,8 +200,8 @@ export default function App() {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Interactive Popup Modal States
-  const [activeModal, setActiveModal] = useState(null); // 'family' | 'symptoms' | 'queue' | 'sos' | null
+  // Interactive Popup Modal States ('family' | 'symptoms' | 'queue' | 'sos' | 'physio' | null)
+  const [activeModal, setActiveModal] = useState(null);
 
   // Feature Data States
   const [familyMembers, setFamilyMembers] = useState([
@@ -237,7 +238,7 @@ export default function App() {
     ],
     bn: [
       { symptom: 'তীব্র বুক ব্যথা ও চাপ', meaning: 'হৃদযন্ত্রের সমস্যা বা এনজাইনার লক্ষণ হতে পারে, যা দ্রুত পরীক্ষা করা দরকার।', specialist: 'Cardiologist' },
-      { symptom: 'গেঁটেবাত ও হাঁটু ফুলে যাওয়া', meaning: 'আর্থ্রাইটিস বা লিগামেন্টের আঘাতের কারণে হতে পারে।', specialist: 'Orthopedic' },
+      { symptom: 'গেঁটেবাত ও হাঁটু ফুলে যাওয়া', meaning: 'আর্থ্রাইটিস বা লিগামেন্টের আঘাতের কারণে হতে পারে।', specialist: 'Orthopedic' },
       { symptom: 'দীর্ঘস্থায়ী ত্বকে ফুসকুড়ি ও চুলকানি', meaning: 'অ্যালার্জি, একজিমা বা ফাঙ্গাল ইনফেকশনের লক্ষণ।', specialist: 'Dermatologist' },
       { symptom: 'কানে ব্যথা ও তীব্র গলা ব্যথা', meaning: 'টনসিল ইনফেকশন বা কানের সমস্যার লক্ষণ।', specialist: 'ENT Specialist' },
       { symptom: 'অনিয়মিত মাসিক ও তলপেটে ব্যথা', meaning: 'পলিসিস্টিক ওভারি (PCOS) বা হরমোনের ভারসাম্যহীনতা।', specialist: 'Gynecologist' },
@@ -247,7 +248,7 @@ export default function App() {
       { symptom: 'গ্যাস, অম্বল ও পেট ফাঁপা', meaning: 'গ্যাস্ট্রিক, বদহজম বা এসিডিটির সমস্যা।', specialist: 'Gastroenterologist' },
       { symptom: 'শ্বাসকষ্ট ও হাঁপানি', meaning: 'ব্রংকিয়াল অ্যাজমা বা ফুসফুসের জটিলতা।', specialist: 'Pulmonologist' },
       { symptom: 'ঘন ঘন প্রস্রাব ও অতিরিক্ত তৃষ্ণা', meaning: 'রক্তে শর্করার তারতম্য বা ইউরিন ইনফেকশনের লক্ষণ।', specialist: 'General Physician' },
-      { symptom: 'কোমর ও পিঠে দীর্ঘস্থায়ী ব্যথা', meaning: 'পেশীর টান, সায়টিকা বা মেরুদণ্ডের সমস্যা।', specialist: 'Orthopedic' },
+      { symptom: 'কোমর ও পিঠে দীর্ঘস্থায়ী ব্যথা', meaning: 'পেশীর টান, সায়টিকা বা মেরুদণ্ডের সমস্যা।', specialist: 'Orthopedic' },
       { symptom: 'দাঁতে ব্যথা ও মাড়ি থেকে রক্তপাত', meaning: 'দাঁতের ক্ষয় বা মাড়ির ইনফেকশন (Gingivitis)।', specialist: 'Dentist' },
       { symptom: 'অতিরিক্ত দুশ্চিন্তা ও অনিদ্রা', meaning: 'মানসিক চাপ বা ঘুমের ব্যাঘাতের লক্ষণ।', specialist: 'General Physician' },
       { symptom: 'অতিরিক্ত চুল পড়া ও খুশকি', meaning: 'অ্যালোপেসিয়া বা পুষ্টির অভাবের কারণে হতে পারে।', specialist: 'Dermatologist' },
@@ -625,7 +626,7 @@ export default function App() {
           </nav>
 
 
-          {/* UTILITY CARDS HUB (CARE CIRCLE, SYMPTOMS, LIVE QUEUE, SOS) */}
+          {/* UTILITY CARDS HUB (CARE CIRCLE, SYMPTOMS, LIVE QUEUE, SOS, PHYSIO) */}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
 
@@ -659,7 +660,22 @@ export default function App() {
               <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>→</span>
             </div>
 
-            {/* 3. LIVE QUEUE & BOOKING TRACKER */}
+            {/* 3. PHYSIO & THERAPEUTIC YOGA MODAL TRIGGER */}
+            <div 
+              onClick={() => setActiveModal('physio')}
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'background 0.2s' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+                <span style={{ color: 'var(--gold)' }}><AppIcon type="history" size={17} /></span>
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: '600', color: '#fff' }}>Physio & Yoga Guide</div>
+                  <div style={{ fontSize: '10.5px', color: 'rgba(255,255,255,0.5)' }}>10 critical condition protocols</div>
+                </div>
+              </div>
+              <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>→</span>
+            </div>
+
+            {/* 4. LIVE QUEUE & BOOKING TRACKER */}
             <div 
               onClick={() => setActiveModal('queue')}
               style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'background 0.2s' }}
@@ -674,7 +690,7 @@ export default function App() {
               <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: activeQueueToken ? '#4ade80' : 'rgba(255,255,255,0.3)' }}></span>
             </div>
 
-            {/* 4. EMERGENCY SOS HUB MODAL TRIGGER */}
+            {/* 5. EMERGENCY SOS HUB MODAL TRIGGER */}
             <div 
               onClick={() => setActiveModal('sos')}
               style={{ background: 'rgba(195, 79, 61, 0.12)', border: '1px solid rgba(195, 79, 61, 0.25)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}
@@ -742,7 +758,7 @@ export default function App() {
 
       {activeModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(6, 43, 37, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-          <div style={{ background: 'var(--white)', width: '100%', maxWidth: activeModal === 'symptoms' ? '600px' : '400px', borderRadius: '24px', padding: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', position: 'relative', maxHeight: '85vh', overflowY: 'auto' }}>
+          <div style={{ background: 'var(--white)', width: '100%', maxWidth: activeModal === 'symptoms' || activeModal === 'physio' ? '650px' : '400px', borderRadius: '24px', padding: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', position: 'relative', maxHeight: '85vh', overflowY: 'auto' }}>
             
             {/* CLOSE BUTTON */}
             <button 
@@ -822,7 +838,12 @@ export default function App() {
               </div>
             )}
 
-            {/* MODAL 3: LIVE QUEUE TRACKER */}
+            {/* MODAL 3: PHYSIO & THERAPEUTIC YOGA GUIDE */}
+            {activeModal === 'physio' && (
+              <PhysioGuideModal onClose={() => setActiveModal(null)} />
+            )}
+
+            {/* MODAL 4: LIVE QUEUE TRACKER */}
             {activeModal === 'queue' && (
               <div>
                 <h3 style={{ margin: '0 0 4px', fontFamily: 'Fraunces, serif', fontSize: '20px', color: 'var(--teal-900)' }}>Live Queue Tracker</h3>
@@ -842,7 +863,7 @@ export default function App() {
               </div>
             )}
 
-            {/* MODAL 4: EMERGENCY SOS & AMBULANCE */}
+            {/* MODAL 5: EMERGENCY SOS & AMBULANCE */}
             {activeModal === 'sos' && (
               <div>
                 <h3 style={{ margin: '0 0 4px', fontFamily: 'Fraunces, serif', fontSize: '20px', color: '#c34f3d' }}>Emergency & SOS Hub</h3>
