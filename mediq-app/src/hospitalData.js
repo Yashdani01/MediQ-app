@@ -1,508 +1,39 @@
-// src/hospitalData.js
 import { supabase } from './supabaseClient';
 
-/* =========================================================
-   HOSPITALS
-========================================================= */
-
-export async function getHospitals(city = '') {
-  let query = supabase
-    .from('hospitals')
-    .select('id, name, location, city, google_maps_url')
-    .order('name', { ascending: true });
-
-  // If a city is selected, filter hospitals by city
-  if (city && city.trim() !== '') {
-    query = query.ilike('city', city.trim());
+export async function getHospitals(city) {
+  let query = supabase.from('hospitals').select('id, name, location, city');
+  if (city) {
+    query = query.ilike('city', city);
   }
-
   const { data, error } = await query;
-
-  if (error) {
-    console.error('Error fetching hospitals:', error);
-    return [];
-  }
-
-  console.log('Current city:', city);
-  console.log('Hospitals fetched:', data);
-
-  return data || [];
+  if (error) { console.error('Error fetching hospitals:', error); return []; }
+  return data;
 }
-
-
-/* =========================================================
-   GET ALL CITIES
-========================================================= */
 
 export async function getAllCities() {
   const { data, error } = await supabase
     .from('hospitals')
     .select('city')
     .not('city', 'is', null);
-
-  if (error) {
-    console.error('Error fetching cities:', error);
-    return [];
-  }
-
-  // Clean empty values and remove duplicates
-  const cities = [
-    ...new Set(
-      (data || [])
-        .map((hospital) => hospital.city?.trim())
-        .filter((city) => city && city.length > 0)
-    ),
-  ];
-
-  // Sort cities alphabetically
-  cities.sort((a, b) => a.localeCompare(b));
-
-  console.log('Cities fetched:', cities);
-
-  return cities;
+  if (error) { console.error('Error fetching cities:', error); return []; }
+  const unique = [...new Set(data.map((h) => h.city).filter(Boolean))];
+  return unique;
 }
-
-
-/* =========================================================
-   DOCTORS FOR HOSPITAL
-========================================================= */
 
 export async function getDoctorsForHospital(hospitalId) {
   const { data, error } = await supabase
     .from('doctors')
-    .select(`
-      id,
-      name,
-      specialty,
-      avg_minutes_per_patient,
-      status,
-      delay_minutes,
-      status_updated_at,
-      working_days,
-      start_time,
-      end_time,
-      notes,
-      consultation_fee,
-      degrees,
-      ptr_score,
-      specialties,
-      custom_schedule
-    `)
+    .select('id, name, specialty, avg_minutes_per_patient, status, delay_minutes, status_updated_at, working_days, start_time, end_time, notes, consultation_fee')
     .eq('hospital_id', hospitalId);
-
-  if (error) {
-    console.error('Error fetching doctors:', error);
-    return [];
-  }
-
-  return data || [];
+  if (error) { console.error('Error fetching doctors:', error); return []; }
+  return data;
 }
-
-
-/* =========================================================
-   WAITING COUNT
-========================================================= */
 
 export async function getWaitingCount(doctorId) {
   const { data, error } = await supabase
-    .rpc('get_waiting_count', {
-      doc_id: doctorId,
-    });
-
-  if (error) {
-    console.error(
-      'Error counting queue:',
-      error
-    );
-
-    return 0;
-  }
-
+    .rpc('get_waiting_count', { doc_id: doctorId });
+  if (error) { console.error('Error counting queue:', error); return 0; }
   return data || 0;
-}
-
-
-/* =========================================================
-   AVAILABLE DOCTOR COUNTS
-========================================================= */
-
-const DAY_ABBR_COUNT = [
-  'Sun',
-  'Mon',
-  'Tue',
-  'Wed',
-  'Thu',
-  'Fri',
-  'Sat',
-];
-
-function isAvailableToday(doc) {
-  const today =
-    DAY_ABBR_COUNT[new Date().getDay()];
-
-  const worksToday =
-    !doc.working_days ||
-    doc.working_days.length === 0 ||
-    doc.working_days.includes(today);
-
-  const notBlocked =
-    doc.status !== 'completed' &&
-    doc.status !== 'on_leave';
-
-  return worksToday && notBlocked;
-}
-
-export async function getAvailableDoctorCounts(
-  hospitalIds
-) {
-  if (
-    !hospitalIds ||
-    hospitalIds.length === 0
-  ) {
-    return {};
-  }
-
-  const { data, error } = await supabase
-    .from('doctors')
-    .select(
-      'hospital_id, status, working_days'
-    )
-    .in(
-      'hospital_id',
-      hospitalIds
-    );
-
-  if (error) {
-    console.error(
-      'Error fetching doctor counts:',
-      error
-    );
-
-    return {};
-  }
-
-  const counts = {};
-
-  (data || []).forEach((doc) => {
-    if (isAvailableToday(doc)) {
-      counts[doc.hospital_id] =
-        (counts[doc.hospital_id] || 0) + 1;
-    }
-  });
-
-  return counts;
-}
-
-
-/* =========================================================
-   SEARCH DOCTORS
-========================================================= */
-
-export async function searchDoctors(
-  city = '',
-  searchTerm = ''
-) {
-  let hospitalQuery = supabase
-    .from('hospitals')
-    .select(
-      'id, name, location, city, google_maps_url'
-    );
-
-  if (city && city.trim() !== '') {
-    hospitalQuery =
-      hospitalQuery.ilike(
-        'city',
-        city.trim()
-      );
-  }
-
-  const {
-    data: hospitals,
-    error: hospitalError,
-  } = await hospitalQuery;
-
-  if (
-    hospitalError ||
-    !hospitals ||
-    hospitals.length === 0
-  ) {
-    console.error(
-      'Hospital search error:',
-      hospitalError
-    );
-
-    return [];
-  }
-
-  const hospitalIds =
-    hospitals.map(
-      (hospital) => hospital.id
-    );
-
-  const hospitalMap =
-    Object.fromEntries(
-      hospitals.map(
-        (hospital) => [
-          hospital.id,
-          hospital,
-        ]
-      )
-    );
-
-  let refinedTerm =
-    searchTerm.trim();
-
-  const lowerTerm =
-    refinedTerm.toLowerCase();
-
-  if (
-    lowerTerm.includes('dant') ||
-    lowerTerm.includes('teeth') ||
-    lowerTerm.includes('tooth') ||
-    lowerTerm.includes('dental') ||
-    lowerTerm.includes('daant')
-  ) {
-    refinedTerm = 'Dentist';
-
-  } else if (
-    lowerTerm.includes('heart') ||
-    lowerTerm.includes('chest') ||
-    lowerTerm.includes('cardiologist')
-  ) {
-    refinedTerm = 'Cardiologist';
-
-  } else if (
-    lowerTerm.includes('sugar') ||
-    lowerTerm.includes('diabetes')
-  ) {
-    refinedTerm = 'Diabetologist';
-
-  } else if (
-    lowerTerm.includes('fever') ||
-    lowerTerm.includes('cold') ||
-    lowerTerm.includes('cough') ||
-    lowerTerm.includes('bukhar') ||
-    lowerTerm.includes('jhor') ||
-    lowerTerm.includes('headache') ||
-    lowerTerm.includes('general') ||
-    lowerTerm.includes('physician')
-  ) {
-    refinedTerm =
-      'General Physician';
-  }
-
-  let doctorQuery = supabase
-    .from('doctors')
-    .select(`
-      id,
-      name,
-      specialty,
-      avg_minutes_per_patient,
-      hospital_id,
-      consultation_fee,
-      degrees,
-      ptr_score,
-      specialties,
-      status,
-      delay_minutes,
-      working_days,
-      start_time,
-      end_time
-    `)
-    .in(
-      'hospital_id',
-      hospitalIds
-    );
-
-  if (refinedTerm) {
-    doctorQuery =
-      doctorQuery.or(
-        `name.ilike.%${refinedTerm}%,specialty.ilike.%${refinedTerm}%`
-      );
-  }
-
-  const {
-    data: doctors,
-    error: doctorError,
-  } = await doctorQuery;
-
-  if (doctorError || !doctors) {
-    console.error(
-      'Doctor search error:',
-      doctorError
-    );
-
-    return [];
-  }
-
-  const results =
-    await Promise.all(
-      doctors.map(
-        async (doc) => ({
-          ...doc,
-
-          liveQueue:
-            await getWaitingCount(
-              doc.id
-            ),
-
-          hospital:
-            hospitalMap[
-              doc.hospital_id
-            ],
-        })
-      )
-    );
-
-  return results;
-}
-
-
-/* =========================================================
-   GET ALL SPECIALTIES
-========================================================= */
-
-export async function getAllSpecialties(
-  city = ''
-) {
-  let hospitalQuery = supabase
-    .from('hospitals')
-    .select('id');
-
-  if (city && city.trim() !== '') {
-    hospitalQuery =
-      hospitalQuery.ilike(
-        'city',
-        city.trim()
-      );
-  }
-
-  const {
-    data: hospitals,
-    error: hospitalError,
-  } = await hospitalQuery;
-
-  if (
-    hospitalError ||
-    !hospitals ||
-    hospitals.length === 0
-  ) {
-    return [];
-  }
-
-  const hospitalIds =
-    hospitals.map(
-      (hospital) => hospital.id
-    );
-
-  const {
-    data: doctors,
-    error,
-  } = await supabase
-    .from('doctors')
-    .select('specialty')
-    .in(
-      'hospital_id',
-      hospitalIds
-    );
-
-  if (error || !doctors) {
-    return [];
-  }
-
-  return [
-    ...new Set(
-      doctors
-        .map(
-          (doctor) =>
-            doctor.specialty?.trim()
-        )
-        .filter(Boolean)
-    ),
-  ].sort(
-    (a, b) =>
-      a.localeCompare(b)
-  );
-}
-/* =========================================================
-   APPEND THIS ENTIRE BLOCK TO THE END OF src/hospitalData.js
-   These 6 functions were missing and are required by
-   HospitalFlow.jsx and BookingTicket.jsx.
-   Do not remove or change anything already in the file —
-   just paste this block after the last function.
-========================================================= */
-
-export async function getMyCurrentBooking(patientUserId) {
-  const { data: patient, error: patientError } = await supabase
-    .from('patients')
-    .select('id')
-    .eq('user_id', patientUserId)
-    .single();
-
-  if (patientError || !patient) return null;
-
-  const { data: appointment, error } = await supabase
-    .from('appointments')
-    .select('id, queue_number, status, doctor_id, hospital_id, booked_at')
-    .eq('patient_id', patient.id)
-    .eq('status', 'waiting')
-    .order('booked_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (error || !appointment) return null;
-
-  const { data: doctor } = await supabase
-    .from('doctors')
-    .select('name, specialty, avg_minutes_per_patient')
-    .eq('id', appointment.doctor_id)
-    .single();
-
-  const { data: hospital } = await supabase
-    .from('hospitals')
-    .select('name')
-    .eq('id', appointment.hospital_id)
-    .single();
-
-  const { count: patientsAhead } = await supabase
-    .from('appointments')
-    .select('*', { count: 'exact', head: true })
-    .eq('doctor_id', appointment.doctor_id)
-    .eq('status', 'waiting')
-    .lt('queue_number', appointment.queue_number);
-
-  return {
-    ...appointment,
-    doctor,
-    hospital,
-    patientsAhead: patientsAhead || 0,
-  };
-}
-
-export async function getHospitalPaymentInfo(hospitalId) {
-  const { data, error } = await supabase
-    .from('hospitals')
-    .select('upi_id')
-    .eq('id', hospitalId)
-    .single();
-  if (error) { console.error('Error fetching payment info:', error); return null; }
-  return data?.upi_id || null;
-}
-
-export async function uploadPaymentScreenshot(file) {
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
-  const { error: uploadError } = await supabase.storage
-    .from('payment-screenshots')
-    .upload(fileName, file);
-
-  if (uploadError) {
-    console.error('Error uploading screenshot:', uploadError);
-    return { error: uploadError };
-  }
-
-  const { data } = supabase.storage.from('payment-screenshots').getPublicUrl(fileName);
-  return { url: data.publicUrl };
 }
 
 export async function bookAppointment(patientUserId, doctorId, hospitalId, paymentMethod, transactionId, screenshotUrl, contactPhone) {
@@ -554,40 +85,52 @@ export async function bookAppointment(patientUserId, doctorId, hospitalId, payme
   return { data: appointment };
 }
 
-export async function cancelAppointment(appointmentId) {
-  const { data, error } = await supabase
-    .from('appointments')
-    .update({ status: 'cancelled' })
-    .eq('id', appointmentId)
-    .select()
+export async function getMyCurrentBooking(patientUserId) {
+  const { data: patient, error: patientError } = await supabase
+    .from('patients')
+    .select('id')
+    .eq('user_id', patientUserId)
     .single();
 
-  if (error) {
-    console.error('Error cancelling appointment:', error);
-    return { error };
-  }
-  return { data };
-}
+  if (patientError || !patient) return null;
 
-// Patient-side: poll for status/check-in updates on a single appointment
-export async function getAppointmentStatus(appointmentId) {
-  const { data, error } = await supabase
+  const { data: appointment, error } = await supabase
     .from('appointments')
-    .select('id, status, booked_at, checked_in_at')
-    .eq('id', appointmentId)
-    .single();
-  if (error) { console.error('Error fetching appointment status:', error); return null; }
-  return data;
-}
-/* =========================================================
-   APPEND THIS ENTIRE BLOCK TO THE END OF src/hospitalData.js
-   (after the block you already added for BookingTicket.jsx)
-   These functions are required by Profile.jsx and
-   ClinicPortal.jsx. Do not remove or change anything already
-   in the file — just paste this block after the last function.
-========================================================= */
+    .select('id, queue_number, status, doctor_id, hospital_id, booked_at')
+    .eq('patient_id', patient.id)
+    .eq('status', 'waiting')
+    .order('booked_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
-// ---- Patient Profile ----
+  if (error || !appointment) return null;
+
+  const { data: doctor } = await supabase
+    .from('doctors')
+    .select('name, specialty, avg_minutes_per_patient')
+    .eq('id', appointment.doctor_id)
+    .single();
+
+  const { data: hospital } = await supabase
+    .from('hospitals')
+    .select('name')
+    .eq('id', appointment.hospital_id)
+    .single();
+
+  const { count: patientsAhead } = await supabase
+    .from('appointments')
+    .select('*', { count: 'exact', head: true })
+    .eq('doctor_id', appointment.doctor_id)
+    .eq('status', 'waiting')
+    .lt('queue_number', appointment.queue_number);
+
+  return {
+    ...appointment,
+    doctor,
+    hospital,
+    patientsAhead: patientsAhead || 0,
+  };
+}
 
 export async function getPatientProfileDetails(patientUserId) {
   const { data, error } = await supabase
@@ -599,7 +142,7 @@ export async function getPatientProfileDetails(patientUserId) {
   return data;
 }
 
-export async function getMyBookings(patientUserId) {
+export async function getBookingHistory(patientUserId) {
   const { data: patient, error: patientError } = await supabase
     .from('patients')
     .select('id')
@@ -610,7 +153,7 @@ export async function getMyBookings(patientUserId) {
 
   const { data: appointments, error } = await supabase
     .from('appointments')
-    .select('id, queue_number, status, created_at, booked_at, doctor_id, hospital_id, booking_code, payment_method, transaction_id, payment_screenshot_url, contact_phone')
+    .select('id, queue_number, status, booked_at, doctor_id, hospital_id')
     .eq('patient_id', patient.id)
     .order('booked_at', { ascending: false })
     .limit(20);
@@ -621,7 +164,7 @@ export async function getMyBookings(patientUserId) {
     appointments.map(async (appt) => {
       const { data: doctor } = await supabase
         .from('doctors')
-        .select('name, specialty, consultation_fee')
+        .select('name, specialty')
         .eq('id', appt.doctor_id)
         .single();
       const { data: hospital } = await supabase
@@ -636,7 +179,79 @@ export async function getMyBookings(patientUserId) {
   return enriched;
 }
 
-// ---- Clinic Portal ----
+// Search doctors by name/specialty across all hospitals in a city
+export async function searchDoctors(city, searchTerm) {
+  let hospitalQuery = supabase.from('hospitals').select('id, name, location, city');
+  if (city) {
+    hospitalQuery = hospitalQuery.ilike('city', city);
+  }
+  const { data: hospitals, error: hospitalError } = await hospitalQuery;
+  if (hospitalError || !hospitals || hospitals.length === 0) return [];
+
+  const hospitalIds = hospitals.map((h) => h.id);
+  const hospitalMap = Object.fromEntries(hospitals.map((h) => [h.id, h]));
+
+  let doctorQuery = supabase
+    .from('doctors')
+    .select('id, name, specialty, avg_minutes_per_patient, hospital_id, consultation_fee')
+    .in('hospital_id', hospitalIds);
+
+  if (searchTerm) {
+    doctorQuery = doctorQuery.or(`name.ilike.%${searchTerm}%,specialty.ilike.%${searchTerm}%`);
+  }
+
+  const { data: doctors, error: doctorError } = await doctorQuery;
+  if (doctorError || !doctors) return [];
+
+  const withQueueAndHospital = await Promise.all(
+    doctors.map(async (doc) => ({
+      ...doc,
+      liveQueue: await getWaitingCount(doc.id),
+      hospital: hospitalMap[doc.hospital_id],
+    }))
+  );
+
+  return withQueueAndHospital;
+}
+
+export async function getAllSpecialties(city) {
+  let hospitalQuery = supabase.from('hospitals').select('id');
+  if (city) {
+    hospitalQuery = hospitalQuery.ilike('city', city);
+  }
+  const { data: hospitals } = await hospitalQuery;
+  if (!hospitals || hospitals.length === 0) return [];
+
+  const hospitalIds = hospitals.map((h) => h.id);
+  const { data: doctors, error } = await supabase
+    .from('doctors')
+    .select('specialty')
+    .in('hospital_id', hospitalIds);
+
+  if (error || !doctors) return [];
+  return [...new Set(doctors.map((d) => d.specialty).filter(Boolean))];
+}
+
+export async function getPatientReports(patientUserId) {
+  const { data: patient, error: patientError } = await supabase
+    .from('patients')
+    .select('id')
+    .eq('user_id', patientUserId)
+    .single();
+
+  if (patientError || !patient) return [];
+
+  const { data, error } = await supabase
+    .from('reports')
+    .select('id, name, report_type, file_url, uploaded_at')
+    .eq('patient_id', patient.id)
+    .order('uploaded_at', { ascending: false });
+
+  if (error) { console.error('Error fetching reports:', error); return []; }
+  return data;
+}
+
+// ---- Clinic Portal functions ----
 
 export async function checkClinicPin(pin) {
   const { data, error } = await supabase.rpc('check_clinic_pin', { input_pin: pin });
@@ -692,10 +307,14 @@ export async function addWalkinBooking(pin, doctorId, name, phone) {
   return { data };
 }
 
-export async function getHospitalUpi(pin) {
-  const { data, error } = await supabase.rpc('get_hospital_upi', { input_pin: pin });
-  if (error) { console.error('Error fetching UPI ID:', error); return null; }
-  return data;
+export async function getHospitalPaymentInfo(hospitalId) {
+  const { data, error } = await supabase
+    .from('hospitals')
+    .select('upi_id')
+    .eq('id', hospitalId)
+    .single();
+  if (error) { console.error('Error fetching payment info:', error); return null; }
+  return data?.upi_id || null;
 }
 
 export async function updateHospitalUpi(pin, upiId) {
@@ -704,6 +323,28 @@ export async function updateHospitalUpi(pin, upiId) {
   });
   if (error) { console.error('Error updating UPI ID:', error); return { error }; }
   return { success: true };
+}
+
+export async function getHospitalUpi(pin) {
+  const { data, error } = await supabase.rpc('get_hospital_upi', { input_pin: pin });
+  if (error) { console.error('Error fetching UPI ID:', error); return null; }
+  return data;
+}
+
+export async function uploadPaymentScreenshot(file) {
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+  const { error: uploadError } = await supabase.storage
+    .from('payment-screenshots')
+    .upload(fileName, file);
+
+  if (uploadError) {
+    console.error('Error uploading screenshot:', uploadError);
+    return { error: uploadError };
+  }
+
+  const { data } = supabase.storage.from('payment-screenshots').getPublicUrl(fileName);
+  return { url: data.publicUrl };
 }
 
 export async function getTodaysBookings(pin, doctorId) {
@@ -730,6 +371,25 @@ export async function checkInAppointment(pin, appointmentId) {
   return { success: true };
 }
 
+// Patient-side: poll for status/check-in updates on a single appointment
+export async function getAppointmentStatus(appointmentId) {
+  const { data, error } = await supabase
+    .from('appointments')
+    .select('id, status, booked_at, checked_in_at')
+    .eq('id', appointmentId)
+    .single();
+  if (error) { console.error('Error fetching appointment status:', error); return null; }
+  return data;
+}
+
+export async function setDoctorPause(pin, doctorId, paused) {
+  const { error } = await supabase.rpc('set_doctor_pause', {
+    input_pin: pin, input_doctor_id: doctorId, input_paused: paused,
+  });
+  if (error) { console.error('Error toggling pause:', error); return { error }; }
+  return { success: true };
+}
+
 export async function getHospitalLocation(pin) {
   const { data, error } = await supabase.rpc('get_hospital_location', { input_pin: pin });
   if (error) {
@@ -750,4 +410,81 @@ export async function updateHospitalLocation(pin, location) {
     return { error };
   }
   return { success: true };
+}
+
+export async function cancelAppointment(appointmentId) {
+  const { data, error } = await supabase
+    .from('appointments')
+    .update({ status: 'cancelled' })
+    .eq('id', appointmentId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error cancelling appointment:', error);
+    return { error };
+  }
+  return { data };
+}
+const DAY_ABBR_COUNT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+function isAvailableToday(doc) {
+  const today = DAY_ABBR_COUNT[new Date().getDay()];
+  const worksToday = !doc.working_days || doc.working_days.length === 0 || doc.working_days.includes(today);
+  const notBlocked = doc.status !== 'completed' && doc.status !== 'on_leave';
+  return worksToday && notBlocked;
+}
+
+export async function getAvailableDoctorCounts(hospitalIds) {
+  if (!hospitalIds || hospitalIds.length === 0) return {};
+  const { data, error } = await supabase
+    .from('doctors')
+    .select('hospital_id, status, working_days')
+    .in('hospital_id', hospitalIds);
+  if (error) { console.error('Error fetching doctor counts:', error); return {}; }
+
+  const counts = {};
+  data.forEach((doc) => {
+    if (isAvailableToday(doc)) {
+      counts[doc.hospital_id] = (counts[doc.hospital_id] || 0) + 1;
+    }
+  });
+  return counts;
+}
+
+export async function getMyBookings(patientUserId) {
+  const { data: patient, error: patientError } = await supabase
+    .from('patients')
+    .select('id')
+    .eq('user_id', patientUserId)
+    .single();
+
+  if (patientError || !patient) return [];
+
+  const { data: appointments, error } = await supabase
+    .from('appointments')
+    .select('id, queue_number, status, created_at, booked_at, doctor_id, hospital_id, booking_code, payment_method, transaction_id, payment_screenshot_url, contact_phone')
+    .eq('patient_id', patient.id)
+    .order('booked_at', { ascending: false })
+    .limit(20);
+
+  if (error || !appointments) return [];
+
+  const enriched = await Promise.all(
+    appointments.map(async (appt) => {
+      const { data: doctor } = await supabase
+        .from('doctors')
+        .select('name, specialty, consultation_fee')
+        .eq('id', appt.doctor_id)
+        .single();
+      const { data: hospital } = await supabase
+        .from('hospitals')
+        .select('name')
+        .eq('id', appt.hospital_id)
+        .single();
+      return { ...appt, doctor, hospital };
+    })
+  );
+
+  return enriched;
 }
