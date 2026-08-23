@@ -579,3 +579,175 @@ export async function getAppointmentStatus(appointmentId) {
   if (error) { console.error('Error fetching appointment status:', error); return null; }
   return data;
 }
+/* =========================================================
+   APPEND THIS ENTIRE BLOCK TO THE END OF src/hospitalData.js
+   (after the block you already added for BookingTicket.jsx)
+   These functions are required by Profile.jsx and
+   ClinicPortal.jsx. Do not remove or change anything already
+   in the file — just paste this block after the last function.
+========================================================= */
+
+// ---- Patient Profile ----
+
+export async function getPatientProfileDetails(patientUserId) {
+  const { data, error } = await supabase
+    .from('patients')
+    .select('patient_code, created_at')
+    .eq('user_id', patientUserId)
+    .single();
+  if (error) { console.error('Error fetching profile details:', error); return null; }
+  return data;
+}
+
+export async function getMyBookings(patientUserId) {
+  const { data: patient, error: patientError } = await supabase
+    .from('patients')
+    .select('id')
+    .eq('user_id', patientUserId)
+    .single();
+
+  if (patientError || !patient) return [];
+
+  const { data: appointments, error } = await supabase
+    .from('appointments')
+    .select('id, queue_number, status, created_at, booked_at, doctor_id, hospital_id, booking_code, payment_method, transaction_id, payment_screenshot_url, contact_phone')
+    .eq('patient_id', patient.id)
+    .order('booked_at', { ascending: false })
+    .limit(20);
+
+  if (error || !appointments) return [];
+
+  const enriched = await Promise.all(
+    appointments.map(async (appt) => {
+      const { data: doctor } = await supabase
+        .from('doctors')
+        .select('name, specialty, consultation_fee')
+        .eq('id', appt.doctor_id)
+        .single();
+      const { data: hospital } = await supabase
+        .from('hospitals')
+        .select('name')
+        .eq('id', appt.hospital_id)
+        .single();
+      return { ...appt, doctor, hospital };
+    })
+  );
+
+  return enriched;
+}
+
+// ---- Clinic Portal ----
+
+export async function checkClinicPin(pin) {
+  const { data, error } = await supabase.rpc('check_clinic_pin', { input_pin: pin });
+  if (error || !data) return null;
+  return data;
+}
+
+export async function getDoctorsForClinic(pin) {
+  const { data, error } = await supabase.rpc('get_doctors_for_clinic', { input_pin: pin });
+  if (error) { console.error('Error fetching clinic doctors:', error); return []; }
+  return data;
+}
+
+export async function addDoctor(pin, name, specialty, avgMinutes, workingDays, startTime, endTime, notes, fee) {
+  const { data, error } = await supabase.rpc('add_doctor', {
+    input_pin: pin, input_name: name, input_specialty: specialty, input_avg_minutes: avgMinutes,
+    input_working_days: workingDays, input_start_time: startTime, input_end_time: endTime, input_notes: notes,
+    input_fee: fee,
+  });
+  if (error) { console.error('Error adding doctor:', error); return { error }; }
+  return { data };
+}
+
+export async function updateDoctor(pin, doctorId, name, specialty, avgMinutes, workingDays, startTime, endTime, notes, fee) {
+  const { error } = await supabase.rpc('update_doctor', {
+    input_pin: pin, input_doctor_id: doctorId, input_name: name, input_specialty: specialty, input_avg_minutes: avgMinutes,
+    input_working_days: workingDays, input_start_time: startTime, input_end_time: endTime, input_notes: notes,
+    input_fee: fee,
+  });
+  if (error) { console.error('Error updating doctor:', error); return { error }; }
+  return { success: true };
+}
+
+export async function deleteDoctor(pin, doctorId) {
+  const { error } = await supabase.rpc('delete_doctor', { input_pin: pin, input_doctor_id: doctorId });
+  if (error) { console.error('Error deleting doctor:', error); return { error }; }
+  return { success: true };
+}
+
+export async function updateDoctorStatus(pin, doctorId, status, delayMinutes) {
+  const { error } = await supabase.rpc('update_doctor_status', {
+    input_pin: pin, input_doctor_id: doctorId, input_status: status, input_delay_minutes: delayMinutes,
+  });
+  if (error) { console.error('Error updating status:', error); return { error }; }
+  return { success: true };
+}
+
+export async function addWalkinBooking(pin, doctorId, name, phone) {
+  const { data, error } = await supabase.rpc('create_walkin_booking', {
+    input_pin: pin, input_doctor_id: doctorId, input_name: name, input_phone: phone,
+  });
+  if (error) { console.error('Error adding walk-in:', error); return { error }; }
+  return { data };
+}
+
+export async function getHospitalUpi(pin) {
+  const { data, error } = await supabase.rpc('get_hospital_upi', { input_pin: pin });
+  if (error) { console.error('Error fetching UPI ID:', error); return null; }
+  return data;
+}
+
+export async function updateHospitalUpi(pin, upiId) {
+  const { error } = await supabase.rpc('update_hospital_upi', {
+    input_pin: pin, input_upi_id: upiId,
+  });
+  if (error) { console.error('Error updating UPI ID:', error); return { error }; }
+  return { success: true };
+}
+
+export async function getTodaysBookings(pin, doctorId) {
+  const { data, error } = await supabase.rpc('get_todays_bookings', {
+    input_pin: pin, input_doctor_id: doctorId,
+  });
+  if (error) { console.error('Error fetching bookings:', error); return []; }
+  return data;
+}
+
+export async function markAppointmentSeen(pin, appointmentId) {
+  const { error } = await supabase.rpc('mark_appointment_seen', {
+    input_pin: pin, input_appointment_id: appointmentId,
+  });
+  if (error) { console.error('Error marking appointment seen:', error); return { error }; }
+  return { success: true };
+}
+
+export async function checkInAppointment(pin, appointmentId) {
+  const { error } = await supabase.rpc('check_in_appointment', {
+    input_pin: pin, input_appointment_id: appointmentId,
+  });
+  if (error) { console.error('Error checking in appointment:', error); return { error }; }
+  return { success: true };
+}
+
+export async function getHospitalLocation(pin) {
+  const { data, error } = await supabase.rpc('get_hospital_location', { input_pin: pin });
+  if (error) {
+    console.error('Error fetching location:', error);
+    return null;
+  }
+  return data;
+}
+
+export async function updateHospitalLocation(pin, location) {
+  const { error } = await supabase.rpc('update_hospital_location', {
+    input_pin: pin,
+    input_location: location,
+  });
+
+  if (error) {
+    console.error('Error updating hospital location:', error);
+    return { error };
+  }
+  return { success: true };
+}
