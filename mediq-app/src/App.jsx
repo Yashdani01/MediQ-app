@@ -25,6 +25,8 @@ const translations = {
     findCare: 'Find Care',
     healthAssistant: 'Health Assistant',
     language: 'Language',
+    symptomsTitle: 'Know Your Symptoms',
+    symptomsSubtitle: 'Detailed guide on common health signs and required medical specialists.',
   },
   bn: {
     loading: 'মেডিকিউ লোড হচ্ছে...',
@@ -39,6 +41,8 @@ const translations = {
     findCare: 'ডাক্তার খুঁজুন',
     healthAssistant: 'স্বাস্থ্য সহায়ক',
     language: 'ভাষা',
+    symptomsTitle: 'আপনার লক্ষণ জানুন',
+    symptomsSubtitle: 'সাধারণ স্বাস্থ্য লক্ষণ এবং প্রয়োজনীয় চিকিৎসকের বিশদ নির্দেশিকা।',
   },
   hi: {
     loading: 'मेडीक्यू लोड हो रहा है...',
@@ -53,6 +57,8 @@ const translations = {
     findCare: 'डॉक्टर खोजें',
     healthAssistant: 'स्वास्थ्य सहायक',
     language: 'भाषा',
+    symptomsTitle: 'अपने लक्षण जानें',
+    symptomsSubtitle: 'सामान्य स्वास्थ्य संकेतों और आवश्यक चिकित्सा विशेषज्ञों पर विस्तृत मार्गदर्शिका।',
   },
 };
 
@@ -156,10 +162,9 @@ function AppIcon({ type, size = 18 }) {
         <line x1="16" y1="17" x2="8" y2="17" />
       </>
     ),
-    bell: (
+    queue: (
       <>
-        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
       </>
     ),
   };
@@ -195,7 +200,7 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Interactive Popup Modal States
-  const [activeModal, setActiveModal] = useState(null); // 'family' | 'symptoms' | 'sos' | null
+  const [activeModal, setActiveModal] = useState(null); // 'family' | 'symptoms' | 'queue' | 'sos' | null
 
   // Feature Data States
   const [familyMembers, setFamilyMembers] = useState([
@@ -204,31 +209,77 @@ export default function App() {
   const [newFamilyName, setNewFamilyName] = useState('');
   const [newFamilyRelation, setNewFamilyRelation] = useState('Parent');
 
-  const [doctorAlerts] = useState([]);
+  const [activeQueueToken, setActiveQueueToken] = useState(null);
 
-  // 20 Common Symptoms Directory Data
-  const commonSymptoms = [
-    { symptom: 'Severe Chest Pain & Tightness', meaning: 'Possible cardiac distress or angina', specialist: 'Cardiologist' },
-    { symptom: 'Joint Pain & Knee Swelling', meaning: 'Arthritis, ligament strain, or cartilage wear', specialist: 'Orthopedic' },
-    { symptom: 'Persistent Skin Rash & Itching', meaning: 'Allergic dermatitis, eczema, or fungal infection', specialist: 'Dermatologist' },
-    { symptom: 'Earache & Throat Pain', meaning: 'Tonsillitis, ear infection, or upper respiratory cold', specialist: 'ENT Specialist' },
-    { symptom: 'Irregular Periods & Pelvic Cramps', meaning: 'Hormonal imbalance, PCOS, or menstrual complications', specialist: 'Gynecologist' },
-    { symptom: 'High Fever & Body Fatigue', meaning: 'Viral infection, flu, or systemic inflammation', specialist: 'General Physician' },
-    { symptom: 'Chronic Migraine & Throbbing Headache', meaning: 'Vascular headache, tension, or neurological fatigue', specialist: 'Neurologist' },
-    { symptom: 'Blurry Vision & Eye Strain', meaning: 'Refractive error, dry eyes, or digital fatigue', specialist: 'Ophthalmologist' },
-    { symptom: 'Acid Reflux & Severe Stomach Bloating', meaning: 'Gastritis, indigestion, or acidity issues', specialist: 'Gastroenterologist' },
-    { symptom: 'Shortness of Breath & Wheezing', meaning: 'Asthma, bronchitis, or respiratory obstruction', specialist: 'Pulmonologist' },
-    { symptom: 'Frequent Urination & Excessive Thirst', meaning: 'Indicative of blood sugar fluctuations or UTI', specialist: 'General Physician' },
-    { symptom: 'Persistent Low Back Pain', meaning: 'Lumbar strain, sciatica, or posture stress', specialist: 'Orthopedic' },
-    { symptom: 'Severe Toothache & Gum Bleeding', meaning: 'Dental caries, gingivitis, or root infection', specialist: 'Dentist' },
-    { symptom: 'Chronic Anxiety & Sleep Insomnia', meaning: 'Stress overload, sleep disorder, or anxiety', specialist: 'General Physician' },
-    { symptom: 'Sudden Hair Loss & Scalp Flaking', meaning: 'Alopecia, severe dandruff, or nutritional deficiency', specialist: 'Dermatologist' },
-    { symptom: 'Nasal Congestion & Sinus Pressure', meaning: 'Sinusitis, allergic rhinitis, or nasal blockage', specialist: 'ENT Specialist' },
-    { symptom: 'Dizziness & Vertigo Spells', meaning: 'Inner ear imbalance or low blood pressure', specialist: 'General Physician' },
-    { symptom: 'Swollen Lymph Nodes in Neck', meaning: 'Local infection or immune response', specialist: 'ENT Specialist' },
-    { symptom: 'Chronic Fatigue & Paleness', meaning: 'Anemia or iron deficiency', specialist: 'General Physician' },
-    { symptom: 'Persistent Ankle Sprain & Stiffness', meaning: 'Ligament sprain or tendonitis', specialist: 'Orthopedic' }
-  ];
+  // 20 Common Symptoms Multi-Lingual Directory Data
+  const commonSymptoms = {
+    en: [
+      { symptom: 'Severe Chest Pain & Tightness', meaning: 'Indicates potential cardiac stress, angina, or acute myocardial issues requiring immediate attention.', specialist: 'Cardiologist' },
+      { symptom: 'Joint Pain & Knee Swelling', meaning: 'Points to arthritis, ligament injury, meniscus tear, or chronic joint inflammation.', specialist: 'Orthopedic' },
+      { symptom: 'Persistent Skin Rash & Itching', meaning: 'Suggests allergic contact dermatitis, eczema, fungal infection, or hives.', specialist: 'Dermatologist' },
+      { symptom: 'Earache & Severe Throat Pain', meaning: 'Indicates tonsillitis, middle ear infection (otitis media), or acute pharyngitis.', specialist: 'ENT Specialist' },
+      { symptom: 'Irregular Periods & Pelvic Cramps', meaning: 'Points toward hormonal imbalance, ovarian cysts, PCOS, or uterine fibroids.', specialist: 'Gynecologist' },
+      { symptom: 'High Fever & Body Fatigue', meaning: 'Signifies viral infections, seasonal flu, malaria, or systemic inflammation.', specialist: 'General Physician' },
+      { symptom: 'Chronic Migraine & Throbbing Headache', meaning: 'Indicates vascular headache, severe tension, or neurological fatigue triggers.', specialist: 'Neurologist' },
+      { symptom: 'Blurry Vision & Eye Strain', meaning: 'Points to refractive errors, astigmatism, dry eyes, or prolonged screen fatigue.', specialist: 'Ophthalmologist' },
+      { symptom: 'Acid Reflux & Severe Stomach Bloating', meaning: 'Indicates chronic gastritis, acid indigestion, GERD, or dietary sensitivity.', specialist: 'Gastroenterologist' },
+      { symptom: 'Shortness of Breath & Wheezing', meaning: 'Suggests bronchial asthma, COPD, bronchitis, or allergic airway obstruction.', specialist: 'Pulmonologist' },
+      { symptom: 'Frequent Urination & Excessive Thirst', meaning: 'Potential indicator of blood sugar irregularities or urinary tract infection.', specialist: 'General Physician' },
+      { symptom: 'Persistent Low Back Pain', meaning: 'Points to lumbar muscle strain, slipped disc, sciatica, or poor posture.', specialist: 'Orthopedic' },
+      { symptom: 'Severe Toothache & Gum Bleeding', meaning: 'Indicates dental cavities, gingivitis, periodontal disease, or root abscess.', specialist: 'Dentist' },
+      { symptom: 'Chronic Anxiety & Sleep Insomnia', meaning: 'Signifies high stress overload, sleep cycle disruption, or anxiety disorder.', specialist: 'General Physician' },
+      { symptom: 'Sudden Hair Loss & Scalp Flaking', meaning: 'Points to alopecia areata, severe dandruff, scalp psoriasis, or nutritional deficiency.', specialist: 'Dermatologist' },
+      { symptom: 'Nasal Congestion & Sinus Pressure', meaning: 'Indicates chronic sinusitis, nasal polyps, or allergic rhinitis flare-up.', specialist: 'ENT Specialist' },
+      { symptom: 'Dizziness & Vertigo Spells', meaning: 'Suggests inner ear vestibular dysfunction, labyrinthitis, or orthostatic hypotension.', specialist: 'General Physician' },
+      { symptom: 'Swollen Lymph Nodes in Neck', meaning: 'Indicates an active immune response fighting throat, dental, or ear infections.', specialist: 'ENT Specialist' },
+      { symptom: 'Chronic Fatigue & Paleness', meaning: 'Points toward iron deficiency anemia, vitamin B12 deficiency, or general weakness.', specialist: 'General Physician' },
+      { symptom: 'Persistent Ankle Sprain & Stiffness', meaning: 'Indicates ligament micro-tears, tendonitis, or insufficient joint rehabilitation.', specialist: 'Orthopedic' }
+    ],
+    bn: [
+      { symptom: 'তীব্র বুক ব্যথা ও চাপ', meaning: 'হৃদযন্ত্রের সমস্যা বা এনজাইনার লক্ষণ হতে পারে, যা দ্রুত পরীক্ষা করা দরকার।', specialist: 'Cardiologist' },
+      { symptom: 'গেঁটেবাত ও হাঁটু ফুলে যাওয়া', meaning: 'আর্থ্রাইটিস বা লিগামেন্টের আঘাতের কারণে হতে পারে।', specialist: 'Orthopedic' },
+      { symptom: 'দীর্ঘস্থায়ী ত্বকে ফুসকুড়ি ও চুলকানি', meaning: 'অ্যালার্জি, একজিমা বা ফাঙ্গাল ইনফেকশনের লক্ষণ।', specialist: 'Dermatologist' },
+      { symptom: 'কানে ব্যথা ও তীব্র গলা ব্যথা', meaning: 'টনসিল ইনফেকশন বা কানের সমস্যার লক্ষণ।', specialist: 'ENT Specialist' },
+      { symptom: 'অনিয়মিত মাসিক ও তলপেটে ব্যথা', meaning: 'পলিসিস্টিক ওভারি (PCOS) বা হরমোনের ভারসাম্যহীনতা।', specialist: 'Gynecologist' },
+      { symptom: 'উচ্চ জ্বর ও শারীরিক ক্লান্তি', meaning: 'ভাইরাল ইনফেকশন, ফ্লু বা ম্যালেরিয়ার লক্ষণ হতে পারে।', specialist: 'General Physician' },
+      { symptom: 'মাইগ্রেন ও তীব্র মাথা ব্যথা', meaning: 'স্নায়বিক ক্লান্তি বা অতিরিক্ত মানসিক চাপের কারণে হয়।', specialist: 'Neurologist' },
+      { symptom: 'চোখে ঝাপসা দেখা ও ক্লান্তি', meaning: 'দৃষ্টিশক্তির ত্রুটি বা চোখের শুষ্কতার সমস্যা।', specialist: 'Ophthalmologist' },
+      { symptom: 'গ্যাস, অম্বল ও পেট ফাঁপা', meaning: 'গ্যাস্ট্রিক, বদহজম বা এসিডিটির সমস্যা।', specialist: 'Gastroenterologist' },
+      { symptom: 'শ্বাসকষ্ট ও হাঁপানি', meaning: 'ব্রংকিয়াল অ্যাজমা বা ফুসফুসের জটিলতা।', specialist: 'Pulmonologist' },
+      { symptom: 'ঘন ঘন প্রস্রাব ও অতিরিক্ত তৃষ্ণা', meaning: 'রক্তে শর্করার তারতম্য বা ইউরিন ইনফেকশনের লক্ষণ।', specialist: 'General Physician' },
+      { symptom: 'কোমর ও পিঠে দীর্ঘস্থায়ী ব্যথা', meaning: 'পেশীর টান, সায়টিকা বা মেরুদণ্ডের সমস্যা।', specialist: 'Orthopedic' },
+      { symptom: 'দাঁতে ব্যথা ও মাড়ি থেকে রক্তপাত', meaning: 'দাঁতের ক্ষয় বা মাড়ির ইনফেকশন (Gingivitis)।', specialist: 'Dentist' },
+      { symptom: 'অতিরিক্ত দুশ্চিন্তা ও অনিদ্রা', meaning: 'মানসিক চাপ বা ঘুমের ব্যাঘাতের লক্ষণ।', specialist: 'General Physician' },
+      { symptom: 'অতিরিক্ত চুল পড়া ও খুশকি', meaning: 'অ্যালোপেসিয়া বা পুষ্টির অভাবের কারণে হতে পারে।', specialist: 'Dermatologist' },
+      { symptom: 'নাক বন্ধ থাকা ও সাইনাসের সমস্যা', meaning: 'সাইনুসাইটিস বা অ্যালার্জিক রাইনাইটিস।', specialist: 'ENT Specialist' },
+      { symptom: 'মাথা ঘোরা ও ভারসাম্যহীনতা', meaning: 'কানের ভেতরের সমস্যা বা রক্তচাপ হ্রাসের লক্ষণ।', specialist: 'General Physician' },
+      { symptom: 'গলায় লিম্ফ নোড ফুলে যাওয়া', meaning: 'গলা বা কানের ইনফেকশনের বিরুদ্ধে শরীরের প্রতিরোধ প্রতিক্রিয়া।', specialist: 'ENT Specialist' },
+      { symptom: 'রক্তশূন্যতা ও চরম ক্লান্তি', meaning: 'আয়রন বা ভিটামিন বি১২ এর অভাব।', specialist: 'General Physician' },
+      { symptom: 'গোড়ালি মচকে যাওয়া ও শক্ত হয়ে যাওয়া', meaning: 'লিগামেন্টের আঘাত বা টেন্ডোনাইটিস।', specialist: 'Orthopedic' }
+    ],
+    hi: [
+      { symptom: 'तेज़ सीने में दर्द और जकड़न', meaning: 'हार्ट से जुड़ी समस्या या एनजाइना का संकेत हो सकता है, तुरंत जांच कराएं।', specialist: 'Cardiologist' },
+      { symptom: 'जोड़ों का दर्द और घुटने में सूजन', meaning: 'अर्थराइटिस, लिगामेंट इंजरी या कार्टिलेज घिसने के कारण हो सकता है।', specialist: 'Orthopedic' },
+      { symptom: 'त्वचा पर चकत्ते और लगातार खुजली', meaning: 'एलर्जी, एक्जिमा, फंगल इन्फेक्शन या पित्ती का संकेत।', specialist: 'Dermatologist' },
+      { symptom: 'कान दर्द और गंभीर गले में खराश', meaning: 'टनसिलिटिस, कान का इन्फेक्शन या सर्दी-जुकाम का असर।', specialist: 'ENT Specialist' },
+      { symptom: 'अनियमित माहवारी और पेट के निचले हिस्से में ऐंठन', meaning: 'हार्मोनल असंतुलन, पीसीओएस (PCOS) या गाइनेकोलॉजिकल समस्या।', specialist: 'Gynecologist' },
+      { symptom: 'तेज़ बुखार और कमजोरी', meaning: 'वायरल इन्फेक्शन, फ्लू या मौसमी बुखार का लक्षण।', specialist: 'General Physician' },
+      { symptom: 'माइग्रेन और तेज सिरदर्द', meaning: 'तनाव, नसों की थकान या सिरदर्द की समस्या।', specialist: 'Neurologist' },
+      { symptom: 'धुंधला दिखना और आंखों में खिंचाव', meaning: 'नजर की कमजोरी, ड्राई आइज या स्क्रीन थकान।', specialist: 'Ophthalmologist' },
+      { symptom: 'एसिडिटी और पेट फूलना', meaning: 'गैस्ट्राइटिस, अपच या जीईआरडी (GERD) की समस्या।', specialist: 'Gastroenterologist' },
+      { symptom: 'सांस फूलना और घबराहट', meaning: 'अस्थमा, ब्रोंकाइटिस या श्वसन नली में रुकावट।', specialist: 'Pulmonologist' },
+      { symptom: 'बार-बार पेशाब आना और अत्यधिक प्यास', meaning: 'शुगर (डाइबिटीज) या यूरिन इन्फेक्शन का शुरुआती संकेत।', specialist: 'General Physician' },
+      { symptom: 'पीठ और कमर में लगातार दर्द', meaning: 'कमर की मांसपेशियों में खिंचाव, स्लिप डिस्क या साइटिका।', specialist: 'Orthopedic' },
+      { symptom: 'दांतों में तेज दर्द और मसूड़ों से खून आना', meaning: 'दांतों में कीड़ा (कैविटी), पायरिया या मसूड़ों का इन्फेक्शन।', specialist: 'Dentist' },
+      { symptom: 'अत्यधिक तनाव और अनिद्रा (नींद न आना)', meaning: 'मानसिक तनाव, एंग्जायटी या नींद चक्र में गड़बड़ी।', specialist: 'General Physician' },
+      { symptom: 'बाल झड़ना और स्कैल्प में रूसी', meaning: 'एलोपेसिया, गंभीर डैंड्रफ या पोषण की कमी।', specialist: 'Dermatologist' },
+      { symptom: 'नाक बंद होना और साइनस का दबाव', meaning: 'साइनसाइटिस, नेज़ल पॉलीप्स या एलर्जी।', specialist: 'ENT Specialist' },
+      { symptom: 'चक्कर आना और सिर घूमना', meaning: 'कान के अंदरूनी संतुलन की समस्या या लो ब्लड प्रेशर।', specialist: 'General Physician' },
+      { symptom: 'गले की ग्रंथियों (लिंफ नोड्स) में सूजन', meaning: 'गले या कान के इन्फेक्शन से लड़ने की प्रतिरक्षा प्रतिक्रिया।', specialist: 'ENT Specialist' },
+      { symptom: 'शरीर में खून की कमी और कमजोरी', meaning: 'एनीमिया, आयरन या विटामिन बी12 की कमी।', specialist: 'General Physician' },
+      { symptom: 'टखने में मोच और जकड़न', meaning: 'लिगामेंट में खिंचाव या टेंडोनाइटिस।', specialist: 'Orthopedic' }
+    ]
+  };
 
 
   /* =========================
@@ -241,6 +292,7 @@ export default function App() {
   };
 
   const t = translations[lang] || translations.en;
+  const currentSymptoms = commonSymptoms[lang] || commonSymptoms.en;
 
 
   /* =========================
@@ -495,7 +547,7 @@ export default function App() {
       />
 
 
-      {/* SIDEBAR (DESKTOP NAV + UTILITIES HUB) */}
+      {/* SIDEBAR (DESKTOP NAV AT TOP + UTILITIES HUB) */}
 
       <aside
         className={`app-sidebar ${
@@ -538,9 +590,9 @@ export default function App() {
           </div>
 
 
-          {/* DESKTOP NAVIGATION TABS IN SIDEBAR */}
+          {/* DESKTOP NAVIGATION TABS IN SIDEBAR (Desktop Only view matching CSS or conditional structure) */}
 
-          <nav className="sidebar-nav" style={{ marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+          <nav className="sidebar-nav desktop-sidebar-nav" style={{ marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
             <span className="sidebar-nav-label">
               Navigation
             </span>
@@ -573,7 +625,7 @@ export default function App() {
           </nav>
 
 
-          {/* UTILITY CARDS HUB (CARE CIRCLE, SYMPTOMS, DOCTOR ALERTS, SOS) */}
+          {/* UTILITY CARDS HUB (CARE CIRCLE, SYMPTOMS, LIVE QUEUE, SOS) */}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
 
@@ -601,24 +653,25 @@ export default function App() {
                 <span style={{ color: 'var(--gold)' }}><AppIcon type="history" size={17} /></span>
                 <div>
                   <div style={{ fontSize: '12px', fontWeight: '600', color: '#fff' }}>Know Your Symptoms</div>
-                  <div style={{ fontSize: '10.5px', color: 'rgba(255,255,255,0.5)' }}>20 common health guides</div>
+                  <div style={{ fontSize: '10.5px', color: 'rgba(255,255,255,0.5)' }}>20 multi-lingual guides</div>
                 </div>
               </div>
               <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>→</span>
             </div>
 
-            {/* 3. DOCTOR STATUS CARD */}
+            {/* 3. LIVE QUEUE & BOOKING TRACKER */}
             <div 
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', padding: '10px 12px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+              onClick={() => setActiveModal('queue')}
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'background 0.2s' }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
-                <span style={{ color: 'var(--gold)' }}><AppIcon type="bell" size={17} /></span>
+                <span style={{ color: 'var(--gold)' }}><AppIcon type="queue" size={17} /></span>
                 <div>
-                  <div style={{ fontSize: '12px', fontWeight: '600', color: '#fff' }}>Doctor Status</div>
-                  <div style={{ fontSize: '10.5px', color: 'rgba(255,255,255,0.5)' }}>{doctorAlerts.length > 0 ? `${doctorAlerts.length} tracking` : 'No active bookings'}</div>
+                  <div style={{ fontSize: '12px', fontWeight: '600', color: '#fff' }}>Live Queue Tracker</div>
+                  <div style={{ fontSize: '10.5px', color: 'rgba(255,255,255,0.5)' }}>{activeQueueToken ? `Token #${activeQueueToken.number}` : 'No active booking'}</div>
                 </div>
               </div>
-              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: doctorAlerts.length > 0 ? '#4ade80' : 'rgba(255,255,255,0.3)' }}></span>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: activeQueueToken ? '#4ade80' : 'rgba(255,255,255,0.3)' }}></span>
             </div>
 
             {/* 4. EMERGENCY SOS HUB MODAL TRIGGER */}
@@ -689,7 +742,7 @@ export default function App() {
 
       {activeModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(6, 43, 37, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-          <div style={{ background: 'var(--white)', width: '100%', maxWidth: activeModal === 'symptoms' ? '550px' : '400px', borderRadius: '24px', padding: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', position: 'relative', maxHeight: '85vh', overflowY: 'auto' }}>
+          <div style={{ background: 'var(--white)', width: '100%', maxWidth: activeModal === 'symptoms' ? '600px' : '400px', borderRadius: '24px', padding: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', position: 'relative', maxHeight: '85vh', overflowY: 'auto' }}>
             
             {/* CLOSE BUTTON */}
             <button 
@@ -703,7 +756,7 @@ export default function App() {
             {activeModal === 'family' && (
               <div>
                 <h3 style={{ margin: '0 0 4px', fontFamily: 'Fraunces, serif', fontSize: '20px', color: 'var(--teal-900)' }}>Care Circle</h3>
-                <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--ink-soft)' }}>Add household members so you can select who your token is booked for during checkout.</p>
+                <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--ink-soft)' }}>Add household members so you can assign appointments to them during checkout.</p>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
                   {familyMembers.map((m) => (
@@ -747,29 +800,49 @@ export default function App() {
               </div>
             )}
 
-            {/* MODAL 2: 20 SYMPTOMS MEDICAL DIRECTORY */}
+            {/* MODAL 2: 20 SYMPTOMS MEDICAL DIRECTORY (MULTI-LINGUAL) */}
             {activeModal === 'symptoms' && (
               <div>
-                <h3 style={{ margin: '0 0 4px', fontFamily: 'Fraunces, serif', fontSize: '20px', color: 'var(--teal-900)' }}>Know Your Symptoms</h3>
-                <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--ink-soft)' }}>Common health signs, what they indicate, and the exact specialist to consult.</p>
+                <h3 style={{ margin: '0 0 4px', fontFamily: 'Fraunces, serif', fontSize: '20px', color: 'var(--teal-900)' }}>{t.symptomsTitle}</h3>
+                <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--ink-soft)' }}>{t.symptomsSubtitle}</p>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {commonSymptoms.map((item, idx) => (
-                    <div key={idx} style={{ background: 'var(--sand-50)', padding: '12px', borderRadius: '12px', border: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
-                      <div>
-                        <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--teal-900)', marginBottom: '2px' }}>{item.symptom}</div>
-                        <div style={{ fontSize: '11.5px', color: 'var(--ink-soft)' }}>{item.meaning}</div>
+                  {currentSymptoms.map((item, idx) => (
+                    <div key={idx} style={{ background: 'var(--sand-50)', padding: '12px 14px', borderRadius: '14px', border: '1px solid var(--line)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                        <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--teal-900)' }}>{item.symptom}</span>
+                        <span style={{ background: 'var(--teal-900)', color: 'var(--gold)', fontSize: '10.5px', fontWeight: '700', padding: '3px 10px', borderRadius: '100px', whiteSpace: 'nowrap' }}>
+                          {item.specialist}
+                        </span>
                       </div>
-                      <span style={{ background: 'var(--teal-900)', color: 'var(--gold)', fontSize: '10.5px', fontWeight: '700', padding: '4px 10px', borderRadius: '100px', whiteSpace: 'nowrap' }}>
-                        {item.specialist}
-                      </span>
+                      <div style={{ fontSize: '12px', color: 'var(--ink-soft)', lineHeight: '1.4' }}>{item.meaning}</div>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* MODAL 3: EMERGENCY SOS & AMBULANCE */}
+            {/* MODAL 3: LIVE QUEUE TRACKER */}
+            {activeModal === 'queue' && (
+              <div>
+                <h3 style={{ margin: '0 0 4px', fontFamily: 'Fraunces, serif', fontSize: '20px', color: 'var(--teal-900)' }}>Live Queue Tracker</h3>
+                <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--ink-soft)' }}>Monitor your active hospital or clinic consultation tokens in real-time.</p>
+                
+                {activeQueueToken ? (
+                  <div style={{ background: 'var(--sand-50)', padding: '16px', borderRadius: '16px', border: '1px solid var(--line)', textAlign: 'center' }}>
+                    <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--teal-700)', textTransform: 'uppercase' }}>Active Token #{activeQueueToken.number}</div>
+                    <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--teal-900)', margin: '6px 0' }}>Dr. {activeQueueToken.doctorName}</div>
+                    <div style={{ fontSize: '13px', color: 'var(--ink-soft)' }}>{activeQueueToken.hospitalName}</div>
+                  </div>
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '30px 10px', color: 'var(--ink-soft)', fontSize: '13px' }}>
+                    You do not have any active queue bookings right now. Book a token from the home screen to track it live here.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* MODAL 4: EMERGENCY SOS & AMBULANCE */}
             {activeModal === 'sos' && (
               <div>
                 <h3 style={{ margin: '0 0 4px', fontFamily: 'Fraunces, serif', fontSize: '20px', color: '#c34f3d' }}>Emergency & SOS Hub</h3>
