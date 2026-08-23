@@ -424,3 +424,158 @@ export async function getAllSpecialties(
       a.localeCompare(b)
   );
 }
+/* =========================================================
+   APPEND THIS ENTIRE BLOCK TO THE END OF src/hospitalData.js
+   These 6 functions were missing and are required by
+   HospitalFlow.jsx and BookingTicket.jsx.
+   Do not remove or change anything already in the file —
+   just paste this block after the last function.
+========================================================= */
+
+export async function getMyCurrentBooking(patientUserId) {
+  const { data: patient, error: patientError } = await supabase
+    .from('patients')
+    .select('id')
+    .eq('user_id', patientUserId)
+    .single();
+
+  if (patientError || !patient) return null;
+
+  const { data: appointment, error } = await supabase
+    .from('appointments')
+    .select('id, queue_number, status, doctor_id, hospital_id, booked_at')
+    .eq('patient_id', patient.id)
+    .eq('status', 'waiting')
+    .order('booked_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !appointment) return null;
+
+  const { data: doctor } = await supabase
+    .from('doctors')
+    .select('name, specialty, avg_minutes_per_patient')
+    .eq('id', appointment.doctor_id)
+    .single();
+
+  const { data: hospital } = await supabase
+    .from('hospitals')
+    .select('name')
+    .eq('id', appointment.hospital_id)
+    .single();
+
+  const { count: patientsAhead } = await supabase
+    .from('appointments')
+    .select('*', { count: 'exact', head: true })
+    .eq('doctor_id', appointment.doctor_id)
+    .eq('status', 'waiting')
+    .lt('queue_number', appointment.queue_number);
+
+  return {
+    ...appointment,
+    doctor,
+    hospital,
+    patientsAhead: patientsAhead || 0,
+  };
+}
+
+export async function getHospitalPaymentInfo(hospitalId) {
+  const { data, error } = await supabase
+    .from('hospitals')
+    .select('upi_id')
+    .eq('id', hospitalId)
+    .single();
+  if (error) { console.error('Error fetching payment info:', error); return null; }
+  return data?.upi_id || null;
+}
+
+export async function uploadPaymentScreenshot(file) {
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+  const { error: uploadError } = await supabase.storage
+    .from('payment-screenshots')
+    .upload(fileName, file);
+
+  if (uploadError) {
+    console.error('Error uploading screenshot:', uploadError);
+    return { error: uploadError };
+  }
+
+  const { data } = supabase.storage.from('payment-screenshots').getPublicUrl(fileName);
+  return { url: data.publicUrl };
+}
+
+export async function bookAppointment(patientUserId, doctorId, hospitalId, paymentMethod, transactionId, screenshotUrl, contactPhone) {
+  const { data: patient, error: patientError } = await supabase
+    .from('patients')
+    .select('id')
+    .eq('user_id', patientUserId)
+    .single();
+
+  if (patientError || !patient) {
+    console.error('Error finding patient record:', patientError);
+    return { error: patientError || new Error('Patient record not found') };
+  }
+
+  const { data: queueNumber, error: queueError } = await supabase
+    .rpc('get_next_queue_number', { doc_id: doctorId });
+
+  if (queueError) {
+    console.error('Error getting queue number:', queueError);
+    return { error: queueError };
+  }
+
+  const now = new Date();
+  const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+  const { data: appointment, error: insertError } = await supabase
+    .from('appointments')
+    .insert({
+      patient_id: patient.id,
+      doctor_id: doctorId,
+      hospital_id: hospitalId,
+      queue_number: queueNumber,
+      token_number: String(queueNumber),
+      appointment_time: timeString,
+      status: 'waiting',
+      payment_method: paymentMethod || 'cash',
+      transaction_id: transactionId || null,
+      payment_screenshot_url: screenshotUrl || null,
+      contact_phone: contactPhone || null,
+    })
+    .select()
+    .single();
+
+  if (insertError) {
+    console.error('Error booking appointment:', insertError);
+    return { error: insertError };
+  }
+
+  return { data: appointment };
+}
+
+export async function cancelAppointment(appointmentId) {
+  const { data, error } = await supabase
+    .from('appointments')
+    .update({ status: 'cancelled' })
+    .eq('id', appointmentId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error cancelling appointment:', error);
+    return { error };
+  }
+  return { data };
+}
+
+// Patient-side: poll for status/check-in updates on a single appointment
+export async function getAppointmentStatus(appointmentId) {
+  const { data, error } = await supabase
+    .from('appointments')
+    .select('id, status, booked_at, checked_in_at')
+    .eq('id', appointmentId)
+    .single();
+  if (error) { console.error('Error fetching appointment status:', error); return null; }
+  return data;
+}
