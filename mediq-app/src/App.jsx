@@ -209,7 +209,7 @@ export default function App() {
   const [newFamilyName, setNewFamilyName] = useState('');
   const [newFamilyRelation, setNewFamilyRelation] = useState('Parent');
 
-  const [activeQueueToken, setActiveQueueToken] = useState(null);
+  const [activeQueueToken] = useState(null);
 
   // 20 Common Symptoms Multi-Lingual Directory Data
   const commonSymptoms = {
@@ -590,9 +590,9 @@ export default function App() {
           </div>
 
 
-          {/* DESKTOP NAVIGATION TABS IN SIDEBAR (Desktop Only view matching CSS or conditional structure) */}
+          {/* DESKTOP NAVIGATION TABS IN SIDEBAR (Desktop Only via CSS class) */}
 
-          <nav className="sidebar-nav desktop-sidebar-nav" style={{ marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+          <nav className="sidebar-nav desktop-only-nav" style={{ marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
             <span className="sidebar-nav-label">
               Navigation
             </span>
