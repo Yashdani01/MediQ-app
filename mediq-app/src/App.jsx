@@ -26,6 +26,7 @@ const translations = {
     healthAssistant: 'Health Assistant',
     language: 'Language',
   },
+
   bn: {
     loading: 'মেডিকিউ লোড হচ্ছে...',
     home: 'হোম',
@@ -40,6 +41,7 @@ const translations = {
     healthAssistant: 'স্বাস্থ্য সহায়ক',
     language: 'ভাষা',
   },
+
   hi: {
     loading: 'मेडीक्यू लोड हो रहा है...',
     home: 'होम',
@@ -81,11 +83,13 @@ function AppIcon({ type, size = 20 }) {
         <path d="M9.5 21v-6h5v6" />
       </>
     ),
+
     triage: (
       <>
         <path d="M3 12h4l2.5-7 5 14 2.5-7H21" />
       </>
     ),
+
     reports: (
       <>
         <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
@@ -94,9 +98,16 @@ function AppIcon({ type, size = 20 }) {
         <path d="M8 17h5" />
       </>
     ),
+
     bookings: (
       <>
-        <rect x="3" y="4" width="18" height="17" rx="2" />
+        <rect
+          x="3"
+          y="4"
+          width="18"
+          height="17"
+          rx="2"
+        />
         <path d="M8 2v4" />
         <path d="M16 2v4" />
         <path d="M3 10h18" />
@@ -105,6 +116,7 @@ function AppIcon({ type, size = 20 }) {
         <path d="M16 15h.01" />
       </>
     ),
+
     globe: (
       <>
         <circle cx="12" cy="12" r="9" />
@@ -113,6 +125,7 @@ function AppIcon({ type, size = 20 }) {
         <path d="M12 3C9.8 5.5 8.7 8.5 8.7 12s1.1 6.5 3.3 9" />
       </>
     ),
+
     logout: (
       <>
         <path d="M10 17l5-5-5-5" />
@@ -120,6 +133,7 @@ function AppIcon({ type, size = 20 }) {
         <path d="M21 19V5a2 2 0 0 0-2-2h-5" />
       </>
     ),
+
     menu: (
       <>
         <path d="M4 7h16" />
@@ -127,40 +141,11 @@ function AppIcon({ type, size = 20 }) {
         <path d="M4 17h16" />
       </>
     ),
+
     close: (
       <>
         <path d="M18 6 6 18" />
         <path d="m6 6 12 12" />
-      </>
-    ),
-    family: (
-      <>
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-      </>
-    ),
-    sos: (
-      <>
-        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-        <line x1="12" y1="9" x2="12" y2="13" />
-        <line x1="12" y1="17" x2="12.01" y2="17" />
-      </>
-    ),
-    history: (
-      <>
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-        <polyline points="14 2 14 8 20 8" />
-        <line x1="16" y1="13" x2="8" y2="13" />
-        <line x1="16" y1="17" x2="8" y2="17" />
-        polyline points="10 9 9 9 8 9"
-      </>
-    ),
-    bell: (
-      <>
-        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
       </>
     ),
   };
@@ -194,23 +179,6 @@ export default function App() {
   );
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  // New Sidebar Feature States
-  const [familyMembers, setFamilyMembers] = useState([
-    { id: 1, name: 'Self (Primary)', relation: 'Primary' }
-  ]);
-  const [newFamilyName, setNewFamilyName] = useState('');
-  const [newFamilyRelation, setNewFamilyRelation] = useState('Parent');
-  const [showAddFamily, setShowAddFamily] = useState(false);
-
-  const [symptomLogs, setSymptomLogs] = useState([
-    { date: 'Today', text: 'Fever & Head ache -> General Physician' },
-    { date: 'Last week', text: 'Joint pain -> Orthopedic' }
-  ]);
-
-  const [doctorAlerts, setDoctorAlerts] = useState([
-    { id: 'doc_1', name: 'Dr. Sharma', status: 'Available' }
-  ]);
 
 
   /* =========================
@@ -393,7 +361,7 @@ export default function App() {
 
 
   /* =========================
-     NAVIGATION (MOBILE BOTTOM BAR)
+     NAVIGATION
   ========================= */
 
   const navigationItems = [
@@ -477,7 +445,7 @@ export default function App() {
       />
 
 
-      {/* SIDEBAR (UPGRADED UTILITY COMMAND CENTER) */}
+      {/* SIDEBAR */}
 
       <aside
         className={`app-sidebar ${
@@ -520,106 +488,39 @@ export default function App() {
           </div>
 
 
-          {/* FEATURE 1: HOUSEHOLD CARE CIRCLE */}
-          <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#0b332c', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <AppIcon type="family" size={16} /> Care Circle
-              </span>
-              <button 
-                onClick={() => setShowAddFamily(!showAddFamily)}
-                style={{ background: 'none', border: 'none', color: '#10b981', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+          {/* NAVIGATION */}
+
+          <nav className="sidebar-nav">
+            <span className="sidebar-nav-label">
+              Navigation
+            </span>
+
+            {navigationItems.map((item) => (
+              <button
+                key={item.id}
+                className={`sidebar-nav-item ${
+                  activeTab === item.id
+                    ? 'active'
+                    : ''
+                }`}
+                onClick={() =>
+                  handleNavigation(item.id)
+                }
               >
-                {showAddFamily ? 'Cancel' : '+ Add'}
-              </button>
-            </div>
-            {showAddFamily && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 8 }}>
-                <input 
-                  type="text" 
-                  placeholder="Member Name" 
-                  value={newFamilyName}
-                  onChange={(e) => setNewFamilyName(e.target.value)}
-                  style={{ padding: '6px 8px', fontSize: 11, borderRadius: 6, border: '1px solid #e2e8f0' }}
-                />
-                <button 
-                  onClick={() => {
-                    if (newFamilyName.trim()) {
-                      setFamilyMembers([...familyMembers, { id: Date.now(), name: newFamilyName, relation: newFamilyRelation }]);
-                      setNewFamilyName('');
-                      setShowAddFamily(false);
-                    }
-                  }}
-                  style={{ background: '#0b332c', color: '#fff', border: 'none', padding: '6px', borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
-                >
-                  Save Member
-                </button>
-              </div>
-            )}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-              {familyMembers.map((m) => (
-                <span key={m.id} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '2px 8px', borderRadius: 12, fontSize: 10, fontWeight: 600, color: '#475569' }}>
-                  {m.name}
+                <span className="sidebar-nav-icon">
+                  <AppIcon type={item.icon} />
                 </span>
-              ))}
-            </div>
-          </div>
 
+                <span>
+                  {item.label}
+                </span>
 
-          {/* FEATURE 4: SMART SYMPTOM HISTORY LOG */}
-          <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#0b332c', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-              <AppIcon type="history" size={16} /> Symptom Log
-            </span>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {symptomLogs.map((log, idx) => (
-                <div key={idx} style={{ fontSize: 11, color: '#64748b', background: '#f8fafc', padding: '6px 8px', borderRadius: 8 }}>
-                  <strong style={{ color: '#0f172a' }}>{log.date}:</strong> {log.text}
-                </div>
-              ))}
-            </div>
-          </div>
-
-
-          {/* FEATURE 5: DOCTOR AVAILABILITY NOTIFICATION BELL */}
-          <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#0b332c', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-              <AppIcon type="bell" size={16} /> Doctor Alerts
-            </span>
-            {doctorAlerts.map((doc) => (
-              <div key={doc.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, background: '#f8fafc', padding: '6px 8px', borderRadius: 8 }}>
-                <span>{doc.name}</span>
-                <span style={{ color: '#10b981', fontWeight: 700 }}>● {doc.status}</span>
-              </div>
+                {activeTab === item.id && (
+                  <span className="sidebar-active-dot" />
+                )}
+              </button>
             ))}
-          </div>
-
-
-          {/* FEATURE 3: EMERGENCY SOS & AMBULANCE */}
-          <div style={{ padding: '12px 16px' }}>
-            <a 
-              href="tel:102"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                background: '#fef2f2',
-                border: '1px solid #fca5a5',
-                color: '#dc2626',
-                padding: '10px',
-                borderRadius: '12px',
-                fontSize: '12px',
-                fontWeight: '800',
-                textDecoration: 'none',
-                textAlign: 'center',
-                boxShadow: '0 2px 6px rgba(220, 38, 38, 0.05)'
-              }}
-            >
-              <AppIcon type="sos" size={16} /> EMERGENCY SOS & AMBULANCE
-            </a>
-          </div>
-
+          </nav>
         </div>
 
 
