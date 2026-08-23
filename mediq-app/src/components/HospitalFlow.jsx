@@ -260,6 +260,14 @@ export default function HospitalFlow({
   const [isListening, setIsListening] =
     useState(false);
 
+  // Dynamic Greeting Handler for MediQ
+  const getDynamicGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning, MediQ';
+    if (hour < 17) return 'Good Afternoon, MediQ';
+    return 'Good Evening, MediQ';
+  };
+
   const isSearchActive =
     searchTerm.trim() !== '' ||
     activeSpecialty !== '';
@@ -814,108 +822,133 @@ export default function HospitalFlow({
         style={{
           paddingBottom: '90px',
           width: '100%',
-          maxWidth: '600px',
+          maxWidth: '650px',
           margin: '0 auto',
           boxSizing: 'border-box',
         }}
       >
 
-        {/* CITY SELECTOR */}
+        {/* 🌟 EXACT MATCH HERO BANNER CARD */}
+        <div style={{
+          background: 'linear-gradient(135deg, #e6f4ea 0%, #daf2e1 100%)',
+          border: '1px solid rgba(16, 185, 129, 0.2)',
+          borderRadius: '20px',
+          padding: '20px 22px',
+          marginBottom: '16px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          boxShadow: '0 4px 15px rgba(16, 185, 129, 0.06)'
+        }}>
+          <div style={{ flex: 1, paddingRight: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <span style={{ fontSize: '18px' }}>☀️</span>
+              <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '16.5px', color: '#0b332c', margin: 0 }}>
+                {getDynamicGreeting()}
+              </h3>
+            </div>
+            <p style={{ fontSize: '12px', fontWeight: '600', color: '#134e44', margin: '0 0 4px' }}>
+              Your health, our priority
+            </p>
+            <p style={{ fontSize: '11px', color: '#475569', margin: 0, lineHeight: '1.4' }}>
+              Find trusted doctors & quality care near you
+            </p>
+          </div>
 
-        <div
-          className="city-switcher-row"
-          style={{
-            marginBottom: '20px',
-            position: 'relative',
-            display: 'flex',
-            justifyContent: 'flex-end',
-          }}
-        >
+          <div style={{
+            width: '95px', height: '65px', background: 'rgba(255,255,255,0.7)',
+            borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.04)', flexShrink: 0, border: '1px solid rgba(16,185,129,0.15)'
+          }}>
+            <span style={{ fontSize: '28px' }}>🩺🛡️</span>
+          </div>
+        </div>
 
-          <button
-            className="city-pill"
-            onClick={() =>
-              setShowCityPicker(
-                !showCityPicker
-              )
-            }
-          >
-            {currentCity || 'All Cities'}{' '}
-            <span
+        {/* 📍 LOCATION DROPDOWN BAR (WITHOUT 'USE MY LOCATION') */}
+        <div style={{ marginBottom: '16px', display: 'flex', width: '100%', boxSizing: 'border-box' }}>
+          <div style={{ position: 'relative', width: '100%' }}>
+            <button
+              onClick={() =>
+                setShowCityPicker(
+                  !showCityPicker
+                )
+              }
               style={{
-                opacity: 0.7,
+                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                background: '#fff', border: '1px solid #e2e8f0', padding: '12px 16px', borderRadius: '14px',
+                fontSize: '13.5px', fontWeight: '600', color: '#0b332c', cursor: 'pointer', boxSizing: 'border-box',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.02)'
               }}
             >
-              ▼
-            </span>
-          </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ color: '#0b332c' }}>📍</span>
+                <span>{currentCity || 'All Locations (Balgona / Bhatar / Burdwan)'}</span>
+              </div>
+              <span style={{ fontSize: '10px', opacity: 0.6 }}>▼</span>
+            </button>
 
-          {showCityPicker && (
+            {showCityPicker && (
 
-            <div
-              className="city-dropdown"
-              style={{
-                right: 0,
-                left: 'auto',
-              }}
-            >
-
-              <button
-                className={`city-option ${
-                  !currentCity
-                    ? 'active'
-                    : ''
-                }`}
-                onClick={() => {
-
-                  setCurrentCity('');
-
-                  setShowCityPicker(
-                    false
-                  );
-
-                  setSelectedHospital(
-                    null
-                  );
-
+              <div
+                style={{
+                  position: 'absolute', left: 0, right: 0, top: '52px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '14px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 100, overflow: 'hidden'
                 }}
               >
-                All Cities
-              </button>
 
-              {allCities.map(
-                (c) => (
+                <button
+                  style={{
+                    width: '100%', textAlign: 'left', padding: '12px 16px', background: !currentCity ? '#f0fdf4' : 'transparent', border: 'none', borderBottom: '1px solid #f1f5f9', fontSize: '13px', fontWeight: '600', cursor: 'pointer', color: '#0b332c'
+                  }}
+                  onClick={() => {
 
-                  <button
-                    key={c}
-                    className={`city-option ${
-                      currentCity === c
-                        ? 'active'
-                        : ''
-                    }`}
-                    onClick={() => {
+                    setCurrentCity('');
 
-                      setCurrentCity(c);
+                    setShowCityPicker(
+                      false
+                    );
 
-                      setShowCityPicker(
-                        false
-                      );
+                    setSelectedHospital(
+                      null
+                    );
 
-                      setSelectedHospital(
-                        null
-                      );
+                  }}
+                >
+                  All Locations
+                </button>
 
-                    }}
-                  >
-                    {c}
-                  </button>
+                {allCities.map(
+                  (c) => (
 
-                )
-              )}
+                    <button
+                      key={c}
+                      style={{
+                        width: '100%', textAlign: 'left', padding: '12px 16px', background: currentCity === c ? '#f0fdf4' : 'transparent', border: 'none', borderBottom: '1px solid #f1f5f9', fontSize: '13px', fontWeight: '600', cursor: 'pointer', color: '#0b332c'
+                      }}
+                      onClick={() => {
 
-            </div>
+                        setCurrentCity(c);
 
-          )}
+                        setShowCityPicker(
+                          false
+                        );
+
+                        setSelectedHospital(
+                          null
+                        );
+
+                      }}
+                    >
+                      {c}
+                    </button>
+
+                  )
+                )}
+
+              </div>
+
+            )}
+
+          </div>
 
         </div>
 
@@ -929,7 +962,7 @@ export default function HospitalFlow({
                 display: 'flex',
                 gap: '8px',
                 alignItems: 'center',
-                marginBottom: '14px',
+                marginBottom: '16px',
                 width: '100%',
                 boxSizing: 'border-box',
               }}
@@ -968,6 +1001,11 @@ export default function HospitalFlow({
                         ? '50px'
                         : '16px',
                     boxSizing: 'border-box',
+                    background: '#fff',
+                    borderRadius: '14px',
+                    border: '1px solid #e2e8f0',
+                    padding: '12px 16px',
+                    fontSize: '14px'
                   }}
                 />
 
@@ -996,7 +1034,7 @@ export default function HospitalFlow({
                   color: '#fff',
                   border: 'none',
                   cursor: 'pointer',
-                  padding: '12px',
+                  padding: '12px 16px',
                   borderRadius: '14px',
                   display: 'flex',
                   alignItems: 'center',
@@ -1044,47 +1082,53 @@ export default function HospitalFlow({
 
             </div>
 
-            {specialties.length > 0 && (
+            {/* SPECIALTY FILTER CHIPS (WITH 'ALL' BUTTON) */}
+            <div
+              className="specialty-chips"
+              style={{
+                width: '100%',
+                boxSizing: 'border-box',
+                marginBottom: '22px'
+              }}
+            >
 
-              <div
-                className="specialty-chips"
-                style={{
-                  width: '100%',
-                  boxSizing: 'border-box',
-                }}
+              <button
+                className={`specialty-chip ${!activeSpecialty && !searchTerm ? 'active' : ''}`}
+                onClick={() => { setActiveSpecialty(''); setSearchTerm(''); }}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
               >
+                <span>🔲</span> All
+              </button>
 
-                {specialties.map(
-                  (s) => (
+              {specialties.map(
+                (s) => (
 
-                    <button
-                      key={s}
-                      className={`specialty-chip ${
+                  <button
+                    key={s}
+                    className={`specialty-chip ${
+                      activeSpecialty === s
+                        ? 'active'
+                        : ''
+                    }`}
+                    onClick={() => {
+
+                      setActiveSpecialty(
                         activeSpecialty === s
-                          ? 'active'
-                          : ''
-                      }`}
-                      onClick={() => {
+                          ? ''
+                          : s
+                      );
 
-                        setActiveSpecialty(
-                          activeSpecialty === s
-                            ? ''
-                            : s
-                        );
+                      setSearchTerm('');
 
-                        setSearchTerm('');
+                    }}
+                  >
+                    {s}
+                  </button>
 
-                      }}
-                    >
-                      {s}
-                    </button>
+                )
+              )}
 
-                  )
-                )}
-
-              </div>
-
-            )}
+            </div>
 
             {isSearchActive ? (
 
@@ -1271,9 +1315,14 @@ export default function HospitalFlow({
 
               <>
 
-                <h3 className="flow-section-title">
-                  Available Hospitals
-                </h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <h3 className="flow-section-title" style={{ margin: 0 }}>
+                    Available Hospitals
+                  </h3>
+                  <span style={{ fontSize: '12px', fontWeight: '700', color: '#10b981', cursor: 'pointer' }}>
+                    View all →
+                  </span>
+                </div>
 
                 {loadingHospitals ? (
 
@@ -1423,37 +1472,29 @@ export default function HospitalFlow({
                                   ) : (
 
                                     <span className="no-doctor-badge">
-                                      Check doctor availability
+                                      Check schedule
                                     </span>
-
-                                  )}
-
-                                  {hosp.location && (
-
-                                    <a
-                                      href={
-                                        directionsUrl
-                                      }
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      onClick={(e) =>
-                                        e.stopPropagation()
-                                      }
-                                      className="directions-btn"
-                                    >
-                                      <span>
-                                        📍
-                                      </span>
-
-                                      Directions
-
-                                    </a>
 
                                   )}
 
                                 </div>
 
-                                <div className="view-doctors-row">
+                                <div style={{ marginTop: '10px' }}>
+                                  <a
+                                    href={directionsUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) =>
+                                      e.stopPropagation()
+                                    }
+                                    className="directions-btn"
+                                    style={{ background: '#e6f4ea', color: '#0b332c', padding: '8px 14px', borderRadius: '10px', fontWeight: '700', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
+                                  >
+                                    <span>📍</span> Directions
+                                  </a>
+                                </div>
+
+                                <div className="view-doctors-row" style={{ marginTop: '12px', color: '#10b981', fontWeight: '700', fontSize: '12.5px' }}>
                                   View Doctors
                                   <span>
                                     →
@@ -1478,6 +1519,26 @@ export default function HospitalFlow({
               </>
 
             )}
+
+            {/* 🛡️ 'BOOK WITH CONFIDENCE' TRUST BANNER AT THE BOTTOM */}
+            <div style={{
+              background: '#e6f4ea', border: '1px solid rgba(16, 185, 129, 0.25)',
+              borderRadius: '16px', padding: '16px 20px', marginTop: '24px',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '24px' }}>📋</span>
+                <div>
+                  <h4 style={{ fontFamily: 'Fraunces, serif', fontSize: '14.5px', color: '#0b332c', margin: '0 0 2px' }}>
+                    Book with confidence
+                  </h4>
+                  <p style={{ fontSize: '11.5px', color: '#475569', margin: 0 }}>
+                    Verified doctors, Real-time queue info, Secure appointments
+                  </p>
+                </div>
+              </div>
+              <span style={{ fontSize: '18px', color: '#10b981' }}>🛡️</span>
+            </div>
 
           </div>
 
