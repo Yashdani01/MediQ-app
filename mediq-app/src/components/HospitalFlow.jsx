@@ -820,53 +820,103 @@ export default function HospitalFlow({
         }}
       >
 
-        {/* REFINED UNIFIED TOP HEADER BANNER */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--white, #ffffff)', padding: '16px 20px', borderRadius: '18px', border: '1px solid var(--line, #e2e8f0)', boxShadow: '0 2px 8px rgba(0,0,0,0.02)', marginBottom: '18px', boxSizing: 'border-box' }}>
-          <div>
-            <span style={{ fontSize: '11.5px', color: 'var(--ink-soft, #64748b)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600' }}>
-              {t.greeting || 'Welcome back,'}
-            </span>
-            <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: '19px', color: 'var(--teal-900, #0b332c)', margin: '2px 0 0' }}>
-              {displayName}
-            </h2>
-          </div>
+        {/* CITY SELECTOR */}
 
-          <div style={{ position: 'relative' }}>
-            <button
-              onClick={() => setShowCityPicker(!showCityPicker)}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--sand-50, #f8f6f0)', border: '1px solid var(--line, #e2e8f0)', padding: '8px 14px', borderRadius: '100px', fontSize: '13px', fontWeight: '600', color: 'var(--teal-900, #0b332c)', cursor: 'pointer' }}
+        <div
+          className="city-switcher-row"
+          style={{
+            marginBottom: '20px',
+            position: 'relative',
+            display: 'flex',
+            justifyContent: 'flex-end',
+          }}
+        >
+
+          <button
+            className="city-pill"
+            onClick={() =>
+              setShowCityPicker(
+                !showCityPicker
+              )
+            }
+          >
+            {currentCity || 'All Cities'}{' '}
+            <span
+              style={{
+                opacity: 0.7,
+              }}
             >
-              <span>📍</span> {currentCity || 'All Cities'} <span style={{ opacity: 0.6, fontSize: '10px' }}>▼</span>
-            </button>
+              ▼
+            </span>
+          </button>
 
-            {showCityPicker && (
-              <div style={{ position: 'absolute', right: 0, top: '42px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '14px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 100, minWidth: '150px', overflow: 'hidden' }}>
-                <button
-                  style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: !currentCity ? '#f0fdf4' : 'transparent', border: 'none', borderBottom: '1px solid #f1f5f9', fontSize: '13px', fontWeight: '600', cursor: 'pointer', color: '#0b332c' }}
-                  onClick={() => {
-                    setCurrentCity('');
-                    setShowCityPicker(false);
-                    setSelectedHospital(null);
-                  }}
-                >
-                  All Cities
-                </button>
-                {allCities.map((c) => (
+          {showCityPicker && (
+
+            <div
+              className="city-dropdown"
+              style={{
+                right: 0,
+                left: 'auto',
+              }}
+            >
+
+              <button
+                className={`city-option ${
+                  !currentCity
+                    ? 'active'
+                    : ''
+                }`}
+                onClick={() => {
+
+                  setCurrentCity('');
+
+                  setShowCityPicker(
+                    false
+                  );
+
+                  setSelectedHospital(
+                    null
+                  );
+
+                }}
+              >
+                All Cities
+              </button>
+
+              {allCities.map(
+                (c) => (
+
                   <button
                     key={c}
-                    style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: currentCity === c ? '#f0fdf4' : 'transparent', border: 'none', borderBottom: '1px solid #f1f5f9', fontSize: '13px', fontWeight: '600', cursor: 'pointer', color: '#0b332c' }}
+                    className={`city-option ${
+                      currentCity === c
+                        ? 'active'
+                        : ''
+                    }`}
                     onClick={() => {
+
                       setCurrentCity(c);
-                      setShowCityPicker(false);
-                      setSelectedHospital(null);
+
+                      setShowCityPicker(
+                        false
+                      );
+
+                      setSelectedHospital(
+                        null
+                      );
+
                     }}
                   >
                     {c}
                   </button>
-                ))}
-              </div>
-            )}
-          </div>
+
+                )
+              )}
+
+            </div>
+
+          )}
+
         </div>
 
         {!selectedHospital && (
