@@ -22,7 +22,7 @@ import { supabase } from './supabaseClient';
 export async function getHospitals(city = '') {
   let query = supabase
     .from('hospitals')
-    .select('id, name, location, city, google_maps_url')
+    .select('id, name, location, city')
     .order('name', { ascending: true });
 
   if (city && city.trim() !== '') {
