@@ -8,6 +8,7 @@ export default function MyBookings() {
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState(null);
   const [activeTab, setActiveTab] = useState('upcoming'); // 'upcoming' | 'completed' | 'cancelled'
+  const [showSupportModal, setShowSupportModal] = useState(false); // Interactive Support Popup State
 
   useEffect(() => {
     loadBookings();
@@ -128,7 +129,7 @@ export default function MyBookings() {
   }
 
   return (
-    <div className="my-bookings-page" style={{ padding: '20px 16px 80px', maxWidth: '650px', margin: '0 auto', boxSizing: 'border-box' }}>
+    <div className="my-bookings-page" style={{ padding: '20px 16px 90px', maxWidth: '650px', margin: '0 auto', boxSizing: 'border-box' }}>
       <div className="my-bookings-container">
         
         {/* 🌟 EXACT MATCH TOP HEADER BANNER */}
@@ -348,14 +349,92 @@ export default function MyBookings() {
             </div>
           </div>
           <button
-            onClick={() => alert('Support line: support@med-iq.in')}
-            style={{ background: '#fff', border: '1px solid #10b981', color: '#0b332c', padding: '8px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
+            onClick={() => setShowSupportModal(true)}
+            style={{ background: '#fff', border: '1px solid #10b981', color: '#0b332c', padding: '8px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
           >
-            🎧 Support
+            <span>🎧</span> Support
           </button>
         </div>
 
       </div>
+
+      {/* 💬 INTERACTIVE SUPPORT OPTIONS MODAL */}
+      {showSupportModal && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(6, 43, 37, 0.6)',
+          backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'
+        }}>
+          <div style={{
+            background: '#fff', width: '100%', maxWidth: '380px', borderRadius: '24px',
+            padding: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', position: 'relative'
+          }}>
+            {/* Close Button */}
+            <button
+              onClick={() => setShowSupportModal(false)}
+              style={{ position: 'absolute', top: '18px', right: '18px', background: '#f1f5f9', border: 'none', width: '30px', height: '30px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#0b332c', fontWeight: 'bold' }}
+            >
+              ✕
+            </button>
+
+            <h3 style={{ margin: '0 0 6px', fontFamily: 'Fraunces, serif', fontSize: '19px', color: '#0b332c' }}>
+              MediQ Helpdesk
+            </h3>
+            <p style={{ margin: '0 0 20px', fontSize: '12.5px', color: '#64748b' }}>
+              Choose your preferred channel to connect with our support team:
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
+              {/* WhatsApp Option */}
+              <a
+                href="https://wa.me/918585058779?text=Hello%20MediQ%20Support,%20I%20need%20assistance%20with%20my%20booking."
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '12px', background: '#f0fdf4',
+                  border: '1px solid #bbf7d0', padding: '14px 16px', borderRadius: '14px',
+                  textDecoration: 'none', color: '#166534', fontWeight: '700', fontSize: '13.5px',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.02)'
+                }}
+              >
+                <span style={{ fontSize: '20px' }}>🟢</span>
+                <div style={{ flex: 1 }}>
+                  <div>WhatsApp Chat</div>
+                  <div style={{ fontSize: '11px', color: '#15803d', fontWeight: 'normal' }}>+91 85850 58779</div>
+                </div>
+                <span>→</span>
+              </a>
+
+              {/* Email Option */}
+              <a
+                href="mailto:helpdesk.mediq@gmail.com?subject=Support%20Request%20-%20MediQ%20Patient%20Portal"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '12px', background: '#f8f6f0',
+                  border: '1px solid #e2e8f0', padding: '14px 16px', borderRadius: '14px',
+                  textDecoration: 'none', color: '#0b332c', fontWeight: '700', fontSize: '13.5px',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.02)'
+                }}
+              >
+                <span style={{ fontSize: '20px' }}>✉️</span>
+                <div style={{ flex: 1 }}>
+                  <div>Email Support</div>
+                  <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 'normal' }}>helpdesk.mediq@gmail.com</div>
+                </div>
+                <span>→</span>
+              </a>
+            </div>
+
+            <button
+              onClick={() => setShowSupportModal(false)}
+              style={{
+                width: '100%', background: '#0b332c', color: '#fff', border: 'none',
+                padding: '12px', borderRadius: '12px', fontSize: '13px', fontWeight: '700', cursor: 'pointer'
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
