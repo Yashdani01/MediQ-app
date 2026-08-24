@@ -260,6 +260,12 @@ export default function HospitalFlow({
   const [isListening, setIsListening] =
     useState(false);
 
+  const [selectedFamilyMember, setSelectedFamilyMember] =
+    useState('');
+
+  const [showCelebration, setShowCelebration] =
+    useState(false);
+
   // Dynamic Greeting Handler for MediQ
   const getDynamicGreeting = () => {
     const hour = new Date().getHours();
@@ -750,6 +756,7 @@ export default function HospitalFlow({
       setPendingBooking(null);
       setTxnId('');
       setScreenshotFile(null);
+      setShowCelebration(true);
 
       return;
     }
@@ -798,6 +805,7 @@ export default function HospitalFlow({
     });
 
     setPendingBooking(null);
+    setShowCelebration(true);
   };
 
   const clearSearch = () => {
@@ -1840,415 +1848,246 @@ export default function HospitalFlow({
       )}
 
       {pendingBooking && (
-
-        <div className="ticket-overlay">
-
-          <div
-            className="ticket-card"
-            style={{
-              width: '90%',
-              maxWidth: '400px',
-              boxSizing: 'border-box',
-            }}
-          >
-
-            <div className="ticket-header">
-              <h2>
+        <div className="ticket-overlay" style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(6, 43, 37, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div className="ticket-card" style={{ background: '#fff', width: '100%', maxWidth: '400px', borderRadius: '24px', padding: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', boxSizing: 'border-box', maxHeight: '90vh', overflowY: 'auto' }}>
+            
+            <div className="ticket-header" style={{ marginBottom: '16px' }}>
+              <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: '19px', color: '#0b332c', margin: 0 }}>
                 Confirm Your Booking
               </h2>
+              <p style={{ fontSize: '12px', color: '#64748b', margin: '4px 0 0' }}>
+                Dr. {pendingBooking.doc.name} ({pendingBooking.doc.specialty})
+              </p>
             </div>
 
-            {pendingBooking.doc.status ===
-              'not_started' && (
-
-              <div
-                style={{
-                  background: '#fef2f2',
-                  border: '1px solid #fca5a5',
-                  padding: '8px 12px',
-                  borderRadius: 8,
-                  marginBottom: 10,
-                  fontSize: 13,
-                  color: '#991b1b',
-                  textAlign: 'left',
-                }}
+            {/* 👤 CARE CIRCLE PATIENT SELECTOR */}
+            <div style={{ marginBottom: '14px' }}>
+              <label style={{ fontSize: '12px', fontWeight: '700', color: '#0b332c', display: 'block', marginBottom: '6px' }}>
+                Booking For (Care Circle):
+              </label>
+              <select
+                value={selectedFamilyMember || displayName}
+                onChange={(e) => setSelectedFamilyMember(e.target.value)}
+                style={{ width: '100%', padding: '11px 12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '13.5px', background: '#fff', color: '#0b332c', boxSizing: 'border-box' }}
               >
-                ℹ️{' '}
-                <strong>
-                  Note:
-                </strong>{' '}
-                Consultation hasn't started yet today,
-                but you can reserve your advance queue
-                token now!
-              </div>
+                <option value={displayName}>{displayName} (Self)</option>
+                {/* Dynamic family members if passed or stored */}
+                <option value="Spouse">Spouse / Family Member</option>
+                <option value="Parent">Parent / Elder</option>
+              </select>
+            </div>
 
-            )}
+            <div style={{ marginBottom: '14px' }}>
+              <label style={{ fontSize: '12px', fontWeight: '700', color: '#0b332c', display: 'block', marginBottom: '6px' }}>
+                Contact Phone Number:
+              </label>
+              <input
+                placeholder="Enter 10-digit mobile number"
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
+                style={{ width: '100%', padding: '11px 12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '13.5px', boxSizing: 'border-box' }}
+              />
+            </div>
 
-            {pendingBooking.doc.status ===
-              'delayed' && (
-
-              <div
-                style={{
-                  background: '#fffbeb',
-                  border: '1px solid #fde68a',
-                  padding: '8px 12px',
-                  borderRadius: 8,
-                  marginBottom: 10,
-                  fontSize: 13,
-                  color: '#92400e',
-                  textAlign: 'left',
-                }}
-              >
-                ℹ️{' '}
-                <strong>
-                  Note:
-                </strong>{' '}
-                Dr. {pendingBooking.doc.name} is running ~
-                {pendingBooking.doc.delay_minutes ||
-                  10}
-                m delayed, but bookings remain open.
-              </div>
-
-            )}
-
-            {pendingBooking.doc.status ===
-              'on_break' && (
-
-              <div
-                style={{
-                  background: '#f3f4f6',
-                  border: '1px solid #d1d5db',
-                  padding: '8px 12px',
-                  borderRadius: 8,
-                  marginBottom: 10,
-                  fontSize: 13,
-                  color: '#374151',
-                  textAlign: 'left',
-                }}
-              >
-                ℹ️{' '}
-                <strong>
-                  Note:
-                </strong>{' '}
-                Dr. {pendingBooking.doc.name} is
-                currently on a break. You can still
-                join the queue.
-              </div>
-
-            )}
-
-            {pendingBooking.doc.consultation_fee !=
-              null && (
-
-              <p
-                style={{
-                  textAlign: 'center',
-                  fontSize: 15,
-                  fontWeight: 700,
-                  color: '#22c55e',
-                  marginBottom: 10,
-                }}
-              >
-                Consultation Fee: ₹
-                {
-                  pendingBooking.doc
-                    .consultation_fee
-                }
-              </p>
-
-            )}
-
-            <input
-              placeholder="Your contact phone number"
-              value={contactPhone}
-              onChange={(e) =>
-                setContactPhone(
-                  e.target.value
-                )
-              }
-              style={{
-                width: '100%',
-                padding: 10,
-                borderRadius: 8,
-                border: '1px solid #e0e0e0',
-                fontSize: 14,
-                marginBottom: 14,
-                boxSizing: 'border-box',
-              }}
-            />
-
-            <p
-              style={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: '#555',
-                marginBottom: 8,
-              }}
-            >
-              Payment Method
+            <p style={{ fontSize: '12.5px', fontWeight: '700', color: '#10b981', marginBottom: '12px' }}>
+              Consultation Fee: ₹{pendingBooking.doc.consultation_fee || 500}
             </p>
 
-            <div
-              style={{
-                display: 'flex',
-                gap: 10,
-                margin: '0 0 16px',
-                width: '100%',
-                boxSizing: 'border-box',
-              }}
-            >
-
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
               <button
-                onClick={() =>
-                  setSelectedPayment(
-                    'cash'
-                  )
-                }
-                style={{
-                  flex: 1,
-                  padding: 14,
-                  borderRadius: 10,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  border:
-                    selectedPayment ===
-                    'cash'
-                      ? 'none'
-                      : '1px solid #ddd',
-                  background:
-                    selectedPayment ===
-                    'cash'
-                      ? '#0b332c'
-                      : 'white',
-                  color:
-                    selectedPayment ===
-                    'cash'
-                      ? 'white'
-                      : '#333',
-                }}
+                onClick={() => setSelectedPayment('cash')}
+                style={{ flex: 1, padding: '12px', borderRadius: '12px', fontWeight: '700', fontSize: '13px', cursor: 'pointer', border: selectedPayment === 'cash' ? 'none' : '1px solid #e2e8f0', background: selectedPayment === 'cash' ? '#0b332c' : '#fff', color: selectedPayment === 'cash' ? '#fff' : '#0b332c' }}
               >
-                Cash
+                Cash at Clinic
               </button>
-
               <button
-                onClick={() =>
-                  setSelectedPayment(
-                    'upi'
-                  )
-                }
-                disabled={
-                  !hospitalUpi
-                }
-                style={{
-                  flex: 1,
-                  padding: 14,
-                  borderRadius: 10,
-                  fontWeight: 600,
-                  cursor:
-                    hospitalUpi
-                      ? 'pointer'
-                      : 'not-allowed',
-                  border:
-                    selectedPayment ===
-                    'upi'
-                      ? 'none'
-                      : '1px solid #ddd',
-                  background:
-                    selectedPayment ===
-                    'upi'
-                      ? '#0b332c'
-                      : 'white',
-                  color:
-                    selectedPayment ===
-                    'upi'
-                      ? 'white'
-                      : hospitalUpi
-                      ? '#333'
-                      : '#bbb',
-                }}
+                onClick={() => setSelectedPayment('upi')}
+                disabled={!hospitalUpi}
+                style={{ flex: 1, padding: '12px', borderRadius: '12px', fontWeight: '700', fontSize: '13px', cursor: hospitalUpi ? 'pointer' : 'not-allowed', border: selectedPayment === 'upi' ? 'none' : '1px solid #e2e8f0', background: selectedPayment === 'upi' ? '#0b332c' : '#fff', color: selectedPayment === 'upi' ? '#fff' : hospitalUpi ? '#0b332c' : '#cbd5e1' }}
               >
                 Online / UPI
               </button>
-
             </div>
 
-            {!hospitalUpi && (
-
-              <p
-                style={{
-                  fontSize: 13,
-                  color: '#999',
-                  textAlign: 'center',
-                }}
-              >
-                This clinic hasn't set up UPI yet —
-                Cash only.
-              </p>
-
-            )}
-
-            {selectedPayment ===
-              'upi' &&
-              hospitalUpi &&
-              !paymentExpired && (
-
-              <>
-
-                <p
-                  style={{
-                    textAlign: 'center',
-                    fontSize: 14,
-                    marginBottom: 4,
-                  }}
-                >
-                  {pendingBooking.doc
-                    .consultation_fee !=
-                    null ? (
-
-                    <>
-                      Pay{' '}
-                      <strong>
-                        ₹
-                        {
-                          pendingBooking
-                            .doc
-                            .consultation_fee
-                        }
-                      </strong>{' '}
-                      to{' '}
-                      <strong>
-                        {hospitalUpi}
-                      </strong>
-                    </>
-
-                  ) : (
-
-                    <>
-                      Pay to:{' '}
-                      <strong>
-                        {hospitalUpi}
-                      </strong>
-                    </>
-
-                  )}
+            {selectedPayment === 'upi' && hospitalUpi && (
+              <div style={{ background: '#f8f6f0', padding: '12px', borderRadius: '12px', marginBottom: '14px', border: '1px solid #e2e8f0' }}>
+                <p style={{ fontSize: '12.5px', margin: '0 0 6px', color: '#0b332c' }}>
+                  Pay via UPI to: <strong>{hospitalUpi}</strong>
                 </p>
-
-                <p
-                  style={{
-                    textAlign: 'center',
-                    fontSize: 13,
-                    color:
-                      timeLeft <= 20
-                        ? '#ef4444'
-                        : '#666',
-                    fontWeight: 700,
-                    marginBottom: 12,
-                  }}
-                >
-                  Time remaining:{' '}
-                  {Math.floor(
-                    timeLeft / 60
-                  )}
-                  :
-                  {String(
-                    timeLeft % 60
-                  ).padStart(2, '0')}
-                </p>
-
                 <input
-                  placeholder="Transaction / UTR ID"
+                  placeholder="Enter Transaction / UTR ID"
                   value={txnId}
-                  onChange={(e) =>
-                    setTxnId(
-                      e.target.value
-                    )
-                  }
-                  style={{
-                    width: '100%',
-                    padding: 10,
-                    borderRadius: 8,
-                    border: '1px solid #e0e0e0',
-                    fontSize: 14,
-                    marginBottom: 8,
-                    boxSizing: 'border-box',
-                  }}
+                  onChange={(e) => setTxnId(e.target.value)}
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13px', marginBottom: '8px', boxSizing: 'border-box' }}
                 />
-
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) =>
-                    setScreenshotFile(
-                      e.target.files[0]
-                    )
-                  }
-                  style={{
-                    width: '100%',
-                    marginBottom: 12,
-                    fontSize: 13,
-                  }}
+                  onChange={(e) => setScreenshotFile(e.target.files[0])}
+                  style={{ width: '100%', fontSize: '12px' }}
                 />
-
-              </>
-
+              </div>
             )}
 
-            {selectedPayment ===
-              'upi' &&
-              hospitalUpi &&
-              paymentExpired && (
-
-              <p
-                style={{
-                  textAlign: 'center',
-                  color: '#ef4444',
-                  fontWeight: 600,
-                  marginBottom: 12,
-                }}
-              >
-                Time expired. Please cancel and book
-                again.
+            {bookingError && (
+              <p style={{ color: '#ef4444', fontSize: '12px', margin: '0 0 12px', fontWeight: '600' }}>
+                {bookingError}
               </p>
-
             )}
 
             <button
-              className="ticket-close-btn"
-              onClick={
-                handleConfirmBooking
-              }
-              disabled={
-                submittingPayment ||
-                (
-                  selectedPayment ===
-                    'upi' &&
-                  paymentExpired
-                )
-              }
+              onClick={handleConfirmBooking}
+              disabled={submittingPayment}
+              style={{ width: '100%', background: '#10b981', color: '#fff', border: 'none', padding: '13px', borderRadius: '12px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', marginBottom: '8px', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)' }}
             >
-              {submittingPayment
-                ? 'Submitting...'
-                : 'Confirm Booking'}
+              {submittingPayment ? 'Confirming Token...' : '✅ Confirm & Get Token'}
             </button>
 
             <button
-              onClick={() =>
-                setPendingBooking(null)
-              }
-              style={{
-                width: '100%',
-                marginTop: 8,
-                padding: 10,
-                borderRadius: 8,
-                border: '1px solid #ddd',
-                background: 'white',
-                cursor: 'pointer',
-              }}
+              onClick={() => setPendingBooking(null)}
+              style={{ width: '100%', background: '#fff', color: '#64748b', border: '1px solid #e2e8f0', padding: '11px', borderRadius: '12px', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}
             >
               Cancel
             </button>
+          </div>
+        </div>
+      )}
+
+      {showCelebration && (
+
+        <div
+          className="celebration-overlay"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 3000,
+            background: 'rgba(6, 43, 37, 0.65)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px',
+          }}
+        >
+
+          <div
+            style={{
+              background: '#fff',
+              width: '100%',
+              maxWidth: '360px',
+              borderRadius: '24px',
+              padding: '32px 24px',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.25)',
+              boxSizing: 'border-box',
+              textAlign: 'center',
+              position: 'relative',
+              overflow: 'hidden',
+              animation: 'mediq-pop-in 0.35s ease',
+            }}
+          >
+
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                fontSize: '22px',
+                lineHeight: 1,
+                padding: '10px 0',
+                letterSpacing: '10px',
+                opacity: 0.9,
+              }}
+            >
+              🎉 🎊 🎉 🎊 🎉
+            </div>
+
+            <div
+              style={{
+                width: '76px',
+                height: '76px',
+                borderRadius: '50%',
+                background: '#e6f4ea',
+                border: '2px solid #10b981',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '28px auto 18px',
+                animation: 'mediq-check-pop 0.4s ease 0.1s both',
+              }}
+            >
+              <svg
+                width="36"
+                height="36"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#10b981"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M20 6L9 17l-5-5" />
+              </svg>
+            </div>
+
+            <h2
+              style={{
+                fontFamily: 'Fraunces, serif',
+                fontSize: '20px',
+                color: '#0b332c',
+                margin: '0 0 8px',
+              }}
+            >
+              Booking Confirmed!
+            </h2>
+
+            <p
+              style={{
+                fontSize: '13.5px',
+                color: '#475569',
+                margin: '0 0 24px',
+                lineHeight: 1.5,
+              }}
+            >
+              Your queue token has been booked successfully.
+              You can track your live position anytime from
+              your profile.
+            </p>
+
+            <button
+              onClick={() =>
+                setShowCelebration(false)
+              }
+              style={{
+                width: '100%',
+                background: '#10b981',
+                color: '#fff',
+                border: 'none',
+                padding: '13px',
+                borderRadius: '12px',
+                fontSize: '14px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)',
+              }}
+            >
+              Great, Thanks!
+            </button>
 
           </div>
+
+          <style>
+            {`
+              @keyframes mediq-pop-in {
+                from { opacity: 0; transform: scale(0.9) translateY(10px); }
+                to { opacity: 1; transform: scale(1) translateY(0); }
+              }
+              @keyframes mediq-check-pop {
+                from { opacity: 0; transform: scale(0.5); }
+                to { opacity: 1; transform: scale(1); }
+              }
+            `}
+          </style>
 
         </div>
 
