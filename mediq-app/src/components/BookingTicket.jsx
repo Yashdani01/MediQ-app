@@ -1,8 +1,16 @@
-// src/components/BookingTicket.jsx
+import React, {
+  useState,
+  useEffect,
+  useRef,
+} from 'react';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { getAppointmentStatus, cancelAppointment } from '../hospitalData';
+import {
+  getAppointmentStatus,
+  cancelAppointment,
+} from '../hospitalData';
+
 import './BookingTicket.css';
+
 
 const BookingTicket = ({
   appointment,
@@ -11,393 +19,391 @@ const BookingTicket = ({
   paymentMethod,
   upiInfo,
   onClose,
-  onCancelled,
 }) => {
-  const [booking, setBooking] = useState(() => ({
-    id: appointment?.id,
 
-    token_number:
-      appointment?.token_number ??
-      appointment?.queue_number ??
-      null,
-
-    queue_number:
-      appointment?.queue_number ??
-      appointment?.token_number ??
-      null,
-
-    status: appointment?.status || 'waiting',
-
-    booked_at:
-      appointment?.booked_at ||
-      appointment?.created_at ||
-      null,
-
-    appointment_date:
-      appointment?.appointment_date ||
-      appointment?.booking_date ||
-      appointment?.date ||
-      null,
-
-    appointment_time:
-      appointment?.appointment_time ||
-      appointment?.booking_time ||
-      appointment?.time ||
-      null,
-
-    checked_in_at:
-      appointment?.checked_in_at || null,
-
-    queue_position:
-      patientsAheadOverride ??
-      appointment?.queue_position ??
-      null,
-
-    doctors: doctor
-      ? {
-          name: doctor.name,
-          specialty: doctor.specialty,
-          consultation_fee: doctor.consultation_fee,
-        }
-      : appointment?.doctors || null,
-
-    hospitals: appointment?.hospital
-      ? {
-          name: appointment.hospital.name,
-        }
-      : appointment?.hospitals || null,
-  }));
-
-  const [cancelling, setCancelling] = useState(false);
-  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
-  const [cancelError, setCancelError] = useState('');
-
-  const intervalRef = useRef(null);
-
-  /*
-   * Keep booking data synced if the parent sends updated appointment data.
-   */
-  useEffect(() => {
-    if (!appointment?.id) return;
-
-    setBooking((prev) => ({
-      ...prev,
-
-      id: appointment.id,
+  const [booking, setBooking] =
+    useState(() => ({
+      id: appointment?.id,
 
       token_number:
-        appointment.token_number ??
-        appointment.queue_number ??
-        prev.token_number,
+        appointment?.token_number ||
+        appointment?.queue_number,
 
       queue_number:
-        appointment.queue_number ??
-        appointment.token_number ??
-        prev.queue_number,
+        appointment?.queue_number,
 
-      status: appointment.status || prev.status,
+      status:
+        appointment?.status ||
+        'waiting',
 
       booked_at:
-        appointment.booked_at ||
-        appointment.created_at ||
-        prev.booked_at,
+        appointment?.booked_at ||
+        appointment?.created_at,
 
-      appointment_date:
-        appointment.appointment_date ||
-        appointment.booking_date ||
-        appointment.date ||
-        prev.appointment_date,
-
-      appointment_time:
-        appointment.appointment_time ||
-        appointment.booking_time ||
-        appointment.time ||
-        prev.appointment_time,
+      created_at:
+        appointment?.created_at,
 
       checked_in_at:
-        appointment.checked_in_at ?? prev.checked_in_at,
+        appointment?.checked_in_at ||
+        null,
 
-      doctors:
-        doctor
-          ? {
-              name: doctor.name,
-              specialty: doctor.specialty,
-              consultation_fee: doctor.consultation_fee,
-            }
-          : appointment.doctors || prev.doctors,
+      queue_position:
+        appointment?.patientsAhead ??
+        patientsAheadOverride,
+
+      doctors: doctor
+        ? {
+            name: doctor.name,
+            specialty:
+              doctor.specialty,
+            consultation_fee:
+              doctor.consultation_fee,
+          }
+        : appointment?.doctor
+        ? appointment.doctor
+        : null,
 
       hospitals:
-        appointment.hospital
+        appointment?.hospital
           ? {
-              name: appointment.hospital.name,
+              name:
+                appointment.hospital.name,
             }
-          : appointment.hospitals || prev.hospitals,
+          : null,
+
+      payment_method:
+        appointment?.payment_method ||
+        paymentMethod ||
+        'cash',
     }));
-  }, [appointment, doctor]);
 
-  /*
-   * Fetch latest booking status.
-   */
-  const fetchStatus = async () => {
-    if (!booking?.id) return;
 
-    try {
-      const statusData = await getAppointmentStatus(booking.id);
+  const [cancelling, setCancelling] =
+    useState(false);
 
-      if (!statusData) return;
+  const [
+    showCancelConfirm,
+    setShowCancelConfirm,
+  ] = useState(false);
 
-      setBooking((prev) => ({
-        ...prev,
+  const [cancelError, setCancelError] =
+    useState('');
 
-        status:
-          statusData.status ||
-          prev.status,
+  const intervalRef =
+    useRef(null);
 
-        checked_in_at:
-          statusData.checked_in_at ??
-          prev.checked_in_at,
 
-        booked_at:
-          statusData.booked_at ||
-          statusData.created_at ||
-          prev.booked_at,
+  /* =====================================================
+     FETCH LIVE STATUS
+  ===================================================== */
 
-        appointment_date:
-          statusData.appointment_date ||
-          statusData.booking_date ||
-          statusData.date ||
-          prev.appointment_date,
+  const fetchStatus =
+    async () => {
 
-        appointment_time:
-          statusData.appointment_time ||
-          statusData.booking_time ||
-          statusData.time ||
-          prev.appointment_time,
+      if (!booking?.id) {
+        return;
+      }
 
-        queue_position:
-          statusData.queue_position ??
-          statusData.patients_ahead ??
-          prev.queue_position,
-      }));
-    } catch (err) {
-      console.error('Error fetching booking status:', err);
-    }
-  };
+      try {
 
-  /*
-   * Auto-refresh active appointment status.
-   */
+        const status =
+          await getAppointmentStatus(
+            booking.id
+          );
+
+        if (status) {
+
+          setBooking(
+            (prev) => ({
+              ...prev,
+
+              status:
+                status.status ||
+                prev.status,
+
+              checked_in_at:
+                status.checked_in_at ||
+                null,
+
+              booked_at:
+                status.booked_at ||
+                status.created_at ||
+                prev.booked_at,
+
+              created_at:
+                status.created_at ||
+                prev.created_at,
+
+              queue_number:
+                status.queue_number ||
+                prev.queue_number,
+
+              token_number:
+                status.token_number ||
+                prev.token_number,
+            })
+          );
+
+        }
+
+      } catch (err) {
+
+        console.error(
+          'Error fetching status:',
+          err
+        );
+
+      }
+
+    };
+
+
+  /* =====================================================
+     AUTO REFRESH
+  ===================================================== */
+
   useEffect(() => {
-    if (!booking?.id) return;
+
+    if (!booking?.id) {
+      return;
+    }
 
     fetchStatus();
 
-    intervalRef.current = setInterval(() => {
-      fetchStatus();
-    }, 15000);
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [booking?.id]);
-
-  /*
-   * Cancel appointment.
-   */
-  const handleCancel = async () => {
-    if (!booking?.id || cancelling) return;
-
-    setCancelling(true);
-    setCancelError('');
-
-    try {
-      console.log('Cancelling appointment:', booking.id);
-
-      const result = await cancelAppointment(booking.id);
-
-      console.log('Cancel appointment result:', result);
-
-      /*
-       * Immediately update the ticket.
-       */
-      const cancelledBooking = {
-        ...booking,
-        status: 'cancelled',
-      };
-
-      setBooking(cancelledBooking);
-
-      setShowCancelConfirm(false);
-
-      /*
-       * Notify parent component so My Bookings can refresh immediately.
-       */
-      if (typeof onCancelled === 'function') {
-        await onCancelled(cancelledBooking);
-      }
-
-      /*
-       * Stop status polling because booking is cancelled.
-       */
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-
-      /*
-       * Close ticket after successful cancellation.
-       */
-      setTimeout(() => {
-        if (typeof onClose === 'function') {
-          onClose();
-        }
-      }, 500);
-
-    } catch (err) {
-      console.error('Error cancelling appointment:', err);
-
-      const errorMessage =
-        err?.message ||
-        err?.error_description ||
-        'Failed to cancel booking. Please try again.';
-
-      setCancelError(errorMessage);
-
-    } finally {
-      setCancelling(false);
-    }
-  };
-
-  const formatTime = (dateStr) => {
-    if (!dateStr) return '--';
-
-    /*
-     * If the database already stores a time like 10:30:00
-     */
-    if (
-      typeof dateStr === 'string' &&
-      /^\d{1,2}:\d{2}/.test(dateStr)
-    ) {
-      const [hourString, minute] = dateStr.split(':');
-
-      const hour = Number(hourString);
-
-      if (Number.isNaN(hour)) return dateStr;
-
-      const ampm = hour >= 12 ? 'PM' : 'AM';
-
-      const formattedHour =
-        hour % 12 === 0
-          ? 12
-          : hour % 12;
-
-      return `${formattedHour
-        .toString()
-        .padStart(2, '0')}:${minute} ${ampm}`;
-    }
-
-    const date = new Date(dateStr);
-
-    if (Number.isNaN(date.getTime())) {
-      return '--';
-    }
-
-    return date.toLocaleTimeString('en-IN', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) return '--';
-
-    /*
-     * Handle YYYY-MM-DD without timezone shifting.
-     */
-    if (
-      typeof dateStr === 'string' &&
-      /^\d{4}-\d{2}-\d{2}$/.test(dateStr)
-    ) {
-      const [year, month, day] = dateStr.split('-');
-
-      const date = new Date(
-        Number(year),
-        Number(month) - 1,
-        Number(day)
+    const interval =
+      setInterval(
+        fetchStatus,
+        15000
       );
 
-      return date.toLocaleDateString('en-IN', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      });
-    }
+    intervalRef.current =
+      interval;
 
-    const date = new Date(dateStr);
+    return () => {
 
-    if (Number.isNaN(date.getTime())) {
-      return '--';
-    }
+      if (
+        intervalRef.current
+      ) {
+        clearInterval(
+          intervalRef.current
+        );
+      }
 
-    return date.toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    });
-  };
+    };
 
-  /*
-   * Status handling.
-   */
-  const normalizedStatus = (
-    booking?.status || 'waiting'
-  ).toLowerCase();
+  }, [booking?.id]);
+
+
+  /* =====================================================
+     CANCEL BOOKING
+  ===================================================== */
+
+  const handleCancel =
+    async () => {
+
+      if (!booking?.id) {
+        setCancelError(
+          'Booking ID is missing.'
+        );
+
+        return;
+      }
+
+      setCancelling(true);
+
+      setCancelError('');
+
+      try {
+
+        const result =
+          await cancelAppointment(
+            booking.id
+          );
+
+
+        /*
+          IMPORTANT:
+
+          cancelAppointment returns
+          { data } OR { error }
+
+          Therefore we must manually
+          check result.error.
+        */
+
+        if (result?.error) {
+
+          throw result.error;
+
+        }
+
+
+        /*
+          Immediately update UI
+        */
+
+        setBooking(
+          (prev) => ({
+            ...prev,
+            status: 'cancelled',
+          })
+        );
+
+
+        setShowCancelConfirm(
+          false
+        );
+
+
+        /*
+          Close after a short delay
+          so cancellation state is saved
+        */
+
+        setTimeout(() => {
+
+          if (onClose) {
+            onClose();
+          }
+
+        }, 500);
+
+
+      } catch (err) {
+
+        console.error(
+          'Error cancelling booking:',
+          err
+        );
+
+        setCancelError(
+          err?.message ||
+          'Failed to cancel booking. Please try again.'
+        );
+
+      } finally {
+
+        setCancelling(false);
+
+      }
+
+    };
+
+
+  /* =====================================================
+     DATE / TIME
+  ===================================================== */
+
+  const formatTime =
+    (dateStr) => {
+
+      if (!dateStr) {
+        return '--';
+      }
+
+      const date =
+        new Date(dateStr);
+
+      if (
+        Number.isNaN(
+          date.getTime()
+        )
+      ) {
+        return '--';
+      }
+
+      return date.toLocaleTimeString(
+        'en-IN',
+        {
+          hour: '2-digit',
+          minute: '2-digit',
+        }
+      );
+
+    };
+
+
+  const formatDate =
+    (dateStr) => {
+
+      if (!dateStr) {
+        return '--';
+      }
+
+      const date =
+        new Date(dateStr);
+
+      if (
+        Number.isNaN(
+          date.getTime()
+        )
+      ) {
+        return '--';
+      }
+
+      return date.toLocaleDateString(
+        'en-IN',
+        {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        }
+      );
+
+    };
+
+
+  /* =====================================================
+     STATUS
+  ===================================================== */
+
+  const isCheckedIn =
+    !!booking?.checked_in_at;
 
   const isCompleted =
-    normalizedStatus === 'completed' ||
-    normalizedStatus === 'seen';
+    booking?.status ===
+      'completed' ||
+    booking?.status ===
+      'seen';
 
   const isCancelled =
-    normalizedStatus === 'cancelled' ||
-    normalizedStatus === 'canceled';
-
-  const isWaiting =
-    normalizedStatus === 'waiting' ||
-    normalizedStatus === 'pending' ||
-    normalizedStatus === 'confirmed';
-
-  const isCheckedIn = Boolean(booking?.checked_in_at);
+    booking?.status ===
+    'cancelled';
 
   const isActive =
     !isCompleted &&
     !isCancelled;
 
-  /*
-   * Progress calculation.
-   */
+
   let progress = 0;
 
   if (isCancelled) {
+
     progress = 0;
+
   } else if (isCompleted) {
+
     progress = 100;
+
   } else if (isCheckedIn) {
+
     progress = 50;
-  } else {
-    progress = 0;
+
   }
+
 
   const progressLabel =
     isCancelled
       ? 'Cancelled'
       : isCompleted
-        ? 'Complete'
-        : isCheckedIn
-          ? 'Checked In'
-          : 'Waiting';
+      ? 'Complete'
+      : isCheckedIn
+      ? 'Checked In'
+      : 'Waiting';
 
-  const bookedStepActive = true;
+
+  const bookedStepActive =
+    true;
 
   const checkedInStepActive =
     isCheckedIn ||
@@ -406,52 +412,42 @@ const BookingTicket = ({
   const yourTurnStepActive =
     isCompleted;
 
+
   const queueStatusText =
     isCancelled
-      ? 'Cancelled'
+      ? 'Booking cancelled'
       : isCompleted
-        ? 'Completed'
-        : isCheckedIn
-          ? 'Checked in — waiting to be called'
-          : 'Waiting to be called';
+      ? 'Consultation completed'
+      : isCheckedIn
+      ? 'Checked in — waiting to be called'
+      : 'Waiting to be called';
+
 
   const displayStatusLabel =
     isCancelled
       ? 'Cancelled'
       : isCompleted
-        ? 'Completed'
-        : isCheckedIn
-          ? 'Checked In'
-          : isWaiting
-            ? 'Waiting'
-            : booking?.status || 'Waiting';
+      ? 'Completed'
+      : isCheckedIn
+      ? 'Checked In'
+      : 'Waiting';
 
-  /*
-   * Prefer actual appointment date.
-   * Fall back to booked_at only if appointment date doesn't exist.
-   */
-  const displayDate =
-    booking?.appointment_date ||
-    booking?.booked_at;
-
-  /*
-   * Prefer actual appointment time.
-   */
-  const displayTime =
-    booking?.appointment_time ||
-    null;
 
   if (!booking?.id) {
+
     return (
       <div className="ticket-error">
+
         <span className="ticket-error-icon">
           ⚠️
         </span>
 
-        <h3>Booking not found</h3>
+        <h3>
+          Booking not found
+        </h3>
 
         <p>
-          We couldn't find your booking details.
+          We couldn't find your booking details
         </p>
 
         <button
@@ -460,27 +456,31 @@ const BookingTicket = ({
         >
           Close
         </button>
+
       </div>
     );
+
   }
 
+
   return (
+
     <div className="ticket-container">
 
       <button
         className="ticket-close"
         onClick={onClose}
-        type="button"
-        disabled={cancelling}
       >
         ✕
       </button>
+
 
       {/* HEADER */}
 
       <div className="ticket-header">
 
         <div className="ticket-brand">
+
           <span className="ticket-brand-icon">
             🏥
           </span>
@@ -488,23 +488,22 @@ const BookingTicket = ({
           <span className="ticket-brand-name">
             MediQ
           </span>
+
         </div>
 
-        <div
-          className={`ticket-status-pill ${
-            isCancelled
-              ? 'cancelled'
-              : 'active'
-          }`}
-        >
+
+        <div className="ticket-status-pill">
+
           {isCancelled
             ? 'Cancelled'
             : isCompleted
-              ? 'Completed'
-              : 'Active'}
+            ? 'Completed'
+            : 'Active'}
+
         </div>
 
       </div>
+
 
       {/* TOKEN */}
 
@@ -515,13 +514,16 @@ const BookingTicket = ({
         </span>
 
         <span className="ticket-token-number">
+
           #
           {booking.token_number ||
             booking.queue_number ||
             '--'}
+
         </span>
 
       </div>
+
 
       {/* PROGRESS */}
 
@@ -551,10 +553,13 @@ const BookingTicket = ({
               cy="60"
               r="50"
               style={{
-                strokeDasharray: 314.16,
+                strokeDasharray:
+                  314.16,
+
                 strokeDashoffset:
                   314.16 -
-                  (progress / 100) * 314.16,
+                  (progress / 100) *
+                    314.16,
               }}
             />
 
@@ -578,6 +583,7 @@ const BookingTicket = ({
 
         </div>
 
+
         <div className="ticket-queue-info">
 
           <span className="ticket-queue-label">
@@ -585,9 +591,11 @@ const BookingTicket = ({
           </span>
 
           <span className="ticket-queue-number">
+
             #
             {booking.queue_position ??
               '--'}
+
           </span>
 
           <span className="ticket-queue-status">
@@ -598,9 +606,11 @@ const BookingTicket = ({
 
       </div>
 
+
       {/* TIMELINE */}
 
       <div className="ticket-timeline">
+
 
         <div
           className={`ticket-timeline-step ${
@@ -621,9 +631,12 @@ const BookingTicket = ({
             </p>
 
             <p className="ticket-timeline-time">
+
               {formatTime(
-                booking.booked_at
+                booking.booked_at ||
+                booking.created_at
               )}
+
             </p>
 
           </div>
@@ -633,6 +646,7 @@ const BookingTicket = ({
           )}
 
         </div>
+
 
         <div
           className={`ticket-timeline-step ${
@@ -653,24 +667,29 @@ const BookingTicket = ({
             </p>
 
             <p className="ticket-timeline-time">
+
               {booking.checked_in_at
                 ? formatTime(
                     booking.checked_in_at
                   )
                 : 'Waiting...'}
+
             </p>
 
           </div>
 
-          {isCheckedIn && !isCompleted && (
-            <span className="ticket-timeline-dot pulse" />
-          )}
+
+          {isCheckedIn &&
+            !isCompleted && (
+              <span className="ticket-timeline-dot pulse" />
+            )}
 
           {isCompleted && (
             <span className="ticket-timeline-dot" />
           )}
 
         </div>
+
 
         <div
           className={`ticket-timeline-step ${
@@ -691,12 +710,15 @@ const BookingTicket = ({
             </p>
 
             <p className="ticket-timeline-time">
+
               {isCompleted
                 ? 'Completed'
                 : 'Soon'}
+
             </p>
 
           </div>
+
 
           {isCompleted && (
             <span className="ticket-timeline-dot" />
@@ -706,9 +728,11 @@ const BookingTicket = ({
 
       </div>
 
-      {/* BOOKING DETAILS */}
+
+      {/* DETAILS */}
 
       <div className="ticket-details">
+
 
         <div className="ticket-detail-row">
 
@@ -717,11 +741,14 @@ const BookingTicket = ({
           </span>
 
           <span className="ticket-detail-value">
+
             {booking.doctors?.name ||
               '--'}
+
           </span>
 
         </div>
+
 
         <div className="ticket-detail-row">
 
@@ -730,11 +757,14 @@ const BookingTicket = ({
           </span>
 
           <span className="ticket-detail-value">
+
             {booking.doctors?.specialty ||
               '--'}
+
           </span>
 
         </div>
+
 
         <div className="ticket-detail-row">
 
@@ -743,37 +773,32 @@ const BookingTicket = ({
           </span>
 
           <span className="ticket-detail-value">
+
             {booking.hospitals?.name ||
               '--'}
+
           </span>
 
         </div>
+
 
         <div className="ticket-detail-row">
 
           <span className="ticket-detail-label">
-            Appointment Date
+            Date
           </span>
 
           <span className="ticket-detail-value">
-            {formatDate(displayDate)}
+
+            {formatDate(
+              booking.booked_at ||
+              booking.created_at
+            )}
+
           </span>
 
         </div>
 
-        {displayTime && (
-          <div className="ticket-detail-row">
-
-            <span className="ticket-detail-label">
-              Appointment Time
-            </span>
-
-            <span className="ticket-detail-value">
-              {formatTime(displayTime)}
-            </span>
-
-          </div>
-        )}
 
         <div className="ticket-detail-row">
 
@@ -783,7 +808,8 @@ const BookingTicket = ({
 
           <span className="ticket-detail-value">
 
-            {paymentMethod === 'upi'
+            {booking.payment_method ===
+            'upi'
               ? `UPI${
                   upiInfo?.upiId
                     ? ` · ${upiInfo.upiId}`
@@ -795,6 +821,7 @@ const BookingTicket = ({
 
         </div>
 
+
         <div className="ticket-detail-row">
 
           <span className="ticket-detail-label">
@@ -803,7 +830,7 @@ const BookingTicket = ({
 
           <span
             className={`ticket-detail-status ${
-              normalizedStatus
+              booking.status
             }`}
           >
             {displayStatusLabel}
@@ -813,7 +840,8 @@ const BookingTicket = ({
 
       </div>
 
-      {/* CANCEL BOOKING */}
+
+      {/* CANCEL ACTION */}
 
       {isActive && (
 
@@ -825,10 +853,11 @@ const BookingTicket = ({
               className="ticket-cancel-btn"
               onClick={() => {
                 setCancelError('');
-                setShowCancelConfirm(true);
+                setShowCancelConfirm(
+                  true
+                );
               }}
               disabled={cancelling}
-              type="button"
             >
               Cancel Booking
             </button>
@@ -841,41 +870,47 @@ const BookingTicket = ({
                 Are you sure you want to cancel this booking?
               </p>
 
+
               {cancelError && (
+
                 <p
                   style={{
-                    color: '#dc2626',
+                    color: '#c0392b',
+                    marginBottom: '10px',
                     fontSize: '13px',
-                    marginBottom: '12px',
                   }}
                 >
                   {cancelError}
                 </p>
+
               )}
+
 
               <div className="ticket-cancel-confirm-buttons">
 
                 <button
                   className="ticket-cancel-confirm-no"
-                  onClick={() => {
-                    setCancelError('');
-                    setShowCancelConfirm(false);
-                  }}
+                  onClick={() =>
+                    setShowCancelConfirm(
+                      false
+                    )
+                  }
                   disabled={cancelling}
-                  type="button"
                 >
                   No, Keep it
                 </button>
+
 
                 <button
                   className="ticket-cancel-confirm-yes"
                   onClick={handleCancel}
                   disabled={cancelling}
-                  type="button"
                 >
+
                   {cancelling
                     ? 'Cancelling...'
                     : 'Yes, Cancel'}
+
                 </button>
 
               </div>
@@ -888,15 +923,19 @@ const BookingTicket = ({
 
       )}
 
+
       {/* FOOTER */}
 
       <div className="ticket-footer">
 
         <span>
+
           Booking ID:{' '}
+
           {booking.id
             ? booking.id.slice(0, 8)
             : '--'}
+
         </span>
 
         <span>•</span>
@@ -908,7 +947,10 @@ const BookingTicket = ({
       </div>
 
     </div>
+
   );
+
 };
+
 
 export default BookingTicket;
