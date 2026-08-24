@@ -84,7 +84,14 @@ export default function Reports({ user }) {
   const medicalDocsCount = reports.filter(r => r.category === 'Medical Documents').length;
 
   return (
-    <div style={{ width: '100%', maxWidth: '650px', margin: '0 auto', padding: '20px 16px 95px', boxSizing: 'border-box' }}>
+    <div style={{
+      width: '100%',
+      maxWidth: '650px',
+      margin: '0 auto',
+      padding: '20px 16px 100px',
+      boxSizing: 'border-box',
+      backgroundColor: 'transparent'
+    }}>
       
       {/* 🌟 1. MY HEALTH VAULT HERO BANNER */}
       <div style={{
