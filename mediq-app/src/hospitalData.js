@@ -1,6 +1,4 @@
-```js
 // src/hospitalData.js
-// Single data-access layer for the whole app.
 
 import { supabase } from './supabaseClient';
 
@@ -53,7 +51,7 @@ export async function getAllCities() {
 }
 
 /* =========================================================
-   2. DOCTORS (patient-facing)
+   2. DOCTORS
 ========================================================= */
 
 export async function getDoctorsForHospital(hospitalId) {
@@ -88,19 +86,21 @@ export async function getDoctorsForHospital(hospitalId) {
 }
 
 export async function getWaitingCount(doctorId) {
-  const { data, error } = await supabase.rpc(
-    'get_waiting_count',
-    {
-      doc_id: doctorId,
-    }
-  );
+  const { count, error } = await supabase
+    .from('appointments')
+    .select('*', {
+      count: 'exact',
+      head: true,
+    })
+    .eq('doctor_id', doctorId)
+    .eq('status', 'waiting');
 
   if (error) {
-    console.error('Error counting queue:', error);
+    console.error('Error counting waiting appointments:', error);
     return 0;
   }
 
-  return data || 0;
+  return count || 0;
 }
 
 const DAY_ABBR_COUNT = [
@@ -139,10 +139,7 @@ export async function getAvailableDoctorCounts(hospitalIds) {
     .in('hospital_id', hospitalIds);
 
   if (error) {
-    console.error(
-      'Error fetching doctor counts:',
-      error
-    );
+    console.error('Error fetching doctor counts:', error);
     return {};
   }
 
@@ -158,15 +155,10 @@ export async function getAvailableDoctorCounts(hospitalIds) {
   return counts;
 }
 
-export async function searchDoctors(
-  city = '',
-  searchTerm = ''
-) {
+export async function searchDoctors(city = '', searchTerm = '') {
   let hospitalQuery = supabase
     .from('hospitals')
-    .select(
-      'id, name, location, city, google_maps_url'
-    );
+    .select('id, name, location, city, google_maps_url');
 
   if (city && city.trim() !== '') {
     hospitalQuery = hospitalQuery.ilike(
@@ -335,6 +327,7 @@ export async function getHospitalPaymentInfo(hospitalId) {
       'Error fetching payment info:',
       error
     );
+
     return null;
   }
 
@@ -342,17 +335,18 @@ export async function getHospitalPaymentInfo(hospitalId) {
 }
 
 export async function uploadPaymentScreenshot(file) {
-  const fileExt = file.name.split('.').pop();
+  const fileExt = file.name
+    .split('.')
+    .pop();
 
   const fileName =
-    `${Date.now()}-` +
-    `${Math.random().toString(36).slice(2)}.` +
-    `${fileExt}`;
+    `${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2)}.${fileExt}`;
 
-  const { error: uploadError } =
-    await supabase.storage
-      .from('payment-screenshots')
-      .upload(fileName, file);
+  const { error: uploadError } = await supabase.storage
+    .from('payment-screenshots')
+    .upload(fileName, file);
 
   if (uploadError) {
     console.error(
@@ -428,13 +422,14 @@ export async function bookAppointment(
 
   const now = new Date();
 
-  const timeString = now.toLocaleTimeString(
-    'en-US',
-    {
-      hour: '2-digit',
-      minute: '2-digit',
-    }
-  );
+  const timeString =
+    now.toLocaleTimeString(
+      'en-US',
+      {
+        hour: '2-digit',
+        minute: '2-digit',
+      }
+    );
 
   const {
     data: appointment,
@@ -449,11 +444,14 @@ export async function bookAppointment(
       token_number: String(queueNumber),
       appointment_time: timeString,
       status: 'waiting',
-      payment_method: paymentMethod || 'cash',
-      transaction_id: transactionId || null,
+      payment_method:
+        paymentMethod || 'cash',
+      transaction_id:
+        transactionId || null,
       payment_screenshot_url:
         screenshotUrl || null,
-      contact_phone: contactPhone || null,
+      contact_phone:
+        contactPhone || null,
     })
     .select()
     .single();
@@ -502,16 +500,15 @@ export async function getMyCurrentBooking(
       status,
       doctor_id,
       hospital_id,
-      booked_at,
       created_at,
+      booked_at,
       checked_in_at,
-      payment_method,
-      transaction_id,
-      contact_phone
+      appointment_time,
+      payment_method
     `)
     .eq('patient_id', patient.id)
     .eq('status', 'waiting')
-    .order('booked_at', {
+    .order('created_at', {
       ascending: false,
     })
     .limit(1)
@@ -523,25 +520,36 @@ export async function getMyCurrentBooking(
 
   const { data: doctor } = await supabase
     .from('doctors')
-    .select(
-      'name, specialty, avg_minutes_per_patient, consultation_fee'
-    )
+    .select(`
+      name,
+      specialty,
+      avg_minutes_per_patient,
+      consultation_fee
+    `)
     .eq('id', appointment.doctor_id)
     .single();
 
   const { data: hospital } = await supabase
     .from('hospitals')
     .select('name')
-    .eq('id', appointment.hospital_id)
+    .eq(
+      'id',
+      appointment.hospital_id
+    )
     .single();
 
-  const { count: patientsAhead } = await supabase
+  const {
+    count: patientsAhead,
+  } = await supabase
     .from('appointments')
     .select('*', {
       count: 'exact',
       head: true,
     })
-    .eq('doctor_id', appointment.doctor_id)
+    .eq(
+      'doctor_id',
+      appointment.doctor_id
+    )
     .eq('status', 'waiting')
     .lt(
       'queue_number',
@@ -552,15 +560,19 @@ export async function getMyCurrentBooking(
     ...appointment,
     doctor,
     hospital,
-    patientsAhead: patientsAhead || 0,
+    patientsAhead:
+      patientsAhead || 0,
   };
 }
+
 
 /* =========================================================
    CANCEL APPOINTMENT
 ========================================================= */
 
-export async function cancelAppointment(appointmentId) {
+export async function cancelAppointment(
+  appointmentId
+) {
   if (!appointmentId) {
     return {
       error: new Error(
@@ -568,6 +580,11 @@ export async function cancelAppointment(appointmentId) {
       ),
     };
   }
+
+  console.log(
+    'Cancelling appointment:',
+    appointmentId
+  );
 
   const {
     data,
@@ -578,8 +595,13 @@ export async function cancelAppointment(appointmentId) {
       status: 'cancelled',
     })
     .eq('id', appointmentId)
-    .in('status', ['waiting', 'checked_in'])
-    .select()
+    .eq('status', 'waiting')
+    .select(`
+      id,
+      status,
+      queue_number,
+      token_number
+    `)
     .maybeSingle();
 
   if (error) {
@@ -596,16 +618,16 @@ export async function cancelAppointment(appointmentId) {
   if (!data) {
     return {
       error: new Error(
-        'Booking could not be cancelled. It may already be completed or cancelled.'
+        'This booking could not be cancelled. It may already be completed or cancelled.'
       ),
     };
   }
 
   return {
     data,
-    success: true,
   };
 }
+
 
 /* =========================================================
    APPOINTMENT STATUS
@@ -624,7 +646,9 @@ export async function getAppointmentStatus(
       status,
       booked_at,
       created_at,
-      checked_in_at
+      checked_in_at,
+      queue_number,
+      token_number
     `)
     .eq('id', appointmentId)
     .single();
@@ -669,7 +693,9 @@ export async function getPatientProfileDetails(
   return data;
 }
 
-export async function getMyBookings(patientUserId) {
+export async function getMyBookings(
+  patientUserId
+) {
   const {
     data: patient,
     error: patientError,
@@ -702,10 +728,11 @@ export async function getMyBookings(patientUserId) {
       transaction_id,
       payment_screenshot_url,
       contact_phone,
-      checked_in_at
+      checked_in_at,
+      appointment_time
     `)
     .eq('patient_id', patient.id)
-    .order('booked_at', {
+    .order('created_at', {
       ascending: false,
     })
     .limit(20);
@@ -715,34 +742,49 @@ export async function getMyBookings(patientUserId) {
   }
 
   return Promise.all(
-    appointments.map(async (appt) => {
-      const { data: doctor } = await supabase
-        .from('doctors')
-        .select(`
-          name,
-          specialty,
-          consultation_fee
-        `)
-        .eq('id', appt.doctor_id)
-        .single();
+    appointments.map(
+      async (appt) => {
+        const {
+          data: doctor,
+        } = await supabase
+          .from('doctors')
+          .select(`
+            name,
+            specialty,
+            consultation_fee,
+            working_days,
+            start_time,
+            end_time
+          `)
+          .eq(
+            'id',
+            appt.doctor_id
+          )
+          .single();
 
-      const { data: hospital } = await supabase
-        .from('hospitals')
-        .select(`
-          name,
-          location,
-          city,
-          google_maps_url
-        `)
-        .eq('id', appt.hospital_id)
-        .single();
+        const {
+          data: hospital,
+        } = await supabase
+          .from('hospitals')
+          .select(`
+            name,
+            location,
+            city,
+            google_maps_url
+          `)
+          .eq(
+            'id',
+            appt.hospital_id
+          )
+          .single();
 
-      return {
-        ...appt,
-        doctor,
-        hospital,
-      };
-    })
+        return {
+          ...appt,
+          doctor,
+          hospital,
+        };
+      }
+    )
   );
 }
 
@@ -778,7 +820,10 @@ export async function getPatientReports(
       file_url,
       uploaded_at
     `)
-    .eq('patient_id', patient.id)
+    .eq(
+      'patient_id',
+      patient.id
+    )
     .order('uploaded_at', {
       ascending: false,
     });
@@ -811,47 +856,43 @@ export async function uploadPatientReport(
     .single();
 
   if (patientError || !patient) {
-    console.error(
-      'Error finding patient record:',
-      patientError
-    );
-
     return {
       error:
         patientError ||
-        new Error('Patient record not found'),
+        new Error(
+          'Patient record not found'
+        ),
     };
   }
 
-  const fileExt = file.name.split('.').pop();
+  const fileExt =
+    file.name.split('.').pop();
 
   const fileName =
-    `${patient.id}/` +
-    `${Date.now()}-` +
-    `${Math.random().toString(36).slice(2)}.` +
-    `${fileExt}`;
+    `${patient.id}/${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2)}.${fileExt}`;
 
   const {
     error: uploadError,
   } = await supabase.storage
     .from('patient-reports')
-    .upload(fileName, file);
-
-  if (uploadError) {
-    console.error(
-      'Error uploading report file:',
-      uploadError
+    .upload(
+      fileName,
+      file
     );
 
+  if (uploadError) {
     return {
       error: uploadError,
     };
   }
 
-  const { data: publicUrlData } =
-    supabase.storage
-      .from('patient-reports')
-      .getPublicUrl(fileName);
+  const {
+    data: publicUrlData,
+  } = supabase.storage
+    .from('patient-reports')
+    .getPublicUrl(fileName);
 
   const {
     data,
@@ -869,11 +910,6 @@ export async function uploadPatientReport(
     .single();
 
   if (insertError) {
-    console.error(
-      'Error saving report record:',
-      insertError
-    );
-
     return {
       error: insertError,
     };
@@ -1004,11 +1040,6 @@ export async function updateDoctor(
     );
 
   if (error) {
-    console.error(
-      'Error updating doctor:',
-      error
-    );
-
     return {
       error,
     };
@@ -1033,11 +1064,6 @@ export async function deleteDoctor(
     );
 
   if (error) {
-    console.error(
-      'Error deleting doctor:',
-      error
-    );
-
     return {
       error,
     };
@@ -1067,11 +1093,6 @@ export async function updateDoctorStatus(
     );
 
   if (error) {
-    console.error(
-      'Error updating status:',
-      error
-    );
-
     return {
       error,
     };
@@ -1102,11 +1123,6 @@ export async function addWalkinBooking(
   );
 
   if (error) {
-    console.error(
-      'Error adding walk-in:',
-      error
-    );
-
     return {
       error,
     };
@@ -1129,11 +1145,6 @@ export async function getHospitalUpi(pin) {
   );
 
   if (error) {
-    console.error(
-      'Error fetching UPI ID:',
-      error
-    );
-
     return null;
   }
 
@@ -1154,11 +1165,6 @@ export async function updateHospitalUpi(
     );
 
   if (error) {
-    console.error(
-      'Error updating UPI ID:',
-      error
-    );
-
     return {
       error,
     };
@@ -1168,6 +1174,7 @@ export async function updateHospitalUpi(
     success: true,
   };
 }
+
 
 /* =========================================================
    CLINIC BOOKINGS
@@ -1197,10 +1204,81 @@ export async function getTodaysBookings(
     return [];
   }
 
-  return Array.isArray(data)
-    ? data
-    : [];
+  return data || [];
 }
+
+
+/*
+  NEW FUNCTION
+
+  Gets waiting count directly from appointments.
+
+  This prevents the clinic dashboard from
+  showing zero when waiting bookings exist.
+*/
+
+export async function getClinicWaitingCount(
+  pin,
+  doctorId
+) {
+  const bookings =
+    await getTodaysBookings(
+      pin,
+      doctorId
+    );
+
+  return (bookings || []).filter(
+    (booking) =>
+      booking.status === 'waiting'
+  ).length;
+}
+
+
+export async function getClinicBookingStats(
+  pin,
+  doctorId
+) {
+  const bookings =
+    await getTodaysBookings(
+      pin,
+      doctorId
+    );
+
+  const stats = {
+    total: 0,
+    waiting: 0,
+    completed: 0,
+    cancelled: 0,
+  };
+
+  (bookings || []).forEach(
+    (booking) => {
+      stats.total += 1;
+
+      if (
+        booking.status === 'waiting'
+      ) {
+        stats.waiting += 1;
+      }
+
+      if (
+        booking.status === 'completed' ||
+        booking.status === 'seen'
+      ) {
+        stats.completed += 1;
+      }
+
+      if (
+        booking.status === 'cancelled'
+      ) {
+        stats.cancelled += 1;
+      }
+    }
+  );
+
+  return stats;
+}
+
 
 export async function markAppointmentSeen(
   pin,
@@ -1217,11 +1295,6 @@ export async function markAppointmentSeen(
     );
 
   if (error) {
-    console.error(
-      'Error marking appointment seen:',
-      error
-    );
-
     return {
       error,
     };
@@ -1247,11 +1320,6 @@ export async function checkInAppointment(
     );
 
   if (error) {
-    console.error(
-      'Error checking in appointment:',
-      error
-    );
-
     return {
       error,
     };
@@ -1262,7 +1330,9 @@ export async function checkInAppointment(
   };
 }
 
-export async function getHospitalLocation(pin) {
+export async function getHospitalLocation(
+  pin
+) {
   const {
     data,
     error,
@@ -1274,11 +1344,6 @@ export async function getHospitalLocation(pin) {
   );
 
   if (error) {
-    console.error(
-      'Error fetching location:',
-      error
-    );
-
     return null;
   }
 
@@ -1299,11 +1364,6 @@ export async function updateHospitalLocation(
     );
 
   if (error) {
-    console.error(
-      'Error updating hospital location:',
-      error
-    );
-
     return {
       error,
     };
@@ -1313,4 +1373,3 @@ export async function updateHospitalLocation(
     success: true,
   };
 }
-```
