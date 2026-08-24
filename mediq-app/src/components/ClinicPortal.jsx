@@ -2550,7 +2550,7 @@ export default function ClinicPortal() {
                      </div>
       );
     }
-  );
+  )
 }
   
       {/* ADD DOCTOR BUTTON */}
