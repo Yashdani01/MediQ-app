@@ -2547,17 +2547,12 @@ export default function ClinicPortal() {
                           ✓ Completed / Seen
                         </p>
                       )}
-                      </div>
-                      );
-                      }
-                    )
-                 )}
-      </div>
-    );
-  }
-        );
-      })}
-
+                     </div>
+      );
+    }
+  );
+}
+  
       {/* ADD DOCTOR BUTTON */}
 
       <button
