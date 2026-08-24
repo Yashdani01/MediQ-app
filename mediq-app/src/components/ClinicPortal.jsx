@@ -82,7 +82,32 @@ const SPECIALTIES = [
   'Physiotherapist',
 ];
 
-const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const DAYS = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+];
+
+const formatTime = (time) => {
+  if (!time) return '--';
+
+  const [hours, minutes] = time.split(':');
+
+  const date = new Date();
+  date.setHours(hours, minutes);
+
+  return date.toLocaleTimeString(
+    'en-IN',
+    {
+      hour: '2-digit',
+      minute: '2-digit',
+    }
+  );
+};
 
 const DEFAULT_SCHEDULE = {
   Mon: { active: true, start: '10:00', end: '14:00' },
@@ -93,16 +118,6 @@ const DEFAULT_SCHEDULE = {
   Sat: { active: true, start: '10:00', end: '13:00' },
   Sun: { active: false, start: '10:00', end: '13:00' },
 };
-
-function formatTime(t) {
-  if (!t) return '';
-
-  const [h, m] = t.split(':').map(Number);
-  const period = h >= 12 ? 'PM' : 'AM';
-  const hour = h % 12 === 0 ? 12 : h % 12;
-
-  return `${hour}:${String(m).padStart(2, '0')} ${period}`;
-}
 
 function getInitials(name = '') {
   return (
@@ -861,7 +876,7 @@ export default function ClinicPortal() {
           )}
         </div>
       </div>
-    );
+  );
   }
 
   const allBookings =
@@ -1115,1455 +1130,29 @@ export default function ClinicPortal() {
                 >
                   {item.value}
                 </p>
-              </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
+      </div>
 
-        {/* SETTINGS */}
+      {/* SETTINGS */}
 
-        {showSettingsDrawer && (
-          <div
-            style={{
-              ...cardStyle,
-              padding: 16,
-              marginBottom: 22,
-              background: '#fffdf8',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent:
-                  'space-between',
-                alignItems: 'center',
-                marginBottom: 14,
-              }}
-            >
-              <div>
-                <p
-                  style={{
-                    margin: 0,
-                    color: '#9a7a35',
-                    fontSize: 10,
-                    fontWeight: 900,
-                    letterSpacing: 0.8,
-                  }}
-                >
-                  CLINIC MANAGEMENT
-                </p>
-
-                <h3
-                  style={{
-                    margin: '4px 0 0',
-                    color: '#173a34',
-                    fontSize: 17,
-                  }}
-                >
-                  Settings & Payment
-                </h3>
-              </div>
-
-              <button
-                onClick={() =>
-                  setShowSettingsDrawer(false)
-                }
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 10,
-                  border:
-                    '1px solid #e3ded4',
-                  background: '#fff',
-                  color: '#65716d',
-                  cursor: 'pointer',
-                }}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div
-              style={{
-                display: 'grid',
-                gap: 12,
-              }}
-            >
-              {/* LOCATION */}
-
-              <div
-                style={{
-                  padding: 14,
-                  borderRadius: 18,
-                  background: '#f8f7f2',
-                  border:
-                    '1px solid #ebe7de',
-                }}
-              >
-                <p
-                  style={{
-                    margin: '0 0 4px',
-                    fontSize: 13,
-                    fontWeight: 800,
-                  }}
-                >
-                  📍 Clinic Location
-                </p>
-
-                <p
-                  style={{
-                    margin: '0 0 12px',
-                    fontSize: 12,
-                    color: '#7c8581',
-                  }}
-                >
-                  Add the Google Maps link patients
-                  can use for navigation.
-                </p>
-
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: 8,
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  <button
-                    onClick={() => {
-                      setLocationInput(locationStr);
-
-                      setEditingLocation(
-                        !editingLocation
-                      );
-                    }}
-                    style={{
-                      ...ghostBtn,
-                      padding: '9px 12px',
-                      fontSize: 12,
-                    }}
-                  >
-                    {locationStr
-                      ? 'Edit Map Link'
-                      : '+ Add Map Link'}
-                  </button>
-
-                  {locationStr && (
-                    <a
-                      href={locationStr}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{
-                        ...primaryBtn,
-                        padding: '9px 12px',
-                        fontSize: 12,
-                        textDecoration: 'none',
-                      }}
-                    >
-                      Test Route →
-                    </a>
-                  )}
-                </div>
-
-                {editingLocation && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 8,
-                      marginTop: 10,
-                    }}
-                  >
-                    <input
-                      placeholder="Paste Google Maps share link"
-                      value={locationInput}
-                      onChange={(e) =>
-                        setLocationInput(
-                          e.target.value
-                        )
-                      }
-                      style={inputStyle}
-                    />
-
-                    <button
-                      onClick={handleSaveLocation}
-                      disabled={savingLocation}
-                      style={{
-                        ...primaryBtn,
-                        padding: 11,
-                      }}
-                    >
-                      {savingLocation
-                        ? 'Saving...'
-                        : 'Save Location'}
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* UPI */}
-
-              <div
-                style={{
-                  padding: 14,
-                  borderRadius: 18,
-                  background: '#f8f7f2',
-                  border:
-                    '1px solid #ebe7de',
-                }}
-              >
-                <p
-                  style={{
-                    margin: '0 0 4px',
-                    fontSize: 13,
-                    fontWeight: 800,
-                  }}
-                >
-                  ₹ Clinic UPI Payment
-                </p>
-
-                <p
-                  style={{
-                    margin: '0 0 12px',
-                    fontSize: 12,
-                    color: '#7c8581',
-                  }}
-                >
-                  Manage the UPI ID and show a
-                  payment QR code.
-                </p>
-
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: 8,
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  <button
-                    onClick={() => {
-                      setUpiInput(upiId);
-
-                      setEditingUpi(
-                        !editingUpi
-                      );
-                    }}
-                    style={{
-                      ...ghostBtn,
-                      padding: '9px 12px',
-                      fontSize: 12,
-                    }}
-                  >
-                    {upiId
-                      ? 'Edit UPI ID'
-                      : '+ Add UPI ID'}
-                  </button>
-
-                  {upiId && (
-                    <button
-                      onClick={() =>
-                        setShowQrModal(true)
-                      }
-                      style={{
-                        ...goldBtn,
-                        padding: '9px 12px',
-                        fontSize: 12,
-                      }}
-                    >
-                      Show Payment QR
-                    </button>
-                  )}
-                </div>
-
-                {editingUpi && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 8,
-                      marginTop: 10,
-                    }}
-                  >
-                    <input
-                      placeholder="Clinic UPI ID"
-                      value={upiInput}
-                      onChange={(e) =>
-                        setUpiInput(
-                          e.target.value
-                        )
-                      }
-                      style={inputStyle}
-                    />
-
-                    <button
-                      onClick={handleSaveUpi}
-                      disabled={savingUpi}
-                      style={{
-                        ...primaryBtn,
-                        padding: 11,
-                      }}
-                    >
-                      {savingUpi
-                        ? 'Saving...'
-                        : 'Save UPI ID'}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {error && (
-          <div
-            style={{
-              marginBottom: 16,
-              padding: '11px 13px',
-              borderRadius: 14,
-              background: '#fff1ef',
-              border:
-                '1px solid #f0cbc6',
-              color: '#b7473e',
-              fontSize: 13,
-            }}
-          >
-            {error}
-          </div>
-        )}
-
-        {/* DOCTOR HEADER */}
-
+      {showSettingsDrawer && (
         <div
           style={{
-            display: 'flex',
-            justifyContent:
-              'space-between',
-            alignItems: 'end',
-            gap: 12,
-            margin: '0 2px 12px',
+            ...cardStyle,
+            padding: 16,
+            marginBottom: 22,
+            background: '#fffdf8',
           }}
         >
-          <div>
-            <p
-              style={{
-                margin: 0,
-                color: '#9a7a35',
-                fontSize: 10,
-                fontWeight: 900,
-                letterSpacing: 0.8,
-              }}
-            >
-              DOCTOR ROSTER
-            </p>
-
-            <h2
-              style={{
-                margin: '4px 0 0',
-                fontFamily:
-                  'Georgia, "Times New Roman", serif',
-                fontSize: 23,
-                color: '#173a34',
-              }}
-            >
-              Manage your doctors
-            </h2>
-          </div>
-
-          <span
-            style={{
-              background: '#eaf5f0',
-              color: '#0f7b60',
-              borderRadius: 999,
-              padding: '7px 10px',
-              fontSize: 11,
-              fontWeight: 800,
-            }}
-          >
-            {doctors.length} Doctor
-            {doctors.length === 1 ? '' : 's'}
-          </span>
-        </div>
-
-        {/* EMPTY STATE */}
-
-        {doctors.length === 0 && (
           <div
             style={{
-              ...cardStyle,
-              padding: '34px 20px',
-              textAlign: 'center',
-              marginBottom: 14,
-            }}
-          >
-            <div
-              style={{
-                fontSize: 36,
-                marginBottom: 8,
-              }}
-            >
-              🩺
-            </div>
-
-            <h3
-              style={{
-                fontFamily:
-                  'Georgia, "Times New Roman", serif',
-                margin: '0 0 6px',
-              }}
-            >
-              No doctors added yet
-            </h3>
-
-            <p
-              style={{
-                margin: 0,
-                fontSize: 13,
-                color: '#7c8581',
-              }}
-            >
-              Add your first doctor profile to
-              start managing appointments.
-            </p>
-          </div>
-        )}
-
-        {/* DOCTOR CARDS */}
-
-        {doctors.map((doc) => {
-          const isEditing =
-            editingId === doc.id;
-
-          const docBookings =
-            bookingsByDoctor[doc.id] || [];
-
-          const docWaitingCount =
-            docBookings.filter(
-              (b) =>
-                b.status === 'waiting'
-            ).length;
-
-          const specs =
-            doc.specialties || [
-              doc.specialty ||
-                'General Physician',
-            ];
-
-          const scheduleObj =
-            doc.custom_schedule || {};
-
-          const statusInfo =
-            STATUS_OPTIONS.find(
-              (s) =>
-                s.value === doc.status
-            ) || STATUS_OPTIONS[0];
-
-          return (
-            <div
-              key={doc.id}
-              style={{
-                ...cardStyle,
-                padding: 16,
-                marginBottom: 14,
-              }}
-            >
-              {isEditing ? (
-                <>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent:
-                        'space-between',
-                      alignItems: 'center',
-                      marginBottom: 12,
-                    }}
-                  >
-                    <div>
-                      <p
-                        style={{
-                          margin: 0,
-                          color: '#9a7a35',
-                          fontSize: 10,
-                          fontWeight: 900,
-                        }}
-                      >
-                        EDIT PROFILE
-                      </p>
-
-                      <h3
-                        style={{
-                          margin: '4px 0 0',
-                        }}
-                      >
-                        Doctor Details
-                      </h3>
-                    </div>
-
-                    <button
-                      onClick={() =>
-                        setEditingId(null)
-                      }
-                      style={{
-                        border: 'none',
-                        background:
-                          'transparent',
-                        fontSize: 20,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      ✕
-                    </button>
-                  </div>
-
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 10,
-                    }}
-                  >
-                    <input
-                      value={editName}
-                      onChange={(e) =>
-                        setEditName(
-                          e.target.value
-                        )
-                      }
-                      style={inputStyle}
-                      placeholder="Doctor Name"
-                    />
-
-                    <input
-                      value={editDegrees}
-                      onChange={(e) =>
-                        setEditDegrees(
-                          e.target.value
-                        )
-                      }
-                      style={inputStyle}
-                      placeholder="Degrees"
-                    />
-
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns:
-                          '1fr 1fr',
-                        gap: 8,
-                      }}
-                    >
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={editPtr}
-                        onChange={(e) =>
-                          setEditPtr(
-                            e.target.value
-                          )
-                        }
-                        style={inputStyle}
-                        placeholder="PTR Score"
-                      />
-
-                      <input
-                        type="number"
-                        value={editFee}
-                        onChange={(e) =>
-                          setEditFee(
-                            e.target.value
-                          )
-                        }
-                        style={inputStyle}
-                        placeholder="Fee ₹"
-                      />
-                    </div>
-
-                    <SpecialtySelector
-                      selected={
-                        editSpecialties
-                      }
-                      onToggle={(spec) =>
-                        toggleSpecialty(
-                          spec,
-                          editSpecialties,
-                          setEditSpecialties
-                        )
-                      }
-                    />
-
-                    <ScheduleEditor
-                      value={
-                        editDaySchedules
-                      }
-                      onChange={
-                        setEditDaySchedules
-                      }
-                    />
-
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns:
-                          '1fr 1fr',
-                        gap: 8,
-                      }}
-                    >
-                      <button
-                        onClick={() =>
-                          handleSaveEdit(
-                            doc.id
-                          )
-                        }
-                        style={{
-                          ...primaryBtn,
-                          padding: 12,
-                        }}
-                      >
-                        Save Changes
-                      </button>
-
-                      <button
-                        onClick={() =>
-                          setEditingId(null)
-                        }
-                        style={{
-                          ...ghostBtn,
-                          padding: 12,
-                        }}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  {/* DOCTOR INFO */}
-
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent:
-                        'space-between',
-                      gap: 12,
-                      alignItems:
-                        'flex-start',
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: 'flex',
-                        gap: 11,
-                        minWidth: 0,
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: 48,
-                          height: 48,
-                          flex: '0 0 48px',
-                          borderRadius: 17,
-                          background:
-                            '#123c35',
-                          color: '#d7b45e',
-                          display: 'flex',
-                          alignItems:
-                            'center',
-                          justifyContent:
-                            'center',
-                          fontSize: 14,
-                          fontWeight: 900,
-                        }}
-                      >
-                        {getInitials(
-                          doc.name
-                        )}
-                      </div>
-
-                      <div>
-                        <h3
-                          style={{
-                            margin: 0,
-                            fontSize: 16,
-                          }}
-                        >
-                          {doc.name}
-                        </h3>
-
-                        <p
-                          style={{
-                            margin:
-                              '3px 0 0',
-                            fontSize: 11,
-                            color:
-                              '#a0782b',
-                            fontWeight: 800,
-                          }}
-                        >
-                          {doc.degrees ||
-                            'MBBS, General Practitioner'}
-                        </p>
-
-                        <p
-                          style={{
-                            margin:
-                              '4px 0 0',
-                            fontSize: 11,
-                            color:
-                              '#7c8581',
-                          }}
-                        >
-                          {specs.join(' • ')}
-                        </p>
-                      </div>
-                    </div>
-
-                    <span
-                      style={{
-                        background:
-                          statusInfo.soft,
-                        color:
-                          statusInfo.color,
-                        borderRadius: 999,
-                        padding: '6px 9px',
-                        fontSize: 10,
-                        fontWeight: 900,
-                      }}
-                    >
-                      {statusInfo.label}
-                    </span>
-                  </div>
-
-                  {/* INFO PILLS */}
-
-                  <div
-                    style={{
-                      display: 'flex',
-                      gap: 8,
-                      flexWrap: 'wrap',
-                      marginTop: 14,
-                    }}
-                  >
-                    <span
-                      style={{
-                        background:
-                          '#faf7ef',
-                        color: '#9a7a35',
-                        border:
-                          '1px solid #eee2c8',
-                        padding: '6px 9px',
-                        borderRadius: 10,
-                        fontSize: 11,
-                        fontWeight: 800,
-                      }}
-                    >
-                      ★ PTR{' '}
-                      {doc.ptr_score ||
-                        '99.0'}
-                      %
-                    </span>
-
-                    {doc.consultation_fee !=
-                      null && (
-                      <span
-                        style={{
-                          background:
-                            '#edf8f3',
-                          color:
-                            '#0f7b60',
-                          border:
-                            '1px solid #d5eadf',
-                          padding:
-                            '6px 9px',
-                          borderRadius: 10,
-                          fontSize: 11,
-                          fontWeight: 800,
-                        }}
-                      >
-                        ₹
-                        {
-                          doc.consultation_fee
-                        }{' '}
-                        Fee
-                      </span>
-                    )}
-
-                    <span
-                      style={{
-                        background:
-                          '#f4f5f3',
-                        color: '#68746f',
-                        padding: '6px 9px',
-                        borderRadius: 10,
-                        fontSize: 11,
-                        fontWeight: 800,
-                      }}
-                    >
-                      {docWaitingCount} Waiting
-                    </span>
-                  </div>
-
-                  {/* STATUS */}
-
-                  <div
-                    style={{
-                      marginTop: 15,
-                      padding: 12,
-                      borderRadius: 17,
-                      background:
-                        '#faf9f6',
-                      border:
-                        '1px solid #ebe7de',
-                    }}
-                  >
-                    <p
-                      style={{
-                        margin: '0 0 8px',
-                        color: '#8a918e',
-                        fontSize: 10,
-                        fontWeight: 900,
-                        letterSpacing: 0.6,
-                      }}
-                    >
-                      LIVE QUEUE STATUS
-                    </p>
-
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: 6,
-                      }}
-                    >
-                      {STATUS_OPTIONS.map(
-                        (opt) => {
-                          const active =
-                            doc.status ===
-                            opt.value;
-
-                          return (
-                            <button
-                              key={
-                                opt.value
-                              }
-                              onClick={() =>
-                                handleStatusChange(
-                                  doc.id,
-                                  opt.value
-                                )
-                              }
-                              style={{
-                                padding:
-                                  '7px 9px',
-                                borderRadius: 10,
-                                fontSize: 10,
-                                fontWeight: 800,
-                                cursor:
-                                  'pointer',
-                                border: active
-                                  ? `1px solid ${opt.color}`
-                                  : '1px solid #e5e1d9',
-                                background:
-                                  active
-                                    ? opt.soft
-                                    : '#fff',
-                                color: active
-                                  ? opt.color
-                                  : '#78817d',
-                              }}
-                            >
-                              {
-                                opt.label
-                              }
-                            </button>
-                          );
-                        }
-                      )}
-                    </div>
-                  </div>
-
-                  {/* SCHEDULE */}
-
-                  <div
-                    style={{
-                      marginTop: 12,
-                      padding: 12,
-                      borderRadius: 17,
-                      background:
-                        '#faf9f6',
-                      border:
-                        '1px solid #ebe7de',
-                    }}
-                  >
-                    <p
-                      style={{
-                        margin: '0 0 8px',
-                        color: '#8a918e',
-                        fontSize: 10,
-                        fontWeight: 900,
-                      }}
-                    >
-                      CONSULTATION SCHEDULE
-                    </p>
-
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: 6,
-                      }}
-                    >
-                      {DAYS.map((day) => {
-                        const slot =
-                          scheduleObj[day];
-
-                        if (
-                          !slot?.active
-                        ) {
-                          return null;
-                        }
-
-                        return (
-                          <span
-                            key={day}
-                            style={{
-                              fontSize: 10,
-                              color:
-                                '#31544c',
-                              background:
-                                '#fff',
-                              border:
-                                '1px solid #e5e1d9',
-                              padding:
-                                '6px 8px',
-                              borderRadius: 9,
-                              fontWeight: 700,
-                            }}
-                          >
-                            {day} ·{' '}
-                            {formatTime(
-                              slot.start
-                            )}
-                            –
-                            {formatTime(
-                              slot.end
-                            )}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* ACTIONS */}
-
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns:
-                        '1.65fr 1fr',
-                      gap: 8,
-                      marginTop: 14,
-                    }}
-                  >
-                    <button
-                      onClick={() =>
-                        toggleTodaysPatients(
-                          doc.id
-                        )
-                      }
-                      style={{
-                        ...(expandedDoctor ===
-                        doc.id
-                          ? ghostBtn
-                          : primaryBtn),
-                        padding: 12,
-                        fontSize: 12,
-                      }}
-                    >
-                      {expandedDoctor ===
-                      doc.id
-                        ? 'Hide Queue'
-                        : `Manage Queue (${docWaitingCount})`}
-                    </button>
-
-                    <button
-                      onClick={() =>
-                        setShowWalkinForm(
-                          showWalkinForm ===
-                            doc.id
-                            ? null
-                            : doc.id
-                        )
-                      }
-                      style={{
-                        ...goldBtn,
-                        padding: 12,
-                        fontSize: 12,
-                      }}
-                    >
-                      + Walk-in
-                    </button>
-                  </div>
-
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns:
-                        '1fr 1fr',
-                      gap: 8,
-                      marginTop: 8,
-                    }}
-                  >
-                    <button
-                      onClick={() =>
-                        startEdit(doc)
-                      }
-                      style={{
-                        ...ghostBtn,
-                        padding: 10,
-                        fontSize: 12,
-                      }}
-                    >
-                      Edit Doctor
-                    </button>
-
-                    <button
-                      onClick={() =>
-                        handleDelete(
-                          doc.id,
-                          doc.name
-                        )
-                      }
-                      style={{
-                        ...dangerBtn,
-                        padding: 10,
-                        fontSize: 12,
-                      }}
-                    >
-                      Remove Doctor
-                    </button>
-                  </div>
-
-                  {/* WALK-IN */}
-
-                  {showWalkinForm ===
-                    doc.id && (
-                    <div
-                      style={{
-                        marginTop: 12,
-                        padding: 13,
-                        borderRadius: 18,
-                        background:
-                          '#fffaf0',
-                        border:
-                          '1px solid #eee0bd',
-                      }}
-                    >
-                      <p
-                        style={{
-                          margin:
-                            '0 0 10px',
-                          color:
-                            '#85611d',
-                          fontSize: 12,
-                          fontWeight: 900,
-                        }}
-                      >
-                        Add Walk-in Patient
-                      </p>
-
-                      <div
-                        style={{
-                          display: 'flex',
-                          flexDirection:
-                            'column',
-                          gap: 8,
-                        }}
-                      >
-                        <input
-                          placeholder="Patient name"
-                          value={walkinName}
-                          onChange={(e) =>
-                            setWalkinName(
-                              e.target.value
-                            )
-                          }
-                          style={
-                            inputStyle
-                          }
-                        />
-
-                        <input
-                          placeholder="Phone (optional)"
-                          value={walkinPhone}
-                          onChange={(e) =>
-                            setWalkinPhone(
-                              e.target.value
-                            )
-                          }
-                          style={
-                            inputStyle
-                          }
-                        />
-
-                        <button
-                          onClick={() =>
-                            handleWalkinSubmit(
-                              doc.id
-                            )
-                          }
-                          style={{
-                            ...primaryBtn,
-                            padding: 11,
-                          }}
-                        >
-                          Create Token
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* QUEUE */}
-
-                  {expandedDoctor ===
-                    doc.id && (
-                    <div
-                      style={{
-                        marginTop: 15,
-                        paddingTop: 14,
-                        borderTop:
-                          '1px solid #ebe7de',
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: 'flex',
-                          justifyContent:
-                            'space-between',
-                          alignItems:
-                            'center',
-                          marginBottom: 10,
-                        }}
-                      >
-                        <div>
-                          <p
-                            style={{
-                              margin: 0,
-                              color:
-                                '#9a7a35',
-                              fontSize: 10,
-                              fontWeight: 900,
-                            }}
-                          >
-                            TODAY'S QUEUE
-                          </p>
-
-                          <h4
-                            style={{
-                              margin:
-                                '4px 0 0',
-                            }}
-                          >
-                            {
-                              docBookings.length
-                            }{' '}
-                            Patient
-                            {docBookings.length ===
-                            1
-                              ? ''
-                              : 's'}
-                          </h4>
-                        </div>
-
-                        <button
-                          onClick={() =>
-                            refreshBookings(
-                              doc.id
-                            )
-                          }
-                          style={{
-                            ...ghostBtn,
-                            padding:
-                              '8px 10px',
-                            fontSize: 11,
-                          }}
-                        >
-                          Refresh
-                        </button>
-                      </div>
-
-                      {loadingBookings ? (
-                        <p
-                          style={{
-                            textAlign:
-                              'center',
-                            color:
-                              '#8a918e',
-                          }}
-                        >
-                          Loading queue...
-                        </p>
-                      ) : docBookings.length ===
-                        0 ? (
-                        <div
-                          style={{
-                            padding:
-                              '22px 12px',
-                            textAlign:
-                              'center',
-                            background:
-                              '#faf9f6',
-                            borderRadius: 16,
-                            color:
-                              '#8a918e',
-                            fontSize: 13,
-                          }}
-                        >
-                          No bookings for today yet.
-                        </div>
-                      ) : (
-                        docBookings.map(
-                          (b) => {
-                            const isWaiting =
-                              b.status ===
-                              'waiting';
-
-                            const isUpdating =
-                              updatingPatient ===
-                              b.id;
-
-                            return (
-                              <div
-                                key={b.id}
-                                style={{
-                                  background:
-                                    '#faf9f6',
-                                  border:
-                                    '1px solid #ebe7de',
-                                  borderRadius: 18,
-                                  padding: 13,
-                                  marginBottom: 9,
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    display:
-                                      'flex',
-                                    justifyContent:
-                                      'space-between',
-                                    gap: 10,
-                                    alignItems:
-                                      'flex-start',
-                                  }}
-                                >
-                                  <div
-                                    style={{
-                                      display:
-                                        'flex',
-                                      gap: 10,
-                                    }}
-                                  >
-                                    <div
-                                      style={{
-                                        width: 38,
-                                        height: 38,
-                                        borderRadius: 13,
-                                        background:
-                                          '#123c35',
-                                        color:
-                                          '#d7b45e',
-                                        display:
-                                          'flex',
-                                        alignItems:
-                                          'center',
-                                        justifyContent:
-                                          'center',
-                                        fontSize: 13,
-                                        fontWeight: 900,
-                                      }}
-                                    >
-                                      #
-                                      {
-                                        b.token_number
-                                      }
-                                    </div>
-
-                                    <div>
-                                      <h5
-                                        style={{
-                                          margin:
-                                            '1px 0 2px',
-                                          fontSize: 14,
-                                        }}
-                                      >
-                                        {b.patient_name ||
-                                          'Patient'}
-                                      </h5>
-
-                                      <p
-                                        style={{
-                                          margin: 0,
-                                          fontSize: 11,
-                                          color:
-                                            '#8a918e',
-                                        }}
-                                      >
-                                        {b.is_walkin
-                                          ? 'Walk-in patient'
-                                          : 'App booking'}
-                                      </p>
-                                    </div>
-                                  </div>
-
-                                  <span
-                                    style={{
-                                      fontSize: 10,
-                                      fontWeight: 900,
-                                      padding:
-                                        '5px 8px',
-                                      borderRadius: 999,
-                                      background:
-                                        isWaiting
-                                          ? '#fff4dc'
-                                          : '#edf8f3',
-                                      color:
-                                        isWaiting
-                                          ? '#aa7413'
-                                          : '#0f8c6b',
-                                    }}
-                                  >
-                                    {isWaiting
-                                      ? 'WAITING'
-                                      : 'COMPLETED'}
-                                  </span>
-                                </div>
-
-                                {isWaiting ? (
-                                  <div
-                                    style={{
-                                      display:
-                                        'grid',
-                                      gridTemplateColumns:
-                                        '1fr 1fr 1fr',
-                                      gap: 7,
-                                      marginTop: 11,
-                                    }}
-                                  >
-                                    <button
-                                      onClick={() =>
-                                        handleCheckIn(
-                                          b.id,
-                                          doc.id
-                                        )
-                                      }
-                                      disabled={
-                                        isUpdating
-                                      }
-                                      style={{
-                                        ...ghostBtn,
-                                        padding: 9,
-                                        fontSize: 10,
-                                      }}
-                                    >
-                                      Check In
-                                    </button>
-
-                                    <button
-                                      onClick={() =>
-                                        handleMarkSeen(
-                                          b.id,
-                                          doc.id
-                                        )
-                                      }
-                                      disabled={
-                                        isUpdating
-                                      }
-                                      style={{
-                                        ...primaryBtn,
-                                        padding: 9,
-                                        fontSize: 10,
-                                      }}
-                                    >
-                                      Mark Seen
-                                    </button>
-
-                                    <button
-                                      onClick={() =>
-                                        handleNoShowCancel(
-                                          b.id,
-                                          doc.id
-                                        )
-                                      }
-                                      disabled={
-                                        isUpdating
-                                      }
-                                      style={{
-                                        ...dangerBtn,
-                                        padding: 9,
-                                        fontSize: 10,
-                                      }}
-                                    >
-                                      Cancel
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <p
-                                    style={{
-                                      color:
-                                        '#0f8c6b',
-                                      fontWeight: 800,
-                                      fontSize: 11,
-                                      margin:
-                                        '10px 0 0',
-                                    }}
-                                  >
-                                    ✓ Completed / Seen
-                                  </p>
-                                )}
-                              </div>
-                            );
-                          }
-                        )
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          );
-        })}
-
-        {/* ADD DOCTOR BUTTON */}
-
-        <button
-          onClick={() =>
-            setShowAddForm(!showAddForm)
-          }
-          style={{
-            ...(showAddForm
-              ? ghostBtn
-              : primaryBtn),
-            width: '100%',
-            padding: 14,
-            fontSize: 14,
-            marginTop: 4,
-          }}
-        >
-          {showAddForm
-            ? 'Close Add Doctor Form'
-            : '+ Add New Doctor'}
-        </button>
-
-        {/* ADD DOCTOR FORM */}
-
-        {showAddForm && (
-          <form
-            onSubmit={handleAddDoctor}
-            style={{
-              ...cardStyle,
-              marginTop: 12,
-              padding: 16,
               display: 'flex',
-              flexDirection: 'column',
-              gap: 12,
+              justifyContent:
+                'space-between',
+              alignItems: 'center',
+              marginBottom: 14,
             }}
           >
             <div>
@@ -2576,516 +1165,1602 @@ export default function ClinicPortal() {
                   letterSpacing: 0.8,
                 }}
               >
-                NEW DOCTOR
+                CLINIC MANAGEMENT
               </p>
 
               <h3
                 style={{
                   margin: '4px 0 0',
-                  fontFamily:
-                    'Georgia, "Times New Roman", serif',
                   color: '#173a34',
-                  fontSize: 22,
+                  fontSize: 17,
                 }}
               >
-                Create Doctor Profile
+                Settings & Payment
               </h3>
-            </div>
+          </div>
 
-            <Field label="Doctor Name *">
-              <input
-                placeholder="e.g. Dr. Gautam Banerjee"
-                value={newName}
-                onChange={(e) =>
-                  setNewName(e.target.value)
-                }
-                style={inputStyle}
-                required
-              />
-            </Field>
+          <button
+            onClick={() =>
+              setShowSettingsDrawer(false)
+            }
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 10,
+              border:
+                '1px solid #e3ded4',
+              background: '#fff',
+              color: '#65716d',
+              cursor: 'pointer',
+            }}
+          >
+            ✕
+          </button>
+        </div>
 
-            <Field label="Degrees & Qualifications *">
-              <input
-                placeholder="e.g. MBBS, MD (General Medicine)"
-                value={newDegrees}
-                onChange={(e) =>
-                  setNewDegrees(e.target.value)
-                }
-                style={inputStyle}
-                required
-              />
-            </Field>
+        <div
+          style={{
+            display: 'grid',
+            gap: 12,
+          }}
+        >
+          {/* LOCATION */}
+
+          <div
+            style={{
+              padding: 14,
+              borderRadius: 18,
+              background: '#f8f7f2',
+              border:
+                '1px solid #ebe7de',
+            }}
+          >
+            <p
+              style={{
+                margin: '0 0 4px',
+                fontSize: 13,
+                fontWeight: 800,
+              }}
+            >
+              📍 Clinic Location
+            </p>
+
+            <p
+              style={{
+                margin: '0 0 12px',
+                fontSize: 12,
+                color: '#7c8581',
+              }}
+            >
+              Add the Google Maps link patients
+              can use for navigation.
+            </p>
 
             <div
               style={{
-                display: 'grid',
-                gridTemplateColumns:
-                  '1fr 1fr',
-                gap: 9,
+                display: 'flex',
+                gap: 8,
+                flexWrap: 'wrap',
               }}
             >
-              <Field label="Consultation Fee ₹">
-                <input
-                  type="number"
-                  placeholder="500"
-                  value={newFee}
-                  onChange={(e) =>
-                    setNewFee(e.target.value)
-                  }
-                  style={inputStyle}
-                />
-              </Field>
+              <button
+                onClick={() => {
+                  setLocationInput(locationStr);
 
-              <Field label="PTR Trust Score %">
-                <input
-                  type="number"
-                  step="0.1"
-                  placeholder="99.5"
-                  value={newPtr}
-                  onChange={(e) =>
-                    setNewPtr(e.target.value)
-                  }
-                  style={inputStyle}
-                />
-              </Field>
+                  setEditingLocation(
+                    !editingLocation
+                  );
+                }}
+                style={{
+                  ...ghostBtn,
+                  padding: '9px 12px',
+                  fontSize: 12,
+                }}
+              >
+                {locationStr
+                  ? 'Edit Map Link'
+                  : '+ Add Map Link'}
+              </button>
+
+              {locationStr && (
+                <a
+                  href={locationStr}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    ...primaryBtn,
+                    padding: '9px 12px',
+                    fontSize: 12,
+                    textDecoration: 'none',
+                  }}
+                >
+                  Test Route →
+                </a>
+              )}
             </div>
 
-            <Field label="Average Consultation Time (Minutes)">
-              <input
-                type="number"
-                min="1"
-                value={newAvgMinutes}
-                onChange={(e) =>
-                  setNewAvgMinutes(
-                    e.target.value
-                  )
-                }
-                style={inputStyle}
-              />
-            </Field>
+            {editingLocation && (
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 8,
+                  marginTop: 10,
+                }}
+              >
+                <input
+                  placeholder="Paste Google Maps share link"
+                  value={locationInput}
+                  onChange={(e) =>
+                    setLocationInput(
+                      e.target.value
+                    )
+                  }
+                  style={inputStyle}
+                />
 
-            <SpecialtySelector
-              selected={newSpecialties}
-              onToggle={(spec) =>
-                toggleSpecialty(
-                  spec,
-                  newSpecialties,
-                  setNewSpecialties
-                )
-              }
-            />
+                <button
+                  onClick={handleSaveLocation}
+                  disabled={savingLocation}
+                  style={{
+                    ...primaryBtn,
+                    padding: 11,
+                  }}
+                >
+                  {savingLocation
+                    ? 'Saving...'
+                    : 'Save Location'}
+                </button>
+              </div>
+            )}
+          </div>
 
-            <ScheduleEditor
-              value={daySchedules}
-              onChange={setDaySchedules}
-            />
+          {/* UPI */}
 
-            <button
-              type="submit"
-              disabled={savingDoctor}
+          <div
+            style={{
+              padding: 14,
+              borderRadius: 18,
+              background: '#f8f7f2',
+              border:
+                '1px solid #ebe7de',
+            }}
+          >
+            <p
               style={{
-                ...primaryBtn,
-                padding: 14,
-                fontSize: 14,
-                opacity:
-                  savingDoctor ? 0.65 : 1,
+                margin: '0 0 4px',
+                fontSize: 13,
+                fontWeight: 800,
               }}
             >
-              {savingDoctor
-                ? 'Saving Doctor...'
-                : 'Save Doctor Profile'}
-            </button>
-          </form>
-        )}
-      </div>
+              ₹ Clinic UPI Payment
+            </p>
 
-      {/* QR MODAL */}
+            <p
+              style={{
+                margin: '0 0 12px',
+                fontSize: 12,
+                color: '#7c8581',
+              }}
+            >
+              Manage the UPI ID and show a
+              payment QR code.
+            </p>
 
-      {showQrModal && (
+            <div
+              style={{
+                display: 'flex',
+                gap: 8,
+                flexWrap: 'wrap',
+              }}
+            >
+              <button
+                onClick={() => {
+                  setUpiInput(upiId);
+
+                  setEditingUpi(
+                    !editingUpi
+                  );
+                }}
+                style={{
+                  ...ghostBtn,
+                  padding: '9px 12px',
+                  fontSize: 12,
+                }}
+              >
+                {upiId
+                  ? 'Edit UPI ID'
+                  : '+ Add UPI ID'}
+              </button>
+
+              {upiId && (
+                <button
+                  onClick={() =>
+                    setShowQrModal(true)
+                  }
+                  style={{
+                    ...goldBtn,
+                    padding: '9px 12px',
+                    fontSize: 12,
+                  }}
+                >
+                  Show Payment QR
+                </button>
+              )}
+            </div>
+
+            {editingUpi && (
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 8,
+                  marginTop: 10,
+                }}
+              >
+                <input
+                  placeholder="Clinic UPI ID"
+                  value={upiInput}
+                  onChange={(e) =>
+                    setUpiInput(
+                      e.target.value
+                    )
+                  }
+                  style={inputStyle}
+                />
+
+                <button
+                  onClick={handleSaveUpi}
+                  disabled={savingUpi}
+                  style={{
+                    ...primaryBtn,
+                    padding: 11,
+                  }}
+                >
+                  {savingUpi
+                    ? 'Saving...'
+                    : 'Save UPI ID'}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {error && (
         <div
           style={{
-            position: 'fixed',
-            inset: 0,
-            background:
-              'rgba(20,30,27,0.56)',
-            backdropFilter: 'blur(7px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 16,
-            zIndex: 1000,
+            marginBottom: 16,
+            padding: '11px 13px',
+            borderRadius: 14,
+            background: '#fff1ef',
+            border:
+              '1px solid #f0cbc6',
+            color: '#b7473e',
+            fontSize: 13,
+          }}
+        >
+          {error}
+        </div>
+      )}
+
+      {/* DOCTOR HEADER */}
+
+      <div
+        style={{
+          display: 'flex',
+          justifyContent:
+            'space-between',
+          alignItems: 'end',
+          gap: 12,
+          margin: '0 2px 12px',
+        }}
+      >
+        <div>
+          <p
+            style={{
+              margin: 0,
+              color: '#9a7a35',
+              fontSize: 10,
+              fontWeight: 900,
+              letterSpacing: 0.8,
+            }}
+          >
+            DOCTOR ROSTER
+          </p>
+
+          <h2
+            style={{
+              margin: '4px 0 0',
+              fontFamily:
+                'Georgia, "Times New Roman", serif',
+              fontSize: 23,
+              color: '#173a34',
+            }}
+          >
+            Manage your doctors
+          </h2>
+        </div>
+
+        <span
+          style={{
+            background: '#eaf5f0',
+            color: '#0f7b60',
+            borderRadius: 999,
+            padding: '7px 10px',
+            fontSize: 11,
+            fontWeight: 800,
+          }}
+        >
+          {doctors.length} Doctor
+          {doctors.length === 1 ? '' : 's'}
+        </span>
+      </div>
+
+      {/* EMPTY STATE */}
+
+      {doctors.length === 0 && (
+        <div
+          style={{
+            ...cardStyle,
+            padding: '34px 20px',
+            textAlign: 'center',
+            marginBottom: 14,
           }}
         >
           <div
             style={{
-              background: '#fffdf8',
-              border:
-                '1px solid #ebe4d8',
-              borderRadius: 28,
-              padding: 22,
-              width: '100%',
-              maxWidth: 360,
-              textAlign: 'center',
-              boxShadow:
-                '0 22px 60px rgba(0,0,0,0.22)',
+              fontSize: 36,
+              marginBottom: 8,
             }}
           >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent:
-                  'space-between',
-                alignItems: 'center',
-                marginBottom: 18,
-              }}
-            >
-              <div
-                style={{
-                  textAlign: 'left',
-                }}
-              >
-                <p
-                  style={{
-                    margin: 0,
-                    color: '#9a7a35',
-                    fontSize: 10,
-                    fontWeight: 900,
-                  }}
-                >
-                  CLINIC PAYMENT
-                </p>
-
-                <h3
-                  style={{
-                    margin: '4px 0 0',
-                  }}
-                >
-                  Scan & Pay
-                </h3>
-              </div>
-
-              <button
-                onClick={() =>
-                  setShowQrModal(false)
-                }
-                style={{
-                  width: 34,
-                  height: 34,
-                  borderRadius: 11,
-                  border:
-                    '1px solid #e2ddd4',
-                  background: '#fff',
-                  cursor: 'pointer',
-                }}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div
-              style={{
-                background: '#fff',
-                border:
-                  '1px solid #ece7dc',
-                padding: 16,
-                borderRadius: 22,
-                display: 'inline-block',
-                marginBottom: 12,
-              }}
-            >
-              <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(
-                  `upi://pay?pa=${upiId}&pn=${encodeURIComponent(
-                    clinicName
-                  )}&cu=INR`
-                )}`}
-                alt="Clinic UPI QR Code"
-                style={{
-                  width: 210,
-                  height: 210,
-                  display: 'block',
-                }}
-              />
-            </div>
-
-            <p
-              style={{
-                margin: '0 0 14px',
-                color: '#7c8581',
-                fontSize: 12,
-              }}
-            >
-              Paying to <strong>{upiId}</strong>
-            </p>
-
-            <button
-              onClick={() =>
-                setShowQrModal(false)
-              }
-              style={{
-                ...primaryBtn,
-                width: '100%',
-                padding: 13,
-              }}
-            >
-              Close
-            </button>
+            🩺
           </div>
+
+          <h3
+            style={{
+              fontFamily:
+                'Georgia, "Times New Roman", serif',
+              margin: '0 0 6px',
+            }}
+          >
+            No doctors added yet
+          </h3>
+
+          <p
+            style={{
+              margin: 0,
+              fontSize: 13,
+              color: '#7c8581',
+            }}
+          >
+            Add your first doctor profile to
+            start managing appointments.
+          </p>
         </div>
       )}
-    </div>
-  );
-}
 
-/* REUSABLE FIELD */
+      {/* DOCTOR CARDS */}
 
-function Field({
-  label,
-  children,
-}) {
-  return (
-    <div>
-      <label
-        style={{
-          display: 'block',
-          marginBottom: 5,
-          color: '#697570',
-          fontSize: 11,
-          fontWeight: 800,
-        }}
-      >
-        {label}
-      </label>
+      {doctors.map((doc) => {
+        const isEditing =
+          editingId === doc.id;
 
-      {children}
-    </div>
-  );
-}
+        const docBookings =
+          bookingsByDoctor[doc.id] || [];
 
-/* SPECIALTY SELECTOR */
+        const docWaitingCount =
+          docBookings.filter(
+            (b) =>
+              b.status === 'waiting'
+          ).length;
 
-function SpecialtySelector({
-  selected,
-  onToggle,
-}) {
-  return (
-    <div>
-      <p
-        style={{
-          margin: '0 0 7px',
-          color: '#697570',
-          fontSize: 11,
-          fontWeight: 800,
-        }}
-      >
-        SPECIALTIES — MULTIPLE ALLOWED
-      </p>
+        const specs =
+          doc.specialties || [
+            doc.specialty ||
+              'General Physician',
+          ];
 
+        const scheduleObj =
+          doc.custom_schedule || {};
+
+        const statusInfo =
+          STATUS_OPTIONS.find(
+            (s) =>
+              s.value === doc.status
+          ) || STATUS_OPTIONS[0];
+
+        return (
+          <div
+            key={doc.id}
+            style={{
+              ...cardStyle,
+              padding: 16,
+              marginBottom: 14,
+            }}
+          >
+            {isEditing ? (
+              <>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent:
+                      'space-between',
+                    alignItems: 'center',
+                    marginBottom: 12,
+                  }}
+                >
+                  <div>
+                    <p
+                      style={{
+                        margin: 0,
+                        color: '#9a7a35',
+                        fontSize: 10,
+                        fontWeight: 900,
+                      }}
+                    >
+                      EDIT PROFILE
+                    </p>
+
+                    <h3
+                      style={{
+                        margin: '4px 0 0',
+                      }}
+                    >
+                      Doctor Details
+                    </h3>
+                  </div>
+
+                  <button
+                    onClick={() =>
+                      setEditingId(null)
+                    }
+                    style={{
+                      border: 'none',
+                      background:
+                        'transparent',
+                      fontSize: 20,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 10,
+                  }}
+                >
+                  <input
+                    value={editName}
+                    onChange={(e) =>
+                      setEditName(
+                        e.target.value
+                      )
+                    }
+                    style={inputStyle}
+                    placeholder="Doctor Name"
+                  />
+
+                  <input
+                    value={editDegrees}
+                    onChange={(e) =>
+                      setEditDegrees(
+                        e.target.value
+                      )
+                    }
+                    style={inputStyle}
+                    placeholder="Degrees"
+                  />
+
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns:
+                        '1fr 1fr',
+                      gap: 8,
+                    }}
+                  >
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={editPtr}
+                      onChange={(e) =>
+                        setEditPtr(
+                          e.target.value
+                        )
+                      }
+                      style={inputStyle}
+                      placeholder="PTR Score"
+                    />
+
+                    <input
+                      type="number"
+                      value={editFee}
+                      onChange={(e) =>
+                        setEditFee(
+                          e.target.value
+                        )
+                      }
+                      style={inputStyle}
+                      placeholder="Fee ₹"
+                    />
+                  </div>
+
+                  <SpecialtySelector
+                    selected={
+                      editSpecialties
+                    }
+                    onToggle={(spec) =>
+                      toggleSpecialty(
+                        spec,
+                        editSpecialties,
+                        setEditSpecialties
+                      )
+                    }
+                  />
+
+                  <ScheduleEditor
+                    value={
+                      editDaySchedules
+                    }
+                    onChange={
+                      setEditDaySchedules
+                    }
+                  />
+
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns:
+                        '1fr 1fr',
+                      gap: 8,
+                    }}
+                  >
+                    <button
+                      onClick={() =>
+                        handleSaveEdit(
+                          doc.id
+                        )
+                      }
+                      style={{
+                        ...primaryBtn,
+                        padding: 12,
+                      }}
+                    >
+                      Save Changes
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        setEditingId(null)
+                      }
+                      style={{
+                        ...ghostBtn,
+                        padding: 12,
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* DOCTOR INFO */}
+
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent:
+                      'space-between',
+                    gap: 12,
+                    alignItems:
+                      'flex-start',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: 11,
+                      minWidth: 0,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 48,
+                        height: 48,
+                        flex: '0 0 48px',
+                        borderRadius: 17,
+                        background:
+                          '#123c35',
+                        color: '#d7b45e',
+                        display: 'flex',
+                        alignItems:
+                          'center',
+                        justifyContent:
+                          'center',
+                        fontSize: 14,
+                        fontWeight: 900,
+                      }}
+                    >
+                      {getInitials(
+                        doc.name
+                      )}
+                    </div>
+
+                    <div>
+                      <h3
+                        style={{
+                          margin: 0,
+                          fontSize: 16,
+                        }}
+                      >
+                        {doc.name}
+                      </h3>
+
+                      <p
+                        style={{
+                          margin:
+                            '3px 0 0',
+                          fontSize: 11,
+                          color:
+                            '#a0782b',
+                          fontWeight: 800,
+                        }}
+                      >
+                        {doc.degrees ||
+                          'MBBS, General Practitioner'}
+                      </p>
+
+                      <p
+                        style={{
+                          margin:
+                            '4px 0 0',
+                          fontSize: 11,
+                          color:
+                            '#7c8581',
+                        }}
+                      >
+                        {specs.join(' • ')}
+                      </p>
+                    </div>
+                  </div>
+
+                  <span
+                    style={{
+                      background:
+                        statusInfo.soft,
+                      color:
+                        statusInfo.color,
+                      borderRadius: 999,
+                      padding: '6px 9px',
+                      fontSize: 10,
+                      fontWeight: 900,
+                    }}
+                  >
+                    {statusInfo.label}
+                  </span>
+                </div>
+
+                {/* INFO PILLS */}
+
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: 8,
+                    flexWrap: 'wrap',
+                    marginTop: 14,
+                  }}
+                >
+                  <span
+                    style={{
+                      background:
+                        '#faf7ef',
+                      color: '#9a7a35',
+                      border:
+                        '1px solid #eee2c8',
+                      padding: '6px 9px',
+                      borderRadius: 10,
+                      fontSize: 11,
+                      fontWeight: 800,
+                    }}
+                  >
+                    ★ PTR{' '}
+                    {doc.ptr_score ||
+                      '99.0'}
+                    %
+                  </span>
+
+                  {doc.consultation_fee !=
+                    null && (
+                    <span
+                      style={{
+                        background:
+                          '#edf8f3',
+                        color:
+                          '#0f7b60',
+                        border:
+                          '1px solid #d5eadf',
+                        padding:
+                          '6px 9px',
+                        borderRadius: 10,
+                        fontSize: 11,
+                        fontWeight: 800,
+                      }}
+                    >
+                      ₹
+                      {
+                        doc.consultation_fee
+                      }{' '}
+                      Fee
+                    </span>
+                  )}
+
+                  <span
+                    style={{
+                      background:
+                        '#f4f5f3',
+                      color: '#68746f',
+                      padding: '6px 9px',
+                      borderRadius: 10,
+                      fontSize: 11,
+                      fontWeight: 800,
+                    }}
+                  >
+                    {docWaitingCount} Waiting
+                  </span>
+                </div>
+
+                {/* STATUS */}
+
+                <div
+                  style={{
+                    marginTop: 15,
+                    padding: 12,
+                    borderRadius: 17,
+                    background:
+                      '#faf9f6',
+                    border:
+                      '1px solid #ebe7de',
+                  }}
+                >
+                  <p
+                    style={{
+                      margin: '0 0 8px',
+                      color: '#8a918e',
+                      fontSize: 10,
+                      fontWeight: 900,
+                      letterSpacing: 0.6,
+                    }}
+                  >
+                    LIVE QUEUE STATUS
+                  </p>
+
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: 6,
+                    }}
+                  >
+                    {STATUS_OPTIONS.map(
+                      (opt) => {
+                        const active =
+                          doc.status ===
+                          opt.value;
+
+                        return (
+                          <button
+                            key={
+                              opt.value
+                            }
+                            onClick={() =>
+                              handleStatusChange(
+                                doc.id,
+                                opt.value
+                              )
+                            }
+                            style={{
+                              padding:
+                                '7px 9px',
+                              borderRadius: 10,
+                              fontSize: 10,
+                              fontWeight: 800,
+                              cursor:
+                                'pointer',
+                              border: active
+                                ? `1px solid ${opt.color}`
+                                : '1px solid #e5e1d9',
+                              background:
+                                active
+                                  ? opt.soft
+                                  : '#fff',
+                              color: active
+                                ? opt.color
+                                : '#78817d',
+                            }}
+                        >
+                          {
+                            opt.label
+                          }
+                        </button>
+                      );
+                    }
+                  )}
+                </div>
+              </div>
+
+              {/* ================================
+    DOCTOR SCHEDULE
+================================ */}
+
+<div
+  style={{
+    marginTop: 12,
+    padding: '12px',
+    borderRadius: 14,
+    background: '#f8f7f3',
+    border: '1px solid #ebe7de',
+  }}
+>
+
+  <div
+    style={{
+      fontSize: 10,
+      fontWeight: 900,
+      letterSpacing: 0.8,
+      color: '#9a7a35',
+      marginBottom: 8,
+    }}
+  >
+    DOCTOR SCHEDULE
+  </div>
+
+  {DAYS.map((day) => {
+    const schedule =
+      scheduleObj[day];
+
+    if (!schedule?.active) {
+      return null;
+    }
+
+    return (
       <div
+        key={day}
         style={{
           display: 'flex',
-          flexWrap: 'wrap',
-          gap: 6,
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '5px 0',
+          fontSize: 12,
         }}
       >
-        {SPECIALTIES.map(
-          (spec) => {
-            const active =
-              selected.includes(spec);
 
-            return (
-              <button
-                key={spec}
-                type="button"
-                onClick={() =>
-                  onToggle(spec)
-                }
-                style={{
-                  padding: '7px 9px',
-                  borderRadius: 10,
-                  border: active
-                    ? '1px solid #123c35'
-                    : '1px solid #e1ddd5',
-                  background: active
-                    ? '#123c35'
-                    : '#fff',
-                  color: active
-                    ? '#fff'
-                    : '#65716d',
-                  fontSize: 10,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                }}
-              >
-                {spec}
-              </button>
-            );
-          }
-        )}
+        <span
+          style={{
+            fontWeight: 700,
+            color: '#173a34',
+          }}
+        >
+          {day}
+        </span>
+
+        <span
+          style={{
+            color: '#64706b',
+          }}
+        >
+          {formatTime(schedule.start)}
+          {' – '}
+          {formatTime(schedule.end)}
+        </span>
+
       </div>
-    </div>
-  );
-}
+    );
+  })}
 
-/* SCHEDULE EDITOR */
+  {Object.values(scheduleObj).every(
+    (schedule) =>
+      !schedule?.active
+  ) && (
 
-function ScheduleEditor({
-  value,
-  onChange,
-}) {
-  const updateDay = (
-    day,
-    patch
-  ) => {
-    onChange({
-      ...value,
-      [day]: {
-        ...(value[day] || {
-          active: false,
-          start: '10:00',
-          end: '14:00',
-        }),
-        ...patch,
-      },
-    });
-  };
-
-  return (
     <div
       style={{
-        background: '#faf9f6',
-        border:
-          '1px solid #ebe7de',
-        padding: 12,
-        borderRadius: 18,
+        fontSize: 12,
+        color: '#8a918e',
       }}
     >
-      <p
+      No active schedule
+    </div>
+
+  )}
+
+</div>
+
+                {/* ACTIONS */}
+
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns:
+                      '1.65fr 1fr',
+                    gap: 8,
+                    marginTop: 14,
+                  }}
+                >
+                  <button
+                    onClick={() =>
+                      toggleTodaysPatients(
+                        doc.id
+                      )
+                    }
+                    style={{
+                      ...(expandedDoctor ===
+                      doc.id
+                        ? ghostBtn
+                        : primaryBtn),
+                      padding: 12,
+                      fontSize: 12,
+                    }}
+                  >
+                    {expandedDoctor ===
+                    doc.id
+                      ? 'Hide Queue'
+                      : `Manage Queue (${docWaitingCount})`}
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      setShowWalkinForm(
+                        showWalkinForm ===
+                          doc.id
+                          ? null
+                          : doc.id
+                      )
+                    }
+                    style={{
+                      ...goldBtn,
+                      padding: 12,
+                      fontSize: 12,
+                    }}
+                  >
+                    + Walk-in
+                  </button>
+                </div>
+
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns:
+                      '1fr 1fr',
+                    gap: 8,
+                    marginTop: 8,
+                  }}
+                >
+                  <button
+                    onClick={() =>
+                      startEdit(doc)
+                    }
+                    style={{
+                      ...ghostBtn,
+                      padding: 10,
+                      fontSize: 12,
+                    }}
+                  >
+                    Edit Doctor
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      handleDelete(
+                        doc.id,
+                        doc.name
+                      )
+                    }
+                    style={{
+                      ...dangerBtn,
+                      padding: 10,
+                      fontSize: 12,
+                    }}
+                  >
+                    Remove Doctor
+                  </button>
+                </div>
+
+                {/* WALK-IN */}
+
+                {showWalkinForm ===
+                  doc.id && (
+                  <div
+                    style={{
+                      marginTop: 12,
+                      padding: 13,
+                      borderRadius: 18,
+                      background:
+                        '#fffaf0',
+                      border:
+                        '1px solid #eee0bd',
+                    }}
+                  >
+                    <p
+                      style={{
+                        margin:
+                          '0 0 10px',
+                        color:
+                          '#85611d',
+                        fontSize: 12,
+                        fontWeight: 900,
+                      }}
+                    >
+                      Add Walk-in Patient
+                    </p>
+
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection:
+                          'column',
+                        gap: 8,
+                      }}
+                    >
+                      <input
+                        placeholder="Patient name"
+                        value={walkinName}
+                        onChange={(e) =>
+                          setWalkinName(
+                            e.target.value
+                          )
+                        }
+                        style={
+                          inputStyle
+                        }
+                      />
+
+                      <input
+                        placeholder="Phone (optional)"
+                        value={walkinPhone}
+                        onChange={(e) =>
+                          setWalkinPhone(
+                            e.target.value
+                          )
+                        }
+                        style={
+                          inputStyle
+                        }
+                      />
+
+                      <button
+                        onClick={() =>
+                          handleWalkinSubmit(
+                            doc.id
+                          )
+                        }
+                        style={{
+                          ...primaryBtn,
+                          padding: 11,
+                        }}
+                      >
+                        Create Token
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* QUEUE */}
+
+                {expandedDoctor ===
+                  doc.id && (
+                  <div
+                    style={{
+                      marginTop: 15,
+                      paddingTop: 14,
+                      borderTop:
+                        '1px solid #ebe7de',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent:
+                          'space-between',
+                        alignItems:
+                          'center',
+                        marginBottom: 10,
+                      }}
+                    >
+                      <div>
+                        <p
+                          style={{
+                            margin: 0,
+                            color:
+                              '#9a7a35',
+                            fontSize: 10,
+                            fontWeight: 900,
+                        }}
+                        >
+                          TODAY'S QUEUE
+                        </p>
+
+                        <h4
+                          style={{
+                            margin:
+                              '4px 0 0',
+                          }}
+                        >
+                          {
+                            docBookings.length
+                          }{' '}
+                          Patient
+                          {docBookings.length ===
+                          1
+                            ? ''
+                            : 's'}
+                        </h4>
+                      </div>
+
+                      <button
+                        onClick={() =>
+                          refreshBookings(
+                            doc.id
+                          )
+                        }
+                        style={{
+                          ...ghostBtn,
+                          padding:
+                            '8px 10px',
+                          fontSize: 11,
+                        }}
+                      >
+                        Refresh
+                      </button>
+                    </div>
+
+                    {loadingBookings ? (
+                      <p
+                        style={{
+                          textAlign:
+                            'center',
+                          color:
+                            '#8a918e',
+                        }}
+                      >
+                        Loading queue...
+                      </p>
+                    ) : docBookings.length ===
+                      0 ? (
+                      <div
+                        style={{
+                          padding:
+                            '22px 12px',
+                          textAlign:
+                            'center',
+                          background:
+                            '#faf9f6',
+                          borderRadius: 16,
+                          color:
+                            '#8a918e',
+                          fontSize: 13,
+                        }}
+                      >
+                        No bookings for today yet.
+                      </div>
+                    ) : (
+                      docBookings.map(
+                        (b) => {
+                          const isWaiting =
+                            b.status ===
+                            'waiting';
+
+                          const isUpdating =
+                            updatingPatient ===
+                            b.id;
+
+                          return (
+                            <div
+                              key={b.id}
+                              style={{
+                                background:
+                                  '#faf9f6',
+                                border:
+                                  '1px solid #ebe7de',
+                                borderRadius: 18,
+                                padding: 13,
+                                marginBottom: 9,
+                              }}
+                            >
+                              <div
+                                style={{
+                                  display:
+                                    'flex',
+                                  justifyContent:
+                                    'space-between',
+                                  gap: 10,
+                                  alignItems:
+                                    'flex-start',
+                                }}
+                            >
+                                <div
+                                  style={{
+                                    display:
+                                      'flex',
+                                    gap: 10,
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      width: 38,
+                                      height: 38,
+                                      borderRadius: 13,
+                                      background:
+                                        '#123c35',
+                                      color:
+                                        '#d7b45e',
+                                      display:
+                                        'flex',
+                                      alignItems:
+                                        'center',
+                                      justifyContent:
+                                        'center',
+                                      fontSize: 13,
+                                      fontWeight: 900,
+                                    }}
+                                  >
+                                    #
+                                    {
+                                      b.token_number
+                                    }
+                                  </div>
+
+                                  <div>
+                                    <h5
+                                      style={{
+                                        margin:
+                                          '1px 0 2px',
+                                        fontSize: 14,
+                                      }}
+                                    >
+                                      {b.patient_name ||
+                                        'Patient'}
+                                    </h5>
+
+                                    <p
+                                      style={{
+                                        margin: 0,
+                                        fontSize: 11,
+                                        color:
+                                          '#8a918e',
+                                      }}
+                                    >
+                                      {b.is_walkin
+                                        ? 'Walk-in patient'
+                                        : 'App booking'}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <span
+                                  style={{
+                                    fontSize: 10,
+                                    fontWeight: 900,
+                                    padding:
+                                      '5px 8px',
+                                    borderRadius: 999,
+                                    background:
+                                      isWaiting
+                                        ? '#fff4dc'
+                                        : '#edf8f3',
+                                    color:
+                                      isWaiting
+                                        ? '#aa7413'
+                                        : '#0f8c6b',
+                                  }}
+                                >
+                                  {isWaiting
+                                    ? 'WAITING'
+                                    : 'COMPLETED'}
+                                </span>
+                              </div>
+
+                              {isWaiting ? (
+                                <div
+                                  style={{
+                                    display:
+                                      'grid',
+                                    gridTemplateColumns:
+                                      '1fr 1fr 1fr',
+                                    gap: 7,
+                                    marginTop: 11,
+                                }}
+                              >
+                                <button
+                                  onClick={() =>
+                                    handleCheckIn(
+                                      b.id,
+                                      doc.id
+                                  )
+                                }
+                                disabled={
+                                  isUpdating
+                              }
+                                style={{
+                                  ...ghostBtn,
+                                  padding: 9,
+                                  fontSize: 10,
+                              }}
+                            >
+                              Check In
+                            </button>
+
+                              <button
+                                onClick={() =>
+                                  handleMarkSeen(
+                                    b.id,
+                                    doc.id
+                                )
+                                }
+                                disabled={
+                                  isUpdating
+                              }
+                                style={{
+                                  ...primaryBtn,
+                                  padding: 9,
+                                  fontSize: 10,
+                              }}
+                            >
+                              Mark Seen
+                            </button>
+
+                              <button
+                                onClick={() =>
+                                  handleNoShowCancel(
+                                    b.id,
+                                    doc.id
+                                )
+                                }
+                                disabled={
+                                  isUpdating
+                              }
+                                style={{
+                                  ...dangerBtn,
+                                  padding: 9,
+                                  fontSize: 10,
+                              }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <p
+                            style={{
+                              color:
+                                '#0f8c6b',
+                            fontWeight: 800,
+                            fontSize: 11,
+                            margin:
+                              '10px 0 0',
+                          }}
+                        >
+                          ✓ Completed / Seen
+                        </p>
+                      )}
+                      </div>
+                      );
+                      }
+                    )
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        );
+      })}
+
+      {/* ADD DOCTOR BUTTON */}
+
+      <button
+        onClick={() =>
+          setShowAddForm(!showAddForm)
+        }
         style={{
-          margin: '0 0 10px',
-          color: '#173a34',
-          fontSize: 12,
-          fontWeight: 900,
+          ...(showAddForm
+            ? ghostBtn
+            : primaryBtn),
+          width: '100%',
+          padding: 14,
+          fontSize: 14,
+          marginTop: 4,
         }}
       >
-        🕒 Day-wise Consultation Timings
-      </p>
+        {showAddForm
+          ? 'Close Add Doctor Form'
+          : '+ Add New Doctor'}
+      </button>
 
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 7,
-        }}
-      >
-        {DAYS.map((day) => {
-          const slot =
-            value[day] || {
-              active: false,
-              start: '10:00',
-              end: '14:00',
-            };
+      {/* ADD DOCTOR FORM */}
 
-          return (
-            <div
-              key={day}
+      {showAddForm && (
+        <form
+          onSubmit={handleAddDoctor}
+          style={{
+            ...cardStyle,
+            marginTop: 12,
+            padding: 16,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 12,
+          }}
+        >
+          <div>
+            <p
               style={{
-                display: 'grid',
-                gridTemplateColumns:
-                  '42px 24px 1fr 16px 1fr',
-                gap: 6,
-                alignItems: 'center',
-                background: '#fff',
-                border:
-                  '1px solid #ebe7de',
-                borderRadius: 12,
-                padding: '7px 8px',
+                margin: 0,
+                color: '#9a7a35',
+                fontSize: 10,
+                fontWeight: 900,
+                letterSpacing: 0.8,
               }}
             >
-              <span
-                style={{
-                  fontSize: 11,
-                  fontWeight: 900,
-                  color: slot.active
-                    ? '#173a34'
-                    : '#9aa19e',
-                }}
-              >
-                {day}
-              </span>
+              NEW DOCTOR
+            </p>
 
+            <h3
+              style={{
+                margin: '4px 0 0',
+                fontFamily:
+                  'Georgia, "Times New Roman", serif',
+                color: '#173a34',
+                fontSize: 22,
+              }}
+            >
+              Create Doctor Profile
+            </h3>
+          </div>
+
+          <Field label="Doctor Name *">
+            <input
+              placeholder="e.g. Dr. Gautam Banerjee"
+              value={newName}
+              onChange={(e) =>
+                setNewName(e.target.value)
+              }
+              style={inputStyle}
+              required
+            />
+          </Field>
+
+          <Field label="Degrees & Qualifications *">
+            <input
+              placeholder="e.g. MBBS, MD (General Medicine)"
+              value={newDegrees}
+              onChange={(e) =>
+                setNewDegrees(e.target.value)
+              }
+              style={inputStyle}
+              required
+            />
+          </Field>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns:
+                '1fr 1fr',
+              gap: 9,
+            }}
+          >
+            <Field label="Consultation Fee ₹">
               <input
-                type="checkbox"
-                checked={slot.active}
+                type="number"
+                placeholder="500"
+                value={newFee}
                 onChange={(e) =>
-                  updateDay(day, {
-                    active:
-                      e.target.checked,
-                  })
+                  setNewFee(e.target.value)
                 }
+                style={inputStyle}
               />
+            </Field>
 
+            <Field label="PTR Trust Score %">
               <input
-                type="time"
-                value={slot.start}
+                type="number"
+                step="0.1"
+                placeholder="99.5"
+                value={newPtr}
                 onChange={(e) =>
-                  updateDay(day, {
-                    start:
-                      e.target.value,
-                  })
+                  setNewPtr(e.target.value)
                 }
-                style={{
-                  width: '100%',
-                  minWidth: 0,
-                  border:
-                    '1px solid #e4e0d7',
-                  borderRadius: 8,
-                  padding: '6px 5px',
-                  color: '#35514a',
-                  background: '#fff',
-                  fontSize: 10,
-                  boxSizing:
-                    'border-box',
-                }}
+                style={inputStyle}
               />
+            </Field>
+          </div>
 
-              <span
-                style={{
-                  color: '#9aa19e',
-                  fontSize: 10,
-                  textAlign: 'center',
-                }}
-              >
-                to
-              </span>
+          <Field label="Average Consultation Time (Minutes)">
+            <input
+              type="number"
+              min="1"
+              value={newAvgMinutes}
+              onChange={(e) =>
+                setNewAvgMinutes(
+                  e.target.value
+                )
+              }
+              style={inputStyle}
+            />
+          </Field>
 
-              <input
-                type="time"
-                value={slot.end}
-                onChange={(e) =>
-                  updateDay(day, {
-                    end:
-                      e.target.value,
-                  })
-                }
-                style={{
-                  width: '100%',
-                  minWidth: 0,
-                  border:
-                    '1px solid #e4e0d7',
-                  borderRadius: 8,
-                  padding: '6px 5px',
-                  color: '#35514a',
-                  background: '#fff',
-                  fontSize: 10,
-                  boxSizing:
-                    'border-box',
-                }}
-              />
-            </div>
-          );
-        })}
-      </div>
+          <SpecialtySelector
+            selected={newSpecialties}
+            onToggle={(spec) =>
+              toggleSpecialty(
+                spec,
+                newSpecialties,
+                setNewSpecialties
+              )
+            }
+          />
+
+          <ScheduleEditor
+            value={daySchedules}
+            onChange={setDaySchedules}
+          />
+
+          <button
+            type="submit"
+            disabled={savingDoctor}
+            style={{
+              ...primaryBtn,
+              padding: 14,
+              fontSize: 14,
+              opacity:
+                savingDoctor ? 0.65 : 1,
+            }}
+          >
+            {savingDoctor
+              ? 'Saving Doctor...'
+              : 'Save Doctor Profile'}
+          </button>
+        </form>
+      )}
     </div>
-  );
-}
+
+    {/* QR MODAL */}
+
+    {showQrModal && (
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          background:
+            'rgba(20,30,27,0.56)',
+          backdropFilter: 'blur(7px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 16,
+          zIndex: 1000,
+        }}
+      >
+        <div
+          style={{
+            background: '#fffdf8',
+            border:
+              '1px solid #ebe4d8',
+            borderRadius: 28,
+            padding: 22,
+            width: '100%',
+            maxWidth: 360,
+            textAlign: 'center',
+            boxShadow:
+              '0 22px 60px rgba(0,0,0,0.22)',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              justifyContent:
+                'space-between',
+              alignItems: 'center',I encountered an error doing what you asked. Could you try again?
