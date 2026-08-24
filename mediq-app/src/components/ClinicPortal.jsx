@@ -2551,11 +2551,10 @@ export default function ClinicPortal() {
                       );
                       }
                     )
-                  )}
-                </div>
-              </>
-            )}
-          </div>
+                 )}
+      </div>
+    );
+  }
         );
       })}
 
