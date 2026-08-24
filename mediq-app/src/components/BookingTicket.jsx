@@ -1,3 +1,6 @@
+```jsx
+// src/components/BookingTicket.jsx
+
 import React, {
   useState,
   useEffect,
@@ -11,7 +14,6 @@ import {
 
 import './BookingTicket.css';
 
-
 const BookingTicket = ({
   appointment,
   doctor,
@@ -20,14 +22,12 @@ const BookingTicket = ({
   upiInfo,
   onClose,
 }) => {
-
   const [booking, setBooking] =
     useState(() => ({
       id: appointment?.id,
 
       token_number:
-        appointment?.token_number ||
-        appointment?.queue_number,
+        appointment?.token_number,
 
       queue_number:
         appointment?.queue_number,
@@ -40,15 +40,11 @@ const BookingTicket = ({
         appointment?.booked_at ||
         appointment?.created_at,
 
-      created_at:
-        appointment?.created_at,
-
       checked_in_at:
         appointment?.checked_in_at ||
         null,
 
       queue_position:
-        appointment?.patientsAhead ??
         patientsAheadOverride,
 
       doctors: doctor
@@ -59,8 +55,6 @@ const BookingTicket = ({
             consultation_fee:
               doctor.consultation_fee,
           }
-        : appointment?.doctor
-        ? appointment.doctor
         : null,
 
       hospitals:
@@ -70,13 +64,7 @@ const BookingTicket = ({
                 appointment.hospital.name,
             }
           : null,
-
-      payment_method:
-        appointment?.payment_method ||
-        paymentMethod ||
-        'cash',
     }));
-
 
   const [cancelling, setCancelling] =
     useState(false);
@@ -86,272 +74,151 @@ const BookingTicket = ({
     setShowCancelConfirm,
   ] = useState(false);
 
-  const [cancelError, setCancelError] =
-    useState('');
-
-  const intervalRef =
-    useRef(null);
-
+  const intervalRef = useRef(null);
 
   /* =====================================================
      FETCH LIVE STATUS
   ===================================================== */
 
-  const fetchStatus =
-    async () => {
+  const fetchStatus = async () => {
+    if (!booking?.id) return;
 
-      if (!booking?.id) {
-        return;
-      }
-
-      try {
-
-        const status =
-          await getAppointmentStatus(
-            booking.id
-          );
-
-        if (status) {
-
-          setBooking(
-            (prev) => ({
-              ...prev,
-
-              status:
-                status.status ||
-                prev.status,
-
-              checked_in_at:
-                status.checked_in_at ||
-                null,
-
-              booked_at:
-                status.booked_at ||
-                status.created_at ||
-                prev.booked_at,
-
-              created_at:
-                status.created_at ||
-                prev.created_at,
-
-              queue_number:
-                status.queue_number ||
-                prev.queue_number,
-
-              token_number:
-                status.token_number ||
-                prev.token_number,
-            })
-          );
-
-        }
-
-      } catch (err) {
-
-        console.error(
-          'Error fetching status:',
-          err
+    try {
+      const status =
+        await getAppointmentStatus(
+          booking.id
         );
 
+      if (status) {
+        setBooking((prev) => ({
+          ...prev,
+
+          status:
+            status.status,
+
+          checked_in_at:
+            status.checked_in_at,
+
+          booked_at:
+            status.booked_at ||
+            status.created_at ||
+            prev.booked_at,
+        }));
       }
-
-    };
-
-
-  /* =====================================================
-     AUTO REFRESH
-  ===================================================== */
+    } catch (err) {
+      console.error(
+        'Error fetching status:',
+        err
+      );
+    }
+  };
 
   useEffect(() => {
-
-    if (!booking?.id) {
-      return;
-    }
+    if (!booking?.id) return;
 
     fetchStatus();
 
-    const interval =
-      setInterval(
-        fetchStatus,
-        15000
-      );
+    const interval = setInterval(
+      fetchStatus,
+      15000
+    );
 
-    intervalRef.current =
-      interval;
+    intervalRef.current = interval;
 
     return () => {
-
-      if (
-        intervalRef.current
-      ) {
+      if (intervalRef.current) {
         clearInterval(
           intervalRef.current
         );
       }
-
     };
-
   }, [booking?.id]);
-
 
   /* =====================================================
      CANCEL BOOKING
   ===================================================== */
 
-  const handleCancel =
-    async () => {
+  const handleCancel = async () => {
+    if (!booking?.id) {
+      alert('Booking ID is missing.');
+      return;
+    }
 
-      if (!booking?.id) {
-        setCancelError(
-          'Booking ID is missing.'
+    setCancelling(true);
+
+    try {
+      const result =
+        await cancelAppointment(
+          booking.id
         );
 
-        return;
+      if (result?.error) {
+        throw result.error;
       }
 
-      setCancelling(true);
+      setBooking((prev) => ({
+        ...prev,
+        status: 'cancelled',
+      }));
 
-      setCancelError('');
+      setShowCancelConfirm(false);
 
-      try {
+      alert(
+        'Booking cancelled successfully.'
+      );
 
-        const result =
-          await cancelAppointment(
-            booking.id
-          );
+      setTimeout(() => {
+        onClose();
+      }, 800);
 
+    } catch (err) {
+      console.error(
+        'Error cancelling booking:',
+        err
+      );
 
-        /*
-          IMPORTANT:
-
-          cancelAppointment returns
-          { data } OR { error }
-
-          Therefore we must manually
-          check result.error.
-        */
-
-        if (result?.error) {
-
-          throw result.error;
-
-        }
-
-
-        /*
-          Immediately update UI
-        */
-
-        setBooking(
-          (prev) => ({
-            ...prev,
-            status: 'cancelled',
-          })
-        );
-
-
-        setShowCancelConfirm(
-          false
-        );
-
-
-        /*
-          Close after a short delay
-          so cancellation state is saved
-        */
-
-        setTimeout(() => {
-
-          if (onClose) {
-            onClose();
-          }
-
-        }, 500);
-
-
-      } catch (err) {
-
-        console.error(
-          'Error cancelling booking:',
-          err
-        );
-
-        setCancelError(
-          err?.message ||
+      alert(
+        err?.message ||
           'Failed to cancel booking. Please try again.'
-        );
+      );
 
-      } finally {
-
-        setCancelling(false);
-
-      }
-
-    };
-
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   /* =====================================================
-     DATE / TIME
+     DATE & TIME
   ===================================================== */
 
-  const formatTime =
-    (dateStr) => {
+  const formatTime = (dateStr) => {
+    if (!dateStr) return '--';
 
-      if (!dateStr) {
-        return '--';
+    const date = new Date(dateStr);
+
+    return date.toLocaleTimeString(
+      'en-IN',
+      {
+        hour: '2-digit',
+        minute: '2-digit',
       }
+    );
+  };
 
-      const date =
-        new Date(dateStr);
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '--';
 
-      if (
-        Number.isNaN(
-          date.getTime()
-        )
-      ) {
-        return '--';
+    const date = new Date(dateStr);
+
+    return date.toLocaleDateString(
+      'en-IN',
+      {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
       }
-
-      return date.toLocaleTimeString(
-        'en-IN',
-        {
-          hour: '2-digit',
-          minute: '2-digit',
-        }
-      );
-
-    };
-
-
-  const formatDate =
-    (dateStr) => {
-
-      if (!dateStr) {
-        return '--';
-      }
-
-      const date =
-        new Date(dateStr);
-
-      if (
-        Number.isNaN(
-          date.getTime()
-        )
-      ) {
-        return '--';
-      }
-
-      return date.toLocaleDateString(
-        'en-IN',
-        {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
-        }
-      );
-
-    };
-
+    );
+  };
 
   /* =====================================================
      STATUS
@@ -361,49 +228,38 @@ const BookingTicket = ({
     !!booking?.checked_in_at;
 
   const isCompleted =
-    booking?.status ===
-      'completed' ||
-    booking?.status ===
-      'seen';
+    booking?.status === 'completed' ||
+    booking?.status === 'seen';
 
   const isCancelled =
-    booking?.status ===
-    'cancelled';
+    booking?.status === 'cancelled';
 
   const isActive =
     !isCompleted &&
     !isCancelled;
 
-
   let progress = 0;
 
   if (isCancelled) {
-
     progress = 0;
-
   } else if (isCompleted) {
-
     progress = 100;
-
   } else if (isCheckedIn) {
-
     progress = 50;
-
+  } else {
+    progress = 0;
   }
-
 
   const progressLabel =
     isCancelled
       ? 'Cancelled'
       : isCompleted
-      ? 'Complete'
-      : isCheckedIn
-      ? 'Checked In'
-      : 'Waiting';
+        ? 'Complete'
+        : isCheckedIn
+          ? 'Checked In'
+          : 'Waiting';
 
-
-  const bookedStepActive =
-    true;
+  const bookedStepActive = true;
 
   const checkedInStepActive =
     isCheckedIn ||
@@ -412,29 +268,29 @@ const BookingTicket = ({
   const yourTurnStepActive =
     isCompleted;
 
-
   const queueStatusText =
     isCancelled
-      ? 'Booking cancelled'
+      ? 'Cancelled'
       : isCompleted
-      ? 'Consultation completed'
-      : isCheckedIn
-      ? 'Checked in — waiting to be called'
-      : 'Waiting to be called';
-
+        ? 'Completed'
+        : isCheckedIn
+          ? 'Checked in — waiting to be called'
+          : 'Waiting to be called';
 
   const displayStatusLabel =
     isCancelled
       ? 'Cancelled'
       : isCompleted
-      ? 'Completed'
-      : isCheckedIn
-      ? 'Checked In'
-      : 'Waiting';
+        ? 'Completed'
+        : isCheckedIn
+          ? 'Checked In'
+          : 'Waiting';
 
+  /* =====================================================
+     BOOKING NOT FOUND
+  ===================================================== */
 
   if (!booking?.id) {
-
     return (
       <div className="ticket-error">
 
@@ -459,12 +315,13 @@ const BookingTicket = ({
 
       </div>
     );
-
   }
 
+  /* =====================================================
+     UI
+  ===================================================== */
 
   return (
-
     <div className="ticket-container">
 
       <button
@@ -473,7 +330,6 @@ const BookingTicket = ({
       >
         ✕
       </button>
-
 
       {/* HEADER */}
 
@@ -491,19 +347,17 @@ const BookingTicket = ({
 
         </div>
 
-
         <div className="ticket-status-pill">
 
           {isCancelled
             ? 'Cancelled'
             : isCompleted
-            ? 'Completed'
-            : 'Active'}
+              ? 'Completed'
+              : 'Active'}
 
         </div>
 
       </div>
-
 
       {/* TOKEN */}
 
@@ -514,16 +368,13 @@ const BookingTicket = ({
         </span>
 
         <span className="ticket-token-number">
-
           #
           {booking.token_number ||
             booking.queue_number ||
             '--'}
-
         </span>
 
       </div>
-
 
       {/* PROGRESS */}
 
@@ -544,17 +395,15 @@ const BookingTicket = ({
             />
 
             <circle
-              className={`ticket-progress-fill ${
-                isCancelled
-                  ? 'cancelled'
-                  : ''
-              }`}
+              className={
+                `ticket-progress-fill ` +
+                `${isCancelled ? 'cancelled' : ''}`
+              }
               cx="60"
               cy="60"
               r="50"
               style={{
-                strokeDasharray:
-                  314.16,
+                strokeDasharray: 314.16,
 
                 strokeDashoffset:
                   314.16 -
@@ -583,6 +432,7 @@ const BookingTicket = ({
 
         </div>
 
+        {/* QUEUE */}
 
         <div className="ticket-queue-info">
 
@@ -591,11 +441,9 @@ const BookingTicket = ({
           </span>
 
           <span className="ticket-queue-number">
-
             #
             {booking.queue_position ??
               '--'}
-
           </span>
 
           <span className="ticket-queue-status">
@@ -606,18 +454,17 @@ const BookingTicket = ({
 
       </div>
 
-
       {/* TIMELINE */}
 
       <div className="ticket-timeline">
 
+        {/* BOOKED */}
 
         <div
-          className={`ticket-timeline-step ${
-            bookedStepActive
-              ? 'active'
-              : ''
-          }`}
+          className={
+            `ticket-timeline-step ` +
+            `${bookedStepActive ? 'active' : ''}`
+          }
         >
 
           <span className="ticket-timeline-icon">
@@ -631,12 +478,9 @@ const BookingTicket = ({
             </p>
 
             <p className="ticket-timeline-time">
-
               {formatTime(
-                booking.booked_at ||
-                booking.created_at
+                booking.booked_at
               )}
-
             </p>
 
           </div>
@@ -647,13 +491,17 @@ const BookingTicket = ({
 
         </div>
 
+        {/* CHECKED IN */}
 
         <div
-          className={`ticket-timeline-step ${
-            checkedInStepActive
-              ? 'active'
-              : ''
-          }`}
+          className={
+            `ticket-timeline-step ` +
+            `${
+              checkedInStepActive
+                ? 'active'
+                : ''
+            }`
+          }
         >
 
           <span className="ticket-timeline-icon">
@@ -678,7 +526,6 @@ const BookingTicket = ({
 
           </div>
 
-
           {isCheckedIn &&
             !isCompleted && (
               <span className="ticket-timeline-dot pulse" />
@@ -690,13 +537,17 @@ const BookingTicket = ({
 
         </div>
 
+        {/* YOUR TURN */}
 
         <div
-          className={`ticket-timeline-step ${
-            yourTurnStepActive
-              ? 'active'
-              : ''
-          }`}
+          className={
+            `ticket-timeline-step ` +
+            `${
+              yourTurnStepActive
+                ? 'active'
+                : ''
+            }`
+          }
         >
 
           <span className="ticket-timeline-icon">
@@ -719,7 +570,6 @@ const BookingTicket = ({
 
           </div>
 
-
           {isCompleted && (
             <span className="ticket-timeline-dot" />
           )}
@@ -728,11 +578,9 @@ const BookingTicket = ({
 
       </div>
 
-
       {/* DETAILS */}
 
       <div className="ticket-details">
-
 
         <div className="ticket-detail-row">
 
@@ -741,14 +589,10 @@ const BookingTicket = ({
           </span>
 
           <span className="ticket-detail-value">
-
-            {booking.doctors?.name ||
-              '--'}
-
+            {booking.doctors?.name || '--'}
           </span>
 
         </div>
-
 
         <div className="ticket-detail-row">
 
@@ -757,14 +601,10 @@ const BookingTicket = ({
           </span>
 
           <span className="ticket-detail-value">
-
-            {booking.doctors?.specialty ||
-              '--'}
-
+            {booking.doctors?.specialty || '--'}
           </span>
 
         </div>
-
 
         <div className="ticket-detail-row">
 
@@ -781,7 +621,6 @@ const BookingTicket = ({
 
         </div>
 
-
         <div className="ticket-detail-row">
 
           <span className="ticket-detail-label">
@@ -789,16 +628,12 @@ const BookingTicket = ({
           </span>
 
           <span className="ticket-detail-value">
-
             {formatDate(
-              booking.booked_at ||
-              booking.created_at
+              booking.booked_at
             )}
-
           </span>
 
         </div>
-
 
         <div className="ticket-detail-row">
 
@@ -808,8 +643,7 @@ const BookingTicket = ({
 
           <span className="ticket-detail-value">
 
-            {booking.payment_method ===
-            'upi'
+            {paymentMethod === 'upi'
               ? `UPI${
                   upiInfo?.upiId
                     ? ` · ${upiInfo.upiId}`
@@ -821,7 +655,6 @@ const BookingTicket = ({
 
         </div>
 
-
         <div className="ticket-detail-row">
 
           <span className="ticket-detail-label">
@@ -829,9 +662,10 @@ const BookingTicket = ({
           </span>
 
           <span
-            className={`ticket-detail-status ${
-              booking.status
-            }`}
+            className={
+              `ticket-detail-status ` +
+              `${booking.status}`
+            }
           >
             {displayStatusLabel}
           </span>
@@ -840,8 +674,7 @@ const BookingTicket = ({
 
       </div>
 
-
-      {/* CANCEL ACTION */}
+      {/* CANCEL */}
 
       {isActive && (
 
@@ -851,12 +684,9 @@ const BookingTicket = ({
 
             <button
               className="ticket-cancel-btn"
-              onClick={() => {
-                setCancelError('');
-                setShowCancelConfirm(
-                  true
-                );
-              }}
+              onClick={() =>
+                setShowCancelConfirm(true)
+              }
               disabled={cancelling}
             >
               Cancel Booking
@@ -870,36 +700,17 @@ const BookingTicket = ({
                 Are you sure you want to cancel this booking?
               </p>
 
-
-              {cancelError && (
-
-                <p
-                  style={{
-                    color: '#c0392b',
-                    marginBottom: '10px',
-                    fontSize: '13px',
-                  }}
-                >
-                  {cancelError}
-                </p>
-
-              )}
-
-
               <div className="ticket-cancel-confirm-buttons">
 
                 <button
                   className="ticket-cancel-confirm-no"
                   onClick={() =>
-                    setShowCancelConfirm(
-                      false
-                    )
+                    setShowCancelConfirm(false)
                   }
                   disabled={cancelling}
                 >
                   No, Keep it
                 </button>
-
 
                 <button
                   className="ticket-cancel-confirm-yes"
@@ -923,19 +734,13 @@ const BookingTicket = ({
 
       )}
 
-
       {/* FOOTER */}
 
       <div className="ticket-footer">
 
         <span>
-
           Booking ID:{' '}
-
-          {booking.id
-            ? booking.id.slice(0, 8)
-            : '--'}
-
+          {booking.id?.slice(0, 8)}
         </span>
 
         <span>•</span>
@@ -947,10 +752,8 @@ const BookingTicket = ({
       </div>
 
     </div>
-
   );
-
 };
 
-
 export default BookingTicket;
+```
