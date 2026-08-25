@@ -235,7 +235,7 @@ export default function HospitalFlow({
     useState(null);
 
   const [timeLeft, setTimeLeft] =
-    useState(90);
+    useState(150); // Upgraded from 90s to 150s
 
   const [paymentExpired, setPaymentExpired] =
     useState(false);
@@ -266,6 +266,10 @@ export default function HospitalFlow({
 
   const [showCelebration, setShowCelebration] =
     useState(false);
+
+  // Booking tier state: standard vs priority (VIP Pass)
+  const [bookingTier, setBookingTier] = useState('standard');
+
   const getDynamicGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good Morning, MediQ';
@@ -289,7 +293,7 @@ export default function HospitalFlow({
       return;
     }
 
-    setTimeLeft(90);
+    setTimeLeft(150);
     setPaymentExpired(false);
 
     const interval = setInterval(() => {
@@ -635,6 +639,7 @@ export default function HospitalFlow({
     setTxnId('');
     setScreenshotFile(null);
     setPaymentExpired(false);
+    setBookingTier('standard');
 
     setPendingBooking({
       doc,
@@ -656,6 +661,8 @@ export default function HospitalFlow({
       );
       return;
     }
+
+    const isPriority = bookingTier === 'priority';
 
     if (selectedPayment === 'upi') {
       if (paymentExpired) {
@@ -706,7 +713,8 @@ export default function HospitalFlow({
           txnId.trim(),
           url,
           contactPhone.trim(),
-          selectedFamilyMember
+          selectedFamilyMember,
+          isPriority
         );
 
       setSubmittingPayment(false);
@@ -757,7 +765,8 @@ export default function HospitalFlow({
         null,
         null,
         contactPhone.trim(),
-        selectedFamilyMember
+        selectedFamilyMember,
+        isPriority
       );
 
     setSubmittingPayment(false);
@@ -792,6 +801,7 @@ export default function HospitalFlow({
     setSearchTerm('');
     setActiveSpecialty('');
   };
+
   return (
     <div
       className="flow-page"
@@ -1060,6 +1070,7 @@ export default function HospitalFlow({
                 </button>
               ))}
             </div>
+
             {isSearchActive ? (
               <>
                 <h3 className="flow-section-title">
@@ -1517,6 +1528,7 @@ export default function HospitalFlow({
           </div>
         )}
       </div>
+
       {ticketData && (
         <BookingTicket
           appointment={
@@ -1560,7 +1572,9 @@ export default function HospitalFlow({
             <div style={{ background: '#f8f6f0', padding: '14px', borderRadius: '16px', marginBottom: '16px', border: '1px solid #e2e8f0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', marginBottom: '6px' }}>
                 <span style={{ color: '#64748b' }}>Consultation Fee:</span>
-                <strong style={{ color: '#0b332c' }}>₹{pendingBooking.doc.consultation_fee || 500}</strong>
+                <strong style={{ color: '#0b332c' }}>
+                  ₹{bookingTier === 'priority' ? (pendingBooking.doc.consultation_fee || 500) + 100 : (pendingBooking.doc.consultation_fee || 500)}
+                </strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px' }}>
                 <span style={{ color: '#64748b' }}>Estimated Wait:</span>
@@ -1602,6 +1616,29 @@ export default function HospitalFlow({
               />
             </div>
 
+            {/* BOOKING TIER SELECTION (Standard vs Priority Consultation) */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '12px', fontWeight: '700', color: '#0b332c', display: 'block', marginBottom: '6px' }}>
+                Consultation Type:
+              </label>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => setBookingTier('standard')}
+                  style={{ flex: 1, padding: '12px', borderRadius: '12px', fontWeight: '700', fontSize: '12px', cursor: 'pointer', border: bookingTier === 'standard' ? 'none' : '1px solid #e2e8f0', background: bookingTier === 'standard' ? '#0b332c' : '#fff', color: bookingTier === 'standard' ? '#fff' : '#0b332c' }}
+                >
+                  Standard (₹{pendingBooking.doc.consultation_fee || 500})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBookingTier('priority')}
+                  style={{ flex: 1, padding: '12px', borderRadius: '12px', fontWeight: '700', fontSize: '12px', cursor: 'pointer', border: bookingTier === 'priority' ? 'none' : '1px solid #fde047', background: bookingTier === 'priority' ? '#d97706' : '#fef3c7', color: bookingTier === 'priority' ? '#fff' : '#92400e' }}
+                >
+                  ⚡ Priority (+₹100)
+                </button>
+              </div>
+            </div>
+
             <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
               <button
                 onClick={() => setSelectedPayment('cash')}
@@ -1620,9 +1657,24 @@ export default function HospitalFlow({
 
             {selectedPayment === 'upi' && hospitalUpi && (
               <div style={{ background: '#f8f6f0', padding: '14px', borderRadius: '14px', marginBottom: '16px', border: '1px solid #e2e8f0' }}>
-                <p style={{ fontSize: '12.5px', margin: '0 0 8px', color: '#0b332c' }}>
-                  Pay via UPI to: <strong>{hospitalUpi}</strong>
-                </p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '12.5px', color: '#0b332c' }}>
+                    UPI ID: <strong>{hospitalUpi}</strong>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(hospitalUpi);
+                      alert('UPI ID copied to clipboard!');
+                    }}
+                    style={{ background: '#0b332c', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}
+                  >
+                    📋 Copy
+                  </button>
+                </div>
+                <div style={{ fontSize: '11.5px', color: '#d97706', fontWeight: '600', marginBottom: '10px' }}>
+                  ⏳ Time remaining: {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')} (150s limit)
+                </div>
                 <input
                   placeholder="Enter Transaction / UTR ID"
                   value={txnId}
