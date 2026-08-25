@@ -1,5 +1,3 @@
-// src/hospitalData.js
-
 import { supabase } from './supabaseClient';
 
 /* =========================================================
@@ -375,14 +373,16 @@ export async function bookAppointment(
   paymentMethod,
   transactionId,
   screenshotUrl,
-  contactPhone
+  contactPhone,
+  patientName = 'Self (Primary)',
+  isPriority = false
 ) {
   const {
     data: patient,
     error: patientError,
   } = await supabase
     .from('patients')
-    .select('id')
+    .select('id, name')
     .eq('user_id', patientUserId)
     .single();
 
@@ -398,6 +398,16 @@ export async function bookAppointment(
         new Error('Patient record not found'),
     };
   }
+
+  // Fetch doctor fee to calculate correct priority pricing (+₹100)
+  const { data: docData } = await supabase
+    .from('doctors')
+    .select('consultation_fee')
+    .eq('id', doctorId)
+    .single();
+
+  const baseFee = docData?.consultation_fee || 500;
+  const finalFee = isPriority ? baseFee + 100 : baseFee;
 
   const {
     data: queueNumber,
@@ -452,6 +462,9 @@ export async function bookAppointment(
         screenshotUrl || null,
       contact_phone:
         contactPhone || null,
+      patient_name: patientName || patient.name || 'Self (Primary)',
+      is_priority: Boolean(isPriority),
+      consultation_fee: finalFee,
     })
     .select()
     .single();
@@ -504,7 +517,10 @@ export async function getMyCurrentBooking(
       booked_at,
       checked_in_at,
       appointment_time,
-      payment_method
+      payment_method,
+      patient_name,
+      is_priority,
+      consultation_fee
     `)
     .eq('patient_id', patient.id)
     .eq('status', 'waiting')
@@ -580,11 +596,6 @@ export async function cancelAppointment(
       ),
     };
   }
-
-  console.log(
-    'Cancelling appointment:',
-    appointmentId
-  );
 
   const {
     data,
@@ -729,7 +740,10 @@ export async function getMyBookings(
       payment_screenshot_url,
       contact_phone,
       checked_in_at,
-      appointment_time
+      appointment_time,
+      patient_name,
+      is_priority,
+      consultation_fee
     `)
     .eq('patient_id', patient.id)
     .order('created_at', {
@@ -1205,78 +1219,6 @@ export async function getTodaysBookings(
   }
 
   return data || [];
-}
-
-
-/*
-  NEW FUNCTION
-
-  Gets waiting count directly from appointments.
-
-  This prevents the clinic dashboard from
-  showing zero when waiting bookings exist.
-*/
-
-export async function getClinicWaitingCount(
-  pin,
-  doctorId
-) {
-  const bookings =
-    await getTodaysBookings(
-      pin,
-      doctorId
-    );
-
-  return (bookings || []).filter(
-    (booking) =>
-      booking.status === 'waiting'
-  ).length;
-}
-
-
-export async function getClinicBookingStats(
-  pin,
-  doctorId
-) {
-  const bookings =
-    await getTodaysBookings(
-      pin,
-      doctorId
-    );
-
-  const stats = {
-    total: 0,
-    waiting: 0,
-    completed: 0,
-    cancelled: 0,
-  };
-
-  (bookings || []).forEach(
-    (booking) => {
-      stats.total += 1;
-
-      if (
-        booking.status === 'waiting'
-      ) {
-        stats.waiting += 1;
-      }
-
-      if (
-        booking.status === 'completed' ||
-        booking.status === 'seen'
-      ) {
-        stats.completed += 1;
-      }
-
-      if (
-        booking.status === 'cancelled'
-      ) {
-        stats.cancelled += 1;
-      }
-    }
-  );
-
-  return stats;
 }
 
 
