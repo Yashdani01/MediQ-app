@@ -305,7 +305,6 @@ export default function ClinicPortal() {
     setEditSpecialties(doc.specialties || [doc.specialty || 'General Physician']);
     setEditFee(doc.consultation_fee != null ? String(doc.consultation_fee) : '');
     
-    // Properly parse custom_schedule so checkboxes and timings load correctly
     const mergedSchedule = { ...DEFAULT_SCHEDULE };
     let rawSchedule = doc.custom_schedule;
     if (typeof rawSchedule === 'string') {
@@ -569,9 +568,23 @@ export default function ClinicPortal() {
             const specs = doc.specialties || [doc.specialty || 'General Physician'];
             const statusInfo = STATUS_OPTIONS.find((s) => s.value === doc.status) || STATUS_OPTIONS[0];
 
+            // Smart schedule parser supporting custom_schedule and fallback working_days
+            let scheduleDisplay = 'Schedule not set';
             let parsedSchedule = doc.custom_schedule;
             if (typeof parsedSchedule === 'string') {
               try { parsedSchedule = JSON.parse(parsedSchedule); } catch (e) { parsedSchedule = null; }
+            }
+            if (parsedSchedule && typeof parsedSchedule === 'object') {
+              const activeDaysList = Object.keys(parsedSchedule).filter(d => parsedSchedule[d]?.active);
+              if (activeDaysList.length > 0) {
+                scheduleDisplay = activeDaysList
+                  .map(d => `${d} · ${formatTime(parsedSchedule[d].start || '10:00')} – ${formatTime(parsedSchedule[d].end || '14:00')}`)
+                  .join(' | ');
+              }
+            }
+            if (scheduleDisplay === 'Schedule not set' && doc.working_days && doc.working_days.length > 0) {
+              const timesStr = doc.start_time && doc.end_time ? ` (${formatTime(doc.start_time)} – ${formatTime(doc.end_time)})` : '';
+              scheduleDisplay = doc.working_days.join(', ') + timesStr;
             }
 
             return (
@@ -633,16 +646,9 @@ export default function ClinicPortal() {
                           <p style={{ fontSize: '12px', color: '#10b981', fontWeight: '700', margin: '0 0 2px' }}>{doc.degrees || 'MBBS'}</p>
                           <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 4px' }}>{specs.join(', ')}</p>
                           
-                          {/* Cleanly formatted Schedule display badge */}
+                          {/* Schedule Display Badge */}
                           <div style={{ fontSize: '11px', color: '#0b332c', background: '#f8f6f0', padding: '4px 10px', borderRadius: '8px', display: 'inline-block', border: '1px solid #e2e8f0', fontWeight: '600' }}>
-                            🕒 {parsedSchedule ? (
-                              Object.keys(parsedSchedule)
-                                .filter(d => parsedSchedule[d]?.active)
-                                .map(d => `${d} · ${formatTime(parsedSchedule[d].start)} – ${formatTime(parsedSchedule[d].end)}`)
-                                .join(' | ') || 'No active days selected'
-                            ) : (
-                              doc.working_days?.join(', ') || 'Schedule not set'
-                            )}
+                            🕒 {scheduleDisplay}
                           </div>
                         </div>
                       </div>
