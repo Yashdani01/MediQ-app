@@ -565,24 +565,43 @@ export default function App() {
           <div style={{ background: 'var(--white)', width: '100%', maxWidth: activeModal === 'symptoms' || activeModal === 'physio' ? '650px' : '400px', borderRadius: '24px', padding: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', position: 'relative', maxHeight: '85vh', overflowY: 'auto' }}>
             <button onClick={() => setActiveModal(null)} style={{ position: 'absolute', top: '20px', right: '20px', background: 'var(--sand-100)', border: 'none', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--ink)' }}>✕</button>
 
-            {activeModal === 'family' && (
+           {activeModal === 'family' && (
               <div>
                 <h3 style={{ margin: '0 0 4px', fontFamily: 'Fraunces, serif', fontSize: '20px', color: 'var(--teal-900)' }}>Care Circle</h3>
                 <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--ink-soft)' }}>Add household members so you can assign appointments to them during checkout.</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
                   {familyMembers.map((m) => (
-                    <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--sand-50)', padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--line)' }}>
-                      <div>
-                        <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--ink)' }}>{m.name}</span>
-                        <span style={{ marginLeft: '8px', fontSize: '11px', color: 'var(--teal-700)', fontWeight: '700', background: 'var(--sand-200)', padding: '2px 8px', borderRadius: '6px' }}>{m.relation || 'Self'}</span>
+                    <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8f6f0', padding: '12px 14px', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#e6f4ea', color: '#0b332c', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: '700' }}>
+                          {m.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '13.5px', fontWeight: '700', color: '#0b332c' }}>{m.name}</div>
+                          <span style={{ fontSize: '11px', color: '#10b981', fontWeight: '700', background: '#dcfce7', padding: '2px 8px', borderRadius: '6px' }}>{m.relation || 'Self'}</span>
+                        </div>
                       </div>
+                      
                       {m.name !== 'Self (Primary)' && (
                         <button 
                           onClick={() => setFamilyMembers(familyMembers.filter(item => item.id !== m.id))}
-                          style={{ background: '#fee2e2', border: 'none', color: '#dc2626', width: '24px', height: '24px', borderRadius: '50%', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
-                          title="Remove member"
+                          style={{ 
+                            background: '#fee2e2', 
+                            border: '1px solid #fca5a5', 
+                            color: '#dc2626', 
+                            width: '30px', 
+                            height: '30px', 
+                            borderRadius: '50%', 
+                            cursor: 'pointer', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            fontSize: '13px',
+                            transition: 'all 0.2s ease'
+                          }}
+                          title="Remove family member"
                         >
-                          ✕
+                          🗑️
                         </button>
                       )}
                     </div>
