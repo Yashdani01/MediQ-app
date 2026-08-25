@@ -297,11 +297,15 @@ export default function ClinicPortal() {
     setEditPtr(String(doc.ptr_score || 99.0));
     setEditSpecialties(doc.specialties || [doc.specialty || 'General Physician']);
     setEditFee(doc.consultation_fee != null ? String(doc.consultation_fee) : '');
-    
+
     const mergedSchedule = { ...DEFAULT_SCHEDULE };
     let rawSchedule = doc.custom_schedule;
     if (typeof rawSchedule === 'string') {
-      try { rawSchedule = JSON.parse(rawSchedule); } catch (e) { rawSchedule = null; }
+      try {
+        rawSchedule = JSON.parse(rawSchedule);
+      } catch (e) {
+        rawSchedule = null;
+      }
     }
     if (rawSchedule) {
       for (const day of DAYS) {
@@ -336,12 +340,15 @@ export default function ClinicPortal() {
       editFee ? parseFloat(editFee) : null
     );
 
-    await supabase.from('doctors').update({
-      degrees: editDegrees,
-      ptr_score: parseFloat(editPtr) || 99.0,
-      specialties: editSpecialties,
-      custom_schedule: editDaySchedules,
-    }).eq('id', doctorId);
+    await supabase
+      .from('doctors')
+      .update({
+        degrees: editDegrees,
+        ptr_score: parseFloat(editPtr) || 99.0,
+        specialties: editSpecialties,
+        custom_schedule: editDaySchedules,
+      })
+      .eq('id', doctorId);
 
     setEditingId(null);
     await loadDoctors(unlockedPin);
@@ -431,8 +438,7 @@ export default function ClinicPortal() {
   return (
     <div style={{ minHeight: '100vh', background: '#f8f6f0', color: '#0b332c', fontFamily: 'sans-serif', paddingBottom: '60px' }}>
       <div style={{ maxWidth: '680px', margin: '0 auto', padding: '20px 16px', boxSizing: 'border-box' }}>
-        
-        {/* TOP HEADER */}
+
         <div style={{ background: '#fff', borderRadius: '20px', padding: '20px', marginBottom: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 15px rgba(0,0,0,0.02)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <div style={{ fontSize: '10.5px', fontWeight: '800', color: '#10b981', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '2px' }}>Clinic Staff Portal</div>
@@ -446,7 +452,6 @@ export default function ClinicPortal() {
           </div>
         </div>
 
-        {/* STATS AT A GLANCE */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '16px' }}>
           {[
             { label: 'Total Tokens', value: totalBookings, bg: '#fff', color: '#0b332c' },
@@ -460,11 +465,10 @@ export default function ClinicPortal() {
           ))}
         </div>
 
-        {/* SETTINGS DRAWER */}
         {showSettingsDrawer && (
           <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '20px', marginBottom: '16px', boxShadow: '0 4px 15px rgba(0,0,0,0.04)' }}>
             <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '18px', color: '#0b332c', margin: '0 0 12px' }}>Clinic Settings & UPI QR</h3>
-            
+
             <div style={{ marginBottom: '14px' }}>
               <label style={{ fontSize: '12px', fontWeight: '700', color: '#0b332c', display: 'block', marginBottom: '6px' }}>Google Maps Location Link:</label>
               <div style={{ display: 'flex', gap: '8px' }}>
@@ -490,7 +494,6 @@ export default function ClinicPortal() {
 
         {error && <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', color: '#dc2626', padding: '12px', borderRadius: '12px', fontSize: '13px', fontWeight: '600', marginBottom: '16px' }}>{error}</div>}
 
-        {/* DOCTOR ROSTER HEADER */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
           <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: '18px', color: '#0b332c', margin: 0 }}>Doctor Roster ({doctors.length})</h2>
           <button onClick={() => setShowAddForm(!showAddForm)} style={{ background: '#10b981', color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '12px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 12px rgba(16,185,129,0.2)' }}>
@@ -498,11 +501,10 @@ export default function ClinicPortal() {
           </button>
         </div>
 
-        {/* ADD DOCTOR FORM */}
         {showAddForm && (
           <form onSubmit={handleAddDoctor} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '20px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '18px', color: '#0b332c', margin: '0 0 4px' }}>Add New Doctor</h3>
-            
+
             <Field label="Doctor Name *">
               <input placeholder="Dr. Gautam Banerjee" value={newName} onChange={(e) => setNewName(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '13.5px', boxSizing: 'border-box' }} required />
             </Field>
@@ -521,7 +523,7 @@ export default function ClinicPortal() {
             </div>
 
             <SpecialtySelector selected={newSpecialties} onToggle={(spec) => toggleSpecialty(spec, newSpecialties, setNewSpecialties)} />
-            
+
             <div style={{ background: '#f8f6f0', padding: '12px', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
               <label style={{ fontSize: '12px', fontWeight: '800', color: '#0b332c', display: 'block', marginBottom: '4px' }}>📅 Doctor Clinic Visit Days & Timings *</label>
               <ScheduleEditor value={daySchedules} onChange={setDaySchedules} />
@@ -533,7 +535,6 @@ export default function ClinicPortal() {
           </form>
         )}
 
-        {/* DOCTOR LIST CARDS */}
         {doctors.length === 0 ? (
           <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '40px 20px', textAlign: 'center' }}>
             <div style={{ fontSize: '32px', marginBottom: '8px' }}>👨‍⚕️</div>
@@ -551,16 +552,22 @@ export default function ClinicPortal() {
             let scheduleDisplay = 'Schedule not set';
             let parsedSchedule = doc.custom_schedule;
             if (typeof parsedSchedule === 'string') {
-              try { parsedSchedule = JSON.parse(parsedSchedule); } catch (e) { parsedSchedule = null; }
+              try {
+                parsedSchedule = JSON.parse(parsedSchedule);
+              } catch (e) {
+                parsedSchedule = null;
+              }
             }
+
             if (parsedSchedule && typeof parsedSchedule === 'object') {
-              const activeDaysList = Object.keys(parsedSchedule).filter(d => parsedSchedule[d]?.active);
+              const activeDaysList = Object.keys(parsedSchedule).filter((d) => parsedSchedule[d]?.active);
               if (activeDaysList.length > 0) {
                 scheduleDisplay = activeDaysList
-                  .map(d => `${d} · ${formatTime(parsedSchedule[d].start || '10:00')} – ${formatTime(parsedSchedule[d].end || '14:00')}`)
+                  .map((d) => `${d} · ${formatTime(parsedSchedule[d].start || '10:00')} – ${formatTime(parsedSchedule[d].end || '14:00')}`)
                   .join(' | ');
               }
             }
+
             if (scheduleDisplay === 'Schedule not set' && doc.working_days && doc.working_days.length > 0) {
               const timesStr = doc.start_time && doc.end_time ? ` (${formatTime(doc.start_time)} – ${formatTime(doc.end_time)})` : '';
               scheduleDisplay = doc.working_days.join(', ') + timesStr;
@@ -624,7 +631,7 @@ export default function ClinicPortal() {
                           <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '17px', color: '#0b332c', margin: '0 0 2px' }}>{doc.name}</h3>
                           <p style={{ fontSize: '12px', color: '#10b981', fontWeight: '700', margin: '0 0 2px' }}>{doc.degrees || 'MBBS'}</p>
                           <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 4px' }}>{specs.join(', ')}</p>
-                          
+
                           <div style={{ fontSize: '11px', color: '#0b332c', background: '#f8f6f0', padding: '4px 10px', borderRadius: '8px', display: 'inline-block', border: '1px solid #e2e8f0', fontWeight: '600' }}>
                             🕒 {scheduleDisplay}
                           </div>
@@ -636,7 +643,6 @@ export default function ClinicPortal() {
                       </span>
                     </div>
 
-                    {/* STATUS SELECTOR CHIPS */}
                     <div style={{ background: '#f8f6f0', padding: '12px', borderRadius: '14px', marginBottom: '14px', border: '1px solid #e2e8f0' }}>
                       <span style={{ fontSize: '10.5px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Change Queue Status:</span>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
@@ -652,7 +658,6 @@ export default function ClinicPortal() {
                       </div>
                     </div>
 
-                    {/* ACTION BUTTONS */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '14px' }}>
                       <button onClick={() => toggleTodaysPatients(doc.id)} style={{ background: '#0b332c', color: '#fff', border: 'none', padding: '10px', borderRadius: '10px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>
                         {expandedDoctor === doc.id ? 'Hide Queue' : `Queue (${waitingCount})`}
@@ -665,7 +670,6 @@ export default function ClinicPortal() {
                       </button>
                     </div>
 
-                    {/* WALK-IN FORM */}
                     {showWalkinForm === doc.id && (
                       <div style={{ background: '#fef3c7', border: '1px solid #fde047', borderRadius: '14px', padding: '14px', marginBottom: '14px' }}>
                         <h4 style={{ margin: '0 0 8px', fontSize: '13px', color: '#92400e', fontWeight: '800' }}>Add Offline Walk-in Patient</h4>
@@ -677,7 +681,6 @@ export default function ClinicPortal() {
                       </div>
                     )}
 
-                    {/* TODAY'S QUEUE EXPANDED LIST WITH PRIORITY HIGHLIGHTING */}
                     {expandedDoctor === doc.id && (
                       <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '14px', marginTop: '14px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -696,17 +699,17 @@ export default function ClinicPortal() {
                               const isUpdating = updatingPatient === b.id;
 
                               return (
-                                <div 
-                                  key={b.id} 
-                                  style={{ 
-                                    background: b.is_priority ? '#fffbeb' : '#f8f6f0', 
-                                    border: b.is_priority ? '1.5px solid #f59e0b' : '1px solid #e2e8f0', 
-                                    borderRadius: '14px', 
-                                    padding: '12px', 
-                                    display: 'flex', 
-                                    justifyContent: 'space-between', 
+                                <div
+                                  key={b.id}
+                                  style={{
+                                    background: b.is_priority ? '#fffbeb' : '#f8f6f0',
+                                    border: b.is_priority ? '1.5px solid #f59e0b' : '1px solid #e2e8f0',
+                                    borderRadius: '14px',
+                                    padding: '12px',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
                                     alignItems: 'center',
-                                    boxShadow: b.is_priority ? '0 4px 12px rgba(245, 158, 11, 0.15)' : 'none'
+                                    boxShadow: b.is_priority ? '0 4px 12px rgba(245, 158, 11, 0.2)' : 'none'
                                   }}
                                 >
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -715,10 +718,13 @@ export default function ClinicPortal() {
                                     </div>
                                     <div>
                                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        {/* Displays Care Circle Member Name (e.g. Wife) */}
                                         <span style={{ fontSize: '13.5px', fontWeight: '800', color: '#0b332c' }}>{b.patient_name || 'Patient'}</span>
+
+                                        {/* High-visibility Priority Badge for Clinic Staff */}
                                         {b.is_priority && (
-                                          <span style={{ background: '#fef3c7', color: '#92400e', fontSize: '9.5px', fontWeight: '900', padding: '2px 6px', borderRadius: '4px', border: '1px solid #fde047' }}>
-                                            ⚡ Priority
+                                          <span style={{ background: '#fef3c7', color: '#92400e', fontSize: '10px', fontWeight: '900', padding: '2px 7px', borderRadius: '6px', border: '1px solid #fde047' }}>
+                                            ⚡ PRIORITY PASS
                                           </span>
                                         )}
                                       </div>
@@ -757,7 +763,6 @@ export default function ClinicPortal() {
         )}
       </div>
 
-      {/* QR MODAL */}
       {showQrModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(6, 43, 37, 0.65)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
           <div style={{ background: '#fff', width: '100%', maxWidth: '340px', borderRadius: '24px', padding: '24px', textAlign: 'center', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
