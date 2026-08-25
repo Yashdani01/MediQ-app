@@ -1070,3 +1070,6 @@ export default function App() {
     </div>
   );
 }
+const handleWhatsAppSupport = () => {
+  window.open('https://wa.me/918585058779?text=Hello%20MediQ%20Support,%20I%20need%20assistance%20with%20my%20app.', '_blank');
+};
