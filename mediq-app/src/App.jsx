@@ -7,8 +7,10 @@ import MyBookings from './components/MyBookings';
 import Reports from './components/Reports';
 import SymptomTriage from './components/SymptomTriage';
 import ClinicPortal from './components/ClinicPortal';
+import PhysioGuideModal from './components/PhysioGuideModal';
 
 import './index.css';
+
 
 const translations = {
   en: {
@@ -24,8 +26,9 @@ const translations = {
     findCare: 'Find Care',
     healthAssistant: 'Health Assistant',
     language: 'Language',
+    symptomsTitle: 'Know Your Symptoms',
+    symptomsSubtitle: 'Detailed guide on common health signs and required medical specialists.',
   },
-
   bn: {
     loading: 'মেডিকিউ লোড হচ্ছে...',
     home: 'হোম',
@@ -39,8 +42,9 @@ const translations = {
     findCare: 'ডাক্তার খুঁজুন',
     healthAssistant: 'স্বাস্থ্য সহায়ক',
     language: 'ভাষা',
+    symptomsTitle: 'আপনার লক্ষণ জানুন',
+    symptomsSubtitle: 'সাধারণ স্বাস্থ্য লক্ষণ এবং প্রয়োজনীয় চিকিৎসকের বিশদ নির্দেশিকা।',
   },
-
   hi: {
     loading: 'मेडीक्यू लोड हो रहा है...',
     home: 'होम',
@@ -54,14 +58,17 @@ const translations = {
     findCare: 'डॉक्टर खोजें',
     healthAssistant: 'स्वास्थ्य सहायक',
     language: 'भाषा',
+    symptomsTitle: 'अपने लक्षण जानें',
+    symptomsSubtitle: 'सामान्य स्वास्थ्य संकेतों और आवश्यक चिकित्सा विशेषज्ञों पर विस्तृत मार्गदर्शिका।',
   },
 };
+
 
 /* =========================
    ICON COMPONENT
 ========================= */
 
-function AppIcon({ type, size = 20 }) {
+function AppIcon({ type, size = 18 }) {
   const common = {
     width: size,
     height: size,
@@ -81,13 +88,11 @@ function AppIcon({ type, size = 20 }) {
         <path d="M9.5 21v-6h5v6" />
       </>
     ),
-
     triage: (
       <>
         <path d="M3 12h4l2.5-7 5 14 2.5-7H21" />
       </>
     ),
-
     reports: (
       <>
         <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
@@ -96,16 +101,9 @@ function AppIcon({ type, size = 20 }) {
         <path d="M8 17h5" />
       </>
     ),
-
     bookings: (
       <>
-        <rect
-          x="3"
-          y="4"
-          width="18"
-          height="17"
-          rx="2"
-        />
+        <rect x="3" y="4" width="18" height="17" rx="2" />
         <path d="M8 2v4" />
         <path d="M16 2v4" />
         <path d="M3 10h18" />
@@ -114,7 +112,6 @@ function AppIcon({ type, size = 20 }) {
         <path d="M16 15h.01" />
       </>
     ),
-
     globe: (
       <>
         <circle cx="12" cy="12" r="9" />
@@ -123,7 +120,6 @@ function AppIcon({ type, size = 20 }) {
         <path d="M12 3C9.8 5.5 8.7 8.5 8.7 12s1.1 6.5 3.3 9" />
       </>
     ),
-
     logout: (
       <>
         <path d="M10 17l5-5-5-5" />
@@ -131,7 +127,6 @@ function AppIcon({ type, size = 20 }) {
         <path d="M21 19V5a2 2 0 0 0-2-2h-5" />
       </>
     ),
-
     menu: (
       <>
         <path d="M4 7h16" />
@@ -139,17 +134,45 @@ function AppIcon({ type, size = 20 }) {
         <path d="M4 17h16" />
       </>
     ),
-
     close: (
       <>
         <path d="M18 6 6 18" />
         <path d="m6 6 12 12" />
       </>
     ),
+    family: (
+      <>
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </>
+    ),
+    sos: (
+      <>
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+        <line x1="12" y1="9" x2="12" y2="13" />
+        <line x1="12" y1="17" x2="12.01" y2="17" />
+      </>
+    ),
+    history: (
+      <>
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="16" y1="13" x2="8" y2="13" />
+        <line x1="16" y1="17" x2="8" y2="17" />
+      </>
+    ),
+    queue: (
+      <>
+        <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+      </>
+    ),
   };
 
   return <svg {...common}>{icons[type]}</svg>;
 }
+
 
 /* =========================
    APP
@@ -177,6 +200,89 @@ export default function App() {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Interactive Popup Modal States ('family' | 'symptoms' | 'queue' | 'sos' | 'physio' | null)
+  const [activeModal, setActiveModal] = useState(null);
+
+  // Feature Data States
+  const [familyMembers, setFamilyMembers] = useState([
+    { id: 1, name: 'Self (Primary)', relation: 'Self' }
+  ]);
+  const [newFamilyName, setNewFamilyName] = useState('');
+  const [newFamilyRelation, setNewFamilyRelation] = useState('Parent');
+
+  const [activeQueueToken] = useState(null);
+
+  // 20 Common Symptoms Multi-Lingual Directory Data
+  const commonSymptoms = {
+    en: [
+      { symptom: 'Severe Chest Pain & Tightness', meaning: 'Indicates potential cardiac stress, angina, or acute myocardial issues requiring immediate attention.', specialist: 'Cardiologist' },
+      { symptom: 'Joint Pain & Knee Swelling', meaning: 'Points to arthritis, ligament injury, meniscus tear, or chronic joint inflammation.', specialist: 'Orthopedic' },
+      { symptom: 'Persistent Skin Rash & Itching', meaning: 'Suggests allergic contact dermatitis, eczema, fungal infection, or hives.', specialist: 'Dermatologist' },
+      { symptom: 'Earache & Severe Throat Pain', meaning: 'Indicates tonsillitis, middle ear infection (otitis media), or acute pharyngitis.', specialist: 'ENT Specialist' },
+      { symptom: 'Irregular Periods & Pelvic Cramps', meaning: 'Points toward hormonal imbalance, ovarian cysts, PCOS, or uterine fibroids.', specialist: 'Gynecologist' },
+      { symptom: 'High Fever & Body Fatigue', meaning: 'Signifies viral infections, seasonal flu, malaria, or systemic inflammation.', specialist: 'General Physician' },
+      { symptom: 'Chronic Migraine & Throbbing Headache', meaning: 'Indicates vascular headache, severe tension, or neurological fatigue triggers.', specialist: 'Neurologist' },
+      { symptom: 'Blurry Vision & Eye Strain', meaning: 'Points to refractive errors, astigmatism, dry eyes, or prolonged screen fatigue.', specialist: 'Ophthalmologist' },
+      { symptom: 'Acid Reflux & Severe Stomach Bloating', meaning: 'Indicates chronic gastritis, acid indigestion, GERD, or dietary sensitivity.', specialist: 'Gastroenterologist' },
+      { symptom: 'Shortness of Breath & Wheezing', meaning: 'Suggests bronchial asthma, COPD, bronchitis, or allergic airway obstruction.', specialist: 'Pulmonologist' },
+      { symptom: 'Frequent Urination & Excessive Thirst', meaning: 'Potential indicator of blood sugar irregularities or urinary tract infection.', specialist: 'General Physician' },
+      { symptom: 'Persistent Low Back Pain', meaning: 'Points to lumbar muscle strain, slipped disc, sciatica, or poor posture.', specialist: 'Orthopedic' },
+      { symptom: 'Severe Toothache & Gum Bleeding', meaning: 'Indicates dental cavities, gingivitis, periodontal disease, or root abscess.', specialist: 'Dentist' },
+      { symptom: 'Chronic Anxiety & Sleep Insomnia', meaning: 'Signifies high stress overload, sleep cycle disruption, or anxiety disorder.', specialist: 'General Physician' },
+      { symptom: 'Sudden Hair Loss & Scalp Flaking', meaning: 'Points to alopecia areata, severe dandruff, scalp psoriasis, or nutritional deficiency.', specialist: 'Dermatologist' },
+      { symptom: 'Nasal Congestion & Sinus Pressure', meaning: 'Indicates chronic sinusitis, nasal polyps, or allergic rhinitis flare-up.', specialist: 'ENT Specialist' },
+      { symptom: 'Dizziness & Vertigo Spells', meaning: 'Suggests inner ear vestibular dysfunction, labyrinthitis, or orthostatic hypotension.', specialist: 'General Physician' },
+      { symptom: 'Swollen Lymph Nodes in Neck', meaning: 'Indicates an active immune response fighting throat, dental, or ear infections.', specialist: 'ENT Specialist' },
+      { symptom: 'Chronic Fatigue & Paleness', meaning: 'Points toward iron deficiency anemia, vitamin B12 deficiency, or general weakness.', specialist: 'General Physician' },
+      { symptom: 'Persistent Ankle Sprain & Stiffness', meaning: 'Indicates ligament micro-tears, tendonitis, or insufficient joint rehabilitation.', specialist: 'Orthopedic' }
+    ],
+    bn: [
+      { symptom: 'তীব্র বুক ব্যথা ও চাপ', meaning: 'হৃদযন্ত্রের সমস্যা বা এনজাইনার লক্ষণ হতে পারে, যা দ্রুত পরীক্ষা করা দরকার।', specialist: 'Cardiologist' },
+      { symptom: 'গেঁটেবাত ও হাঁটু ফুলে যাওয়া', meaning: 'আর্থ্রাইটিস বা লিগামেন্টের আঘাতের কারণে হতে পারে।', specialist: 'Orthopedic' },
+      { symptom: 'দীর্ঘস্থায়ী ত্বকে ফুসকুড়ি ও চুলকানি', meaning: 'অ্যালার্জি, একজিমা বা ফাঙ্গাল ইনফেকশনের লক্ষণ।', specialist: 'Dermatologist' },
+      { symptom: 'কানে ব্যথা ও তীব্র গলা ব্যথা', meaning: 'টনসিল ইনফেকশন বা কানের সমস্যার লক্ষণ।', specialist: 'ENT Specialist' },
+      { symptom: 'অনিয়মিত মাসিক ও তলপেটে ব্যথা', meaning: 'পলিসিস্টিক ওভারি (PCOS) বা হরমোনের ভারসাম্যহীনতা।', specialist: 'Gynecologist' },
+      { symptom: 'উচ্চ জ্বর ও শারীরিক ক্লান্তি', meaning: 'ভাইরাল ইনফেকশন, ফ্লু বা ম্যালেরিয়ার লক্ষণ হতে পারে।', specialist: 'General Physician' },
+      { symptom: 'মাইগ্রেন ও তীব্র মাথা ব্যথা', meaning: 'স্নায়বিক ক্লান্তি বা অতিরিক্ত মানসিক চাপের কারণে হয়।', specialist: 'Neurologist' },
+      { symptom: 'চোখে ঝাপসা দেখা ও ক্লান্তি', meaning: 'দৃষ্টিশক্তির ত্রুটি বা চোখের শুষ্কতার সমস্যা।', specialist: 'Ophthalmologist' },
+      { symptom: 'গ্যাস, অম্বল ও পেট ফাঁপা', meaning: 'গ্যাস্ট্রিক, বদহজম বা এসিডিটির সমস্যা।', specialist: 'Gastroenterologist' },
+      { symptom: 'শ্বাসকষ্ট ও হাঁপানি', meaning: 'ব্রংকিয়াল অ্যাজমা বা ফুসফুসের জটিলতা।', specialist: 'Pulmonologist' },
+      { symptom: 'ঘন ঘন প্রস্রাব ও অতিরিক্ত তৃষ্ণা', meaning: 'রক্তে শর্করার তারতম্য বা ইউরিন ইনফেকশনের লক্ষণ।', specialist: 'General Physician' },
+      { symptom: 'কোমর ও পিঠে দীর্ঘস্থায়ী ব্যথা', meaning: 'পেশীর টান, সায়টিকা বা মেরুদণ্ডের সমস্যা।', specialist: 'Orthopedic' },
+      { symptom: 'দাঁতে ব্যথা ও মাড়ি থেকে রক্তপাত', meaning: 'দাঁতের ক্ষয় বা মাড়ির ইনফেকশন (Gingivitis)।', specialist: 'Dentist' },
+      { symptom: 'অতিরিক্ত দুশ্চিন্তা ও অনিদ্রা', meaning: 'মানসিক চাপ বা ঘুমের ব্যাঘাতের লক্ষণ।', specialist: 'General Physician' },
+      { symptom: 'অতিরিক্ত চুল পড়া ও খুশকি', meaning: 'অ্যালোপেসিয়া বা পুষ্টির অভাবের কারণে হতে পারে।', specialist: 'Dermatologist' },
+      { symptom: 'নাক বন্ধ থাকা ও সাইনাসের সমস্যা', meaning: 'সাইনুসাইটিস বা অ্যালার্জিক রাইনাইটিস।', specialist: 'ENT Specialist' },
+      { symptom: 'মাথা ঘোরা ও ভারসাম্যহীনতা', meaning: 'কানের ভেতরের সমস্যা বা রক্তচাপ হ্রাসের লক্ষণ।', specialist: 'General Physician' },
+      { symptom: 'গলায় লিম্ফ নোড ফুলে যাওয়া', meaning: 'গলা বা কানের ইনফেকশনের বিরুদ্ধে শরীরের প্রতিরোধ প্রতিক্রিয়া।', specialist: 'ENT Specialist' },
+      { symptom: 'রক্তশূন্যতা ও চরম ক্লান্তি', meaning: 'আয়রন বা ভিটামিন বি১২ এর অভাব।', specialist: 'General Physician' },
+      { symptom: 'গোড়ালি মচকে যাওয়া ও শক্ত হয়ে যাওয়া', meaning: 'লিগামেন্টের আঘাত বা টেন্ডোনাইটিস।', specialist: 'Orthopedic' }
+    ],
+    hi: [
+      { symptom: 'तेज़ सीने में दर्द और जकड़न', meaning: 'हार्ट से जुड़ी समस्या या एनजाइना का संकेत हो सकता है, तुरंत जांच कराएं।', specialist: 'Cardiologist' },
+      { symptom: 'जोड़ों का दर्द और घुटने में सूजन', meaning: 'अर्थराइटिस, लिगामेंट इंजरी या कार्टिलेज घिसने के कारण हो सकता है।', specialist: 'Orthopedic' },
+      { symptom: 'त्वचा पर चकत्ते और लगातार खुजली', meaning: 'एलर्जी, एक्जिमा, फंगल इन्फेक्शन या पित्ती का संकेत।', specialist: 'Dermatologist' },
+      { symptom: 'कान दर्द और गंभीर गले में खराश', meaning: 'टनसिलिटिस, कान का इन्फेक्शन या सर्दी-जुकाम का असर।', specialist: 'ENT Specialist' },
+      { symptom: 'अनियमित माहवारी और पेट के निचले हिस्से में ऐंठन', meaning: 'हार्मोनल असंतुलन, पीसीओएस (PCOS) या गाइनेकोलॉजिकल समस्या।', specialist: 'Gynecologist' },
+      { symptom: 'तेज़ बुखार और कमजोरी', meaning: 'वायरल इन्फेक्शन, फ्लू या मौसमी बुखार का लक्षण।', specialist: 'General Physician' },
+      { symptom: 'माइग्रेन और तेज सिरदर्द', meaning: 'तनाव, नसों की थकान या सिरदर्द की समस्या।', specialist: 'Neurologist' },
+      { symptom: 'धुंधला दिखना और आंखों में खिंचाव', meaning: 'नजर की कमजोरी, ड्राई आइज या स्क्रीन थकान।', specialist: 'Ophthalmologist' },
+      { symptom: 'एसिडिटी और पेट फूलना', meaning: 'गैस्ट्राइटिस, अपच या जीईआरडी (GERD) की समस्या।', specialist: 'Gastroenterologist' },
+      { symptom: 'सांस फूलना और घबराहट', meaning: 'अस्थमा, ब्रोंकाइटिस या श्वसन नली में रुकावट।', specialist: 'Pulmonologist' },
+      { symptom: 'बार-बार पेशाब आना और अत्यधिक प्यास', meaning: 'शुगर (डाइबिटीज) या यूरिन इन्फेक्शन का शुरुआती संकेत।', specialist: 'General Physician' },
+      { symptom: 'पीठ और कमर में लगातार दर्द', meaning: 'कमर की मांसपेशियों में खिंचाव, स्लिप डिस्क या साइटिका।', specialist: 'Orthopedic' },
+      { symptom: 'दांतों में तेज दर्द और मसूड़ों से खून आना', meaning: 'दांतों में कीड़ा (कैविटी), पायरिया या मसूड़ों का इन्फेक्शन।', specialist: 'Dentist' },
+      { symptom: 'अत्यधिक तनाव और अनिद्रा (नींद न आना)', meaning: 'मानसिक तनाव, एंग्जायटी या नींद चक्र में गड़बड़ी।', specialist: 'General Physician' },
+      { symptom: 'बाल झड़ना और स्कैल्प में रूसी', meaning: 'एलोपेसिया, गंभीर डैंड्रफ या पोषण की कमी।', specialist: 'Dermatologist' },
+      { symptom: 'नाक बंद होना और साइनस का दबाव', meaning: 'साइनसाइटिस, नेज़ल पॉलीप्स या एलर्जी।', specialist: 'ENT Specialist' },
+      { symptom: 'चक्कर आना और सिर घूमना', meaning: 'कान के अंदरूनी संतुलन की समस्या या लो ब्लड प्रेशर।', specialist: 'General Physician' },
+      { symptom: 'गले की ग्रंथियों (लिंफ नोड्स) में सूजन', meaning: 'गले या कान के इन्फेक्शन से लड़ने की प्रतिरक्षा प्रतिक्रिया।', specialist: 'ENT Specialist' },
+      { symptom: 'शरीर में खून की कमी और कमजोरी', meaning: 'एनीमिया, आयरन या विटामिन बी12 की कमी।', specialist: 'General Physician' },
+      { symptom: 'टखने में मोच और जकड़न', meaning: 'लिगामेंट में खिंचाव या टेंडोनाइटिस।', specialist: 'Orthopedic' }
+    ]
+  };
+
+
   /* =========================
      LANGUAGE
   ========================= */
@@ -187,6 +293,8 @@ export default function App() {
   };
 
   const t = translations[lang] || translations.en;
+  const currentSymptoms = commonSymptoms[lang] || commonSymptoms.en;
+
 
   /* =========================
      AUTH SESSION
@@ -211,10 +319,8 @@ export default function App() {
       setLoading(false);
 
       if (session?.user) {
-        setProfileLoaded(false);
         loadPatientProfile(session.user);
       } else {
-        setPatientProfile(null);
         setProfileLoaded(true);
       }
     });
@@ -222,103 +328,76 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
+
   /* =========================
      PATIENT PROFILE
   ========================= */
 
   const loadPatientProfile = async (user) => {
-    try {
-      const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(window.location.search);
 
-      const pendingName = params.get('name');
-      const pendingCity = params.get('city');
+    const pendingName = params.get('name');
+    const pendingCity = params.get('city');
 
-      const { data: existing, error: existingError } = await supabase
-        .from('patients')
-        .select('id, name, city')
-        .eq('user_id', user.id)
-        .maybeSingle();
+    const { data: existing } = await supabase
+      .from('patients')
+      .select('id, name, city')
+      .eq('user_id', user.id)
+      .maybeSingle();
 
-      if (existingError) {
-        console.error('Error loading patient profile:', existingError);
-      }
-
-      if (existing) {
-        if (pendingName) {
-          const { data: updated, error: updateError } = await supabase
-            .from('patients')
-            .update({
-              name: pendingName,
-              city: pendingCity || existing.city,
-            })
-            .eq('id', existing.id)
-            .select('name, city')
-            .single();
-
-          if (updateError) {
-            console.error(
-              'Error updating patient profile:',
-              updateError
-            );
-            setPatientProfile(existing);
-          } else {
-            setPatientProfile(updated);
-          }
-
-          window.history.replaceState(
-            {},
-            '',
-            window.location.pathname
-          );
-        } else {
-          setPatientProfile(existing);
-        }
-      } else {
-        const patientCode =
-          'MDQ-' +
-          Math.floor(1000 + Math.random() * 9000);
-
-        const fullName =
-          pendingName ||
-          user.email?.split('@')[0] ||
-          'Patient';
-
-        const userCity = pendingCity || '';
-
-        const { data: created, error: createError } = await supabase
+    if (existing) {
+      if (pendingName) {
+        const { data: updated } = await supabase
           .from('patients')
-          .insert({
-            user_id: user.id,
-            name: fullName,
-            patient_code: patientCode,
-            city: userCity,
+          .update({
+            name: pendingName,
+            city: pendingCity || existing.city,
           })
+          .eq('id', existing.id)
           .select('name, city')
           .single();
 
-        if (createError) {
-          console.error(
-            'Error creating patient profile:',
-            createError
-          );
+        setPatientProfile(updated);
 
-          setPatientProfile({
-            name: fullName,
-            city: userCity,
-          });
-        } else {
-          setPatientProfile(created);
-        }
-
-        localStorage.removeItem('mediq_pending_name');
-        localStorage.removeItem('mediq_pending_city');
+        window.history.replaceState(
+          {},
+          '',
+          window.location.pathname
+        );
+      } else {
+        setPatientProfile(existing);
       }
-    } catch (error) {
-      console.error('Patient profile error:', error);
-    } finally {
-      setProfileLoaded(true);
+    } else {
+      const patientCode =
+        'MDQ-' + Math.floor(1000 + Math.random() * 9000);
+
+      const fullName =
+        pendingName ||
+        user.email?.split('@')[0] ||
+        'Patient';
+
+      const userCity = pendingCity || '';
+
+      const { data: created } = await supabase
+        .from('patients')
+        .insert({
+          user_id: user.id,
+          name: fullName,
+          patient_code: patientCode,
+          city: userCity,
+        })
+        .select('name, city')
+        .single();
+
+      setPatientProfile(created);
+
+      localStorage.removeItem('mediq_pending_name');
+      localStorage.removeItem('mediq_pending_city');
     }
+
+    setProfileLoaded(true);
   };
+
 
   /* =========================
      LOADING
@@ -338,6 +417,7 @@ export default function App() {
     );
   }
 
+
   /* =========================
      LOGIN
   ========================= */
@@ -349,6 +429,7 @@ export default function App() {
       />
     );
   }
+
 
   /* =========================
      LOGOUT
@@ -362,8 +443,9 @@ export default function App() {
     setIsGuest(false);
     setActiveTab('home');
     setPatientProfile(null);
-    setProfileLoaded(true);
+    setProfileLoaded(false);
   };
+
 
   /* =========================
      USER INFO
@@ -380,8 +462,9 @@ export default function App() {
   const userInitial =
     displayName?.charAt(0)?.toUpperCase() || 'G';
 
+
   /* =========================
-     NAVIGATION
+     NAVIGATION ITEMS
   ========================= */
 
   const navigationItems = [
@@ -407,6 +490,7 @@ export default function App() {
     },
   ];
 
+
   const handleNavigation = (tab) => {
     setActiveTab(tab);
     setSidebarOpen(false);
@@ -416,6 +500,7 @@ export default function App() {
       behavior: 'smooth',
     });
   };
+
 
   /* =========================
      PAGE TITLES
@@ -427,6 +512,7 @@ export default function App() {
     reports: t.reports,
     bookings: t.myBookings,
   };
+
 
   return (
     <div className="mediq-app">
@@ -451,6 +537,7 @@ export default function App() {
         </div>
       </header>
 
+
       {/* MOBILE SIDEBAR OVERLAY */}
 
       <div
@@ -460,7 +547,8 @@ export default function App() {
         onClick={() => setSidebarOpen(false)}
       />
 
-      {/* SIDEBAR */}
+
+      {/* SIDEBAR (DESKTOP NAV AT TOP + UTILITIES HUB) */}
 
       <aside
         className={`app-sidebar ${
@@ -483,6 +571,7 @@ export default function App() {
             </button>
           </div>
 
+
           {/* USER CARD */}
 
           <div className="sidebar-user-card">
@@ -501,9 +590,10 @@ export default function App() {
             </div>
           </div>
 
-          {/* NAVIGATION */}
 
-          <nav className="sidebar-nav">
+          {/* DESKTOP NAVIGATION TABS IN SIDEBAR (Desktop Only via CSS class) */}
+
+          <nav className="sidebar-nav desktop-only-nav" style={{ marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
             <span className="sidebar-nav-label">
               Navigation
             </span>
@@ -534,7 +624,91 @@ export default function App() {
               </button>
             ))}
           </nav>
+
+
+          {/* UTILITY CARDS HUB (CARE CIRCLE, SYMPTOMS, LIVE QUEUE, SOS, PHYSIO) */}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+
+            {/* 1. CARE CIRCLE MODAL TRIGGER */}
+            <div 
+              onClick={() => setActiveModal('family')}
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'background 0.2s' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+                <span style={{ color: 'var(--gold)' }}><AppIcon type="family" size={17} /></span>
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: '600', color: '#fff' }}>Care Circle</div>
+                  <div style={{ fontSize: '10.5px', color: 'rgba(255,255,255,0.5)' }}>{familyMembers.length} member(s) added</div>
+                </div>
+              </div>
+              <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>→</span>
+            </div>
+
+            {/* 2. 20 SYMPTOMS DIRECTORY MODAL TRIGGER */}
+            <div 
+              onClick={() => setActiveModal('symptoms')}
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'background 0.2s' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+                <span style={{ color: 'var(--gold)' }}><AppIcon type="history" size={17} /></span>
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: '600', color: '#fff' }}>Know Your Symptoms</div>
+                  <div style={{ fontSize: '10.5px', color: 'rgba(255,255,255,0.5)' }}>20 multi-lingual guides</div>
+                </div>
+              </div>
+              <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>→</span>
+            </div>
+
+            {/* 3. PHYSIO & THERAPEUTIC YOGA MODAL TRIGGER */}
+            <div 
+              onClick={() => setActiveModal('physio')}
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'background 0.2s' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+                <span style={{ color: 'var(--gold)' }}><AppIcon type="history" size={17} /></span>
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: '600', color: '#fff' }}>Physio & Yoga Guide</div>
+                  <div style={{ fontSize: '10.5px', color: 'rgba(255,255,255,0.5)' }}>10 critical condition protocols</div>
+                </div>
+              </div>
+              <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>→</span>
+            </div>
+
+            {/* 4. LIVE QUEUE & BOOKING TRACKER */}
+            <div 
+              onClick={() => setActiveModal('queue')}
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'background 0.2s' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+                <span style={{ color: 'var(--gold)' }}><AppIcon type="queue" size={17} /></span>
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: '600', color: '#fff' }}>Live Queue Tracker</div>
+                  <div style={{ fontSize: '10.5px', color: 'rgba(255,255,255,0.5)' }}>{activeQueueToken ? `Token #${activeQueueToken.number}` : 'No active booking'}</div>
+                </div>
+              </div>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: activeQueueToken ? '#4ade80' : 'rgba(255,255,255,0.3)' }}></span>
+            </div>
+
+            {/* 5. EMERGENCY SOS HUB MODAL TRIGGER */}
+            <div 
+              onClick={() => setActiveModal('sos')}
+              style={{ background: 'rgba(195, 79, 61, 0.12)', border: '1px solid rgba(195, 79, 61, 0.25)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+                <span style={{ color: '#ffd8d2' }}><AppIcon type="sos" size={17} /></span>
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: '700', color: '#ffd8d2' }}>Emergency & SOS</div>
+                  <div style={{ fontSize: '10.5px', color: 'rgba(255,255,255,0.6)' }}>Ambulance & Services</div>
+                </div>
+              </div>
+              <span style={{ fontSize: '12px', color: '#ffd8d2' }}>→</span>
+            </div>
+
+          </div>
+
         </div>
+
 
         {/* SIDEBAR FOOTER */}
 
@@ -565,6 +739,7 @@ export default function App() {
             </select>
           </div>
 
+
           <button
             className="sidebar-logout"
             onClick={handleLogout}
@@ -577,6 +752,144 @@ export default function App() {
           </button>
         </div>
       </aside>
+
+
+      {/* INTERACTIVE POPUP MODALS */}
+
+      {activeModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(6, 43, 37, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div style={{ background: 'var(--white)', width: '100%', maxWidth: activeModal === 'symptoms' || activeModal === 'physio' ? '650px' : '400px', borderRadius: '24px', padding: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', position: 'relative', maxHeight: '85vh', overflowY: 'auto' }}>
+            
+            {/* CLOSE BUTTON */}
+            <button 
+              onClick={() => setActiveModal(null)}
+              style={{ position: 'absolute', top: '20px', right: '20px', background: 'var(--sand-100)', border: 'none', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--ink)' }}
+            >
+              ✕
+            </button>
+
+            {/* MODAL 1: CARE CIRCLE */}
+            {activeModal === 'family' && (
+              <div>
+                <h3 style={{ margin: '0 0 4px', fontFamily: 'Fraunces, serif', fontSize: '20px', color: 'var(--teal-900)' }}>Care Circle</h3>
+                <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--ink-soft)' }}>Add household members so you can assign appointments to them during checkout.</p>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                  {familyMembers.map((m) => (
+                    <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--sand-50)', padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--line)' }}>
+                      <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--ink)' }}>{m.name}</span>
+                      <span style={{ fontSize: '11px', color: 'var(--teal-700)', fontWeight: '700', background: 'var(--sand-200)', padding: '2px 8px', borderRadius: '6px' }}>{m.relation || 'Self'}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input 
+                    type="text" 
+                    placeholder="Enter family member name" 
+                    value={newFamilyName}
+                    onChange={(e) => setNewFamilyName(e.target.value)}
+                    style={{ flex: 1, padding: '10px 12px', borderRadius: '12px', border: '1px solid var(--line)', fontSize: '13px', outline: 'none' }}
+                  />
+                  <select 
+                    value={newFamilyRelation}
+                    onChange={(e) => setNewFamilyRelation(e.target.value)}
+                    style={{ padding: '10px', borderRadius: '12px', border: '1px solid var(--line)', fontSize: '12px', background: 'var(--white)' }}
+                  >
+                    <option value="Parent">Parent</option>
+                    <option value="Spouse">Spouse</option>
+                    <option value="Child">Child</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <button 
+                  onClick={() => {
+                    if (newFamilyName.trim()) {
+                      setFamilyMembers([...familyMembers, { id: Date.now(), name: newFamilyName, relation: newFamilyRelation }]);
+                      setNewFamilyName('');
+                    }
+                  }}
+                  style={{ width: '100%', marginTop: '10px', background: 'var(--teal-900)', color: '#fff', border: 'none', padding: '11px', borderRadius: '12px', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}
+                >
+                  Add Family Member
+                </button>
+              </div>
+            )}
+
+            {/* MODAL 2: 20 SYMPTOMS MEDICAL DIRECTORY (MULTI-LINGUAL) */}
+            {activeModal === 'symptoms' && (
+              <div>
+                <h3 style={{ margin: '0 0 4px', fontFamily: 'Fraunces, serif', fontSize: '20px', color: 'var(--teal-900)' }}>{t.symptomsTitle}</h3>
+                <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--ink-soft)' }}>{t.symptomsSubtitle}</p>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {currentSymptoms.map((item, idx) => (
+                    <div key={idx} style={{ background: 'var(--sand-50)', padding: '12px 14px', borderRadius: '14px', border: '1px solid var(--line)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                        <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--teal-900)' }}>{item.symptom}</span>
+                        <span style={{ background: 'var(--teal-900)', color: 'var(--gold)', fontSize: '10.5px', fontWeight: '700', padding: '3px 10px', borderRadius: '100px', whiteSpace: 'nowrap' }}>
+                          {item.specialist}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '12px', color: 'var(--ink-soft)', lineHeight: '1.4' }}>{item.meaning}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* MODAL 3: PHYSIO & THERAPEUTIC YOGA GUIDE */}
+            {activeModal === 'physio' && (
+              <PhysioGuideModal onClose={() => setActiveModal(null)} />
+            )}
+
+            {/* MODAL 4: LIVE QUEUE TRACKER */}
+            {activeModal === 'queue' && (
+              <div>
+                <h3 style={{ margin: '0 0 4px', fontFamily: 'Fraunces, serif', fontSize: '20px', color: 'var(--teal-900)' }}>Live Queue Tracker</h3>
+                <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--ink-soft)' }}>Monitor your active hospital or clinic consultation tokens in real-time.</p>
+                
+                {activeQueueToken ? (
+                  <div style={{ background: 'var(--sand-50)', padding: '16px', borderRadius: '16px', border: '1px solid var(--line)', textAlign: 'center' }}>
+                    <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--teal-700)', textTransform: 'uppercase' }}>Active Token #{activeQueueToken.number}</div>
+                    <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--teal-900)', margin: '6px 0' }}>Dr. {activeQueueToken.doctorName}</div>
+                    <div style={{ fontSize: '13px', color: 'var(--ink-soft)' }}>{activeQueueToken.hospitalName}</div>
+                  </div>
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '30px 10px', color: 'var(--ink-soft)', fontSize: '13px' }}>
+                    You do not have any active queue bookings right now. Book a token from the home screen to track it live here.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* MODAL 5: EMERGENCY SOS & AMBULANCE */}
+            {activeModal === 'sos' && (
+              <div>
+                <h3 style={{ margin: '0 0 4px', fontFamily: 'Fraunces, serif', fontSize: '20px', color: '#c34f3d' }}>Emergency & SOS Hub</h3>
+                <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--ink-soft)' }}>Tap any emergency service below to instantly invoke your phone dialer:</p>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <a href="tel:102" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fbe8e4', border: '1px solid #fca5a5', padding: '14px', borderRadius: '14px', textDecoration: 'none', color: '#c34f3d', fontWeight: '700', fontSize: '14px' }}>
+                    <span>🚑 National Ambulance</span>
+                    <span>102 →</span>
+                  </a>
+                  <a href="tel:112" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fbe8e4', border: '1px solid #fca5a5', padding: '14px', borderRadius: '14px', textDecoration: 'none', color: '#c34f3d', fontWeight: '700', fontSize: '14px' }}>
+                    <span>🚨 Emergency Response (ERSS)</span>
+                    <span>112 →</span>
+                  </a>
+                  <a href="tel:101" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fbe8e4', border: '1px solid #fca5a5', padding: '14px', borderRadius: '14px', textDecoration: 'none', color: '#c34f3d', fontWeight: '700', fontSize: '14px' }}>
+                    <span>🚒 Fire Department</span>
+                    <span>101 →</span>
+                  </a>
+                </div>
+              </div>
+            )}
+
+          </div>
+        </div>
+      )}
+
 
       {/* MAIN APPLICATION */}
 
@@ -595,6 +908,7 @@ export default function App() {
               {pageTitles[activeTab]}
             </h1>
           </div>
+
 
           <div className="desktop-header-actions">
 
@@ -621,6 +935,7 @@ export default function App() {
               </select>
             </div>
 
+
             <div className="desktop-profile">
               <div className="desktop-profile-avatar">
                 {userInitial}
@@ -638,12 +953,16 @@ export default function App() {
                 </span>
               </div>
             </div>
+
           </div>
         </header>
+
 
         {/* PAGE CONTENT */}
 
         <main className="app-content">
+
+          {/* HOME */}
 
           {activeTab === 'home' && (
             <HospitalFlow
@@ -654,33 +973,25 @@ export default function App() {
               initialCity={initialCity}
               lang={lang}
               t={t}
-              externalSpecialtyFilter={null}
             />
           )}
 
+
+          {/* TRIAGE */}
+
           {activeTab === 'triage' && (
-            <div className="app-triage-page">
-
-              <HospitalFlow
-                user={session?.user || null}
-                isGuest={isGuest}
-                onLogout={handleLogout}
-                displayName={displayName}
-                initialCity={initialCity}
-                lang={lang}
-                t={t}
-              />
-
-              <SymptomTriage
-                onClose={() =>
-                  handleNavigation('home')
-                }
-                onSelectSpecialty={() => {
-                  handleNavigation('home');
-                }}
-              />
-            </div>
+            <SymptomTriage
+              onClose={() =>
+                handleNavigation('home')
+              }
+              onSelectSpecialty={() => {
+                handleNavigation('home');
+              }}
+            />
           )}
+
+
+          {/* REPORTS */}
 
           {activeTab === 'reports' && (
             <Reports
@@ -689,12 +1000,16 @@ export default function App() {
             />
           )}
 
+
+          {/* BOOKINGS */}
+
           {activeTab === 'bookings' && (
             <MyBookings />
           )}
 
         </main>
       </div>
+
 
       {/* MOBILE BOTTOM NAV */}
 
