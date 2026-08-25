@@ -178,6 +178,7 @@ export default function HospitalFlow({
   initialCity,
   lang,
   t,
+  familyMembers,
 }) {
   const [currentCity, setCurrentCity] =
     useState(initialCity || '');
@@ -260,13 +261,13 @@ export default function HospitalFlow({
   const [isListening, setIsListening] =
     useState(false);
 
+  // Care Circle State defaulting to Self / displayName
   const [selectedFamilyMember, setSelectedFamilyMember] =
-    useState('');
+    useState(displayName || 'Self (Primary)');
 
   const [showCelebration, setShowCelebration] =
     useState(false);
 
-  // Dynamic Greeting Handler for MediQ
   const getDynamicGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good Morning, MediQ';
@@ -644,6 +645,7 @@ export default function HospitalFlow({
   };
 
   const handleConfirmBooking = async () => {
+    if (!pendingBooking) return;
 
     const {
       doc,
@@ -651,24 +653,18 @@ export default function HospitalFlow({
     } = pendingBooking;
 
     if (!contactPhone.trim()) {
-
       setBookingError(
         'Please enter a contact phone number.'
       );
-
       return;
     }
 
     if (selectedPayment === 'upi') {
-
       if (paymentExpired) {
-
         setBookingError(
           'Payment time expired. Please try booking again.'
         );
-
         setPendingBooking(null);
-
         return;
       }
 
@@ -676,11 +672,9 @@ export default function HospitalFlow({
         !txnId.trim() ||
         !screenshotFile
       ) {
-
         setBookingError(
           'Please enter the transaction ID and upload a payment screenshot.'
         );
-
         return;
       }
 
@@ -695,13 +689,10 @@ export default function HospitalFlow({
         );
 
       if (uploadError) {
-
         setSubmittingPayment(false);
-
         setBookingError(
           'Could not upload screenshot. Please try again.'
         );
-
         return;
       }
 
@@ -716,37 +707,31 @@ export default function HospitalFlow({
           'upi',
           txnId.trim(),
           url,
-          contactPhone.trim()
+          contactPhone.trim(),
+          selectedFamilyMember
         );
 
       setSubmittingPayment(false);
 
       if (error) {
-
         setBookingError(
           'Something went wrong while booking. Please try again.'
         );
-
         setPendingBooking(null);
-
         return;
       }
 
       setTicketData({
         appointment,
-
         doctor: {
           name: doc.name,
           specialty: doc.specialty,
           avg_minutes_per_patient:
             doc.avg_minutes_per_patient,
         },
-
         patientsAheadOverride:
           doc.liveQueue,
-
         paymentMethod: 'upi',
-
         upiInfo:
           hospitalUpi
             ? { upiId: hospitalUpi }
@@ -757,9 +742,10 @@ export default function HospitalFlow({
       setTxnId('');
       setScreenshotFile(null);
       setShowCelebration(true);
-
       return;
     }
+
+    setSubmittingPayment(true);
 
     const {
       data: appointment,
@@ -772,35 +758,31 @@ export default function HospitalFlow({
         'cash',
         null,
         null,
-        contactPhone.trim()
+        contactPhone.trim(),
+        selectedFamilyMember
       );
 
-    if (error) {
+    setSubmittingPayment(false);
 
+    if (error) {
       setBookingError(
         'Something went wrong while booking. Please try again.'
       );
-
       setPendingBooking(null);
-
       return;
     }
 
     setTicketData({
       appointment,
-
       doctor: {
         name: doc.name,
         specialty: doc.specialty,
         avg_minutes_per_patient:
           doc.avg_minutes_per_patient,
       },
-
       patientsAheadOverride:
         doc.liveQueue,
-
       paymentMethod: 'cash',
-
       upiInfo: null,
     });
 
@@ -814,7 +796,6 @@ export default function HospitalFlow({
   };
 
   return (
-
     <div
       className="flow-page"
       style={{
@@ -824,7 +805,6 @@ export default function HospitalFlow({
         overflowX: 'hidden',
       }}
     >
-
       <div
         className="flow-content"
         style={{
@@ -835,8 +815,7 @@ export default function HospitalFlow({
           boxSizing: 'border-box',
         }}
       >
-
-        {/* 🌟 EXACT MATCH HERO BANNER CARD */}
+        {/* HERO BANNER */}
         <div style={{
           background: 'linear-gradient(135deg, #e6f4ea 0%, #daf2e1 100%)',
           border: '1px solid rgba(16, 185, 129, 0.2)',
@@ -872,7 +851,7 @@ export default function HospitalFlow({
           </div>
         </div>
 
-        {/* 📍 LOCATION DROPDOWN BAR (WITHOUT 'USE MY LOCATION') */}
+        {/* LOCATION SELECTOR */}
         <div style={{ marginBottom: '16px', display: 'flex', width: '100%', boxSizing: 'border-box' }}>
           <div style={{ position: 'relative', width: '100%' }}>
             <button
@@ -896,74 +875,46 @@ export default function HospitalFlow({
             </button>
 
             {showCityPicker && (
-
               <div
                 style={{
                   position: 'absolute', left: 0, right: 0, top: '52px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '14px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 100, overflow: 'hidden'
                 }}
               >
-
                 <button
                   style={{
                     width: '100%', textAlign: 'left', padding: '12px 16px', background: !currentCity ? '#f0fdf4' : 'transparent', border: 'none', borderBottom: '1px solid #f1f5f9', fontSize: '13px', fontWeight: '600', cursor: 'pointer', color: '#0b332c'
                   }}
                   onClick={() => {
-
                     setCurrentCity('');
-
-                    setShowCityPicker(
-                      false
-                    );
-
-                    setSelectedHospital(
-                      null
-                    );
-
+                    setShowCityPicker(false);
+                    setSelectedHospital(null);
                   }}
                 >
                   All Locations
                 </button>
 
-                {allCities.map(
-                  (c) => (
-
-                    <button
-                      key={c}
-                      style={{
-                        width: '100%', textAlign: 'left', padding: '12px 16px', background: currentCity === c ? '#f0fdf4' : 'transparent', border: 'none', borderBottom: '1px solid #f1f5f9', fontSize: '13px', fontWeight: '600', cursor: 'pointer', color: '#0b332c'
-                      }}
-                      onClick={() => {
-
-                        setCurrentCity(c);
-
-                        setShowCityPicker(
-                          false
-                        );
-
-                        setSelectedHospital(
-                          null
-                        );
-
-                      }}
-                    >
-                      {c}
-                    </button>
-
-                  )
-                )}
-
+                {allCities.map((c) => (
+                  <button
+                    key={c}
+                    style={{
+                      width: '100%', textAlign: 'left', padding: '12px 16px', background: currentCity === c ? '#f0fdf4' : 'transparent', border: 'none', borderBottom: '1px solid #f1f5f9', fontSize: '13px', fontWeight: '600', cursor: 'pointer', color: '#0b332c'
+                    }}
+                    onClick={() => {
+                      setCurrentCity(c);
+                      setShowCityPicker(false);
+                      setSelectedHospital(null);
+                    }}
+                  >
+                    {c}
+                  </button>
+                ))}
               </div>
-
             )}
-
           </div>
-
         </div>
 
         {!selectedHospital && (
-
           <div>
-
             <div
               className="search-bar-wrap"
               style={{
@@ -975,7 +926,6 @@ export default function HospitalFlow({
                 boxSizing: 'border-box',
               }}
             >
-
               <div
                 style={{
                   position: 'relative',
@@ -983,7 +933,6 @@ export default function HospitalFlow({
                   minWidth: 0,
                 }}
               >
-
                 <input
                   type="text"
                   className="search-bar"
@@ -994,13 +943,10 @@ export default function HospitalFlow({
                   }
                   value={searchTerm}
                   onChange={(e) => {
-
                     setSearchTerm(
                       e.target.value
                     );
-
                     setActiveSpecialty('');
-
                   }}
                   style={{
                     width: '100%',
@@ -1018,16 +964,13 @@ export default function HospitalFlow({
                 />
 
                 {isSearchActive && (
-
                   <button
                     className="search-clear-btn"
                     onClick={clearSearch}
                   >
                     Clear
                   </button>
-
                 )}
-
               </div>
 
               <button
@@ -1054,7 +997,6 @@ export default function HospitalFlow({
                     'background 0.2s',
                 }}
               >
-
                 <svg
                   width="20"
                   height="20"
@@ -1065,32 +1007,25 @@ export default function HospitalFlow({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
-
                   <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-
                   <path d="M19 10v1a7 7 0 0 1-14 0v-1" />
-
                   <line
                     x1="12"
                     y1="19"
                     x2="12"
                     y2="23"
                   />
-
                   <line
                     x1="8"
                     y1="23"
                     x2="16"
                     y2="23"
                   />
-
                 </svg>
-
               </button>
-
             </div>
 
-            {/* SPECIALTY FILTER CHIPS (WITH 'ALL' BUTTON) */}
+            {/* SPECIALTY CHIPS */}
             <div
               className="specialty-chips"
               style={{
@@ -1099,7 +1034,6 @@ export default function HospitalFlow({
                 marginBottom: '22px'
               }}
             >
-
               <button
                 className={`specialty-chip ${!activeSpecialty && !searchTerm ? 'active' : ''}`}
                 onClick={() => { setActiveSpecialty(''); setSearchTerm(''); }}
@@ -1108,60 +1042,44 @@ export default function HospitalFlow({
                 <span>🔲</span> All
               </button>
 
-              {specialties.map(
-                (s) => (
-
-                  <button
-                    key={s}
-                    className={`specialty-chip ${
+              {specialties.map((s) => (
+                <button
+                  key={s}
+                  className={`specialty-chip ${
+                    activeSpecialty === s
+                      ? 'active'
+                      : ''
+                  }`}
+                  onClick={() => {
+                    setActiveSpecialty(
                       activeSpecialty === s
-                        ? 'active'
-                        : ''
-                    }`}
-                    onClick={() => {
-
-                      setActiveSpecialty(
-                        activeSpecialty === s
-                          ? ''
-                          : s
-                      );
-
-                      setSearchTerm('');
-
-                    }}
-                  >
-                    {s}
-                  </button>
-
-                )
-              )}
-
+                        ? ''
+                        : s
+                    );
+                    setSearchTerm('');
+                  }}
+                >
+                  {s}
+                </button>
+              ))}
             </div>
 
             {isSearchActive ? (
-
               <>
-
                 <h3 className="flow-section-title">
                   Search Results
                 </h3>
 
                 {searching ? (
-
                   <p className="flow-empty">
                     Searching...
                   </p>
-
                 ) : searchResults.length === 0 ? (
-
                   <p className="flow-empty">
                     No doctors found. Try a different search.
                   </p>
-
                 ) : (
-
                   <div className="doctor-list">
-
                     {searchResults
                       .sort(
                         (a, b) =>
@@ -1169,7 +1087,6 @@ export default function HospitalFlow({
                           b.liveQueue
                       )
                       .map((doc) => {
-
                         const availability =
                           getAvailability(doc);
 
@@ -1181,7 +1098,6 @@ export default function HospitalFlow({
                           ];
 
                         return (
-
                           <div
                             key={doc.id}
                             className={`doctor-card ${
@@ -1190,25 +1106,18 @@ export default function HospitalFlow({
                                 : 'muted'
                             }`}
                           >
-
                             <div className="doctor-info">
-
                               <DoctorAvatar
                                 bookable={
                                   availability.bookable
                                 }
                               />
-
                               <div className="doctor-details">
-
                                 <div className="doctor-details-top">
-
                                   <div>
-
                                     <p className="doctor-name">
                                       {doc.name}
                                     </p>
-
                                     <p
                                       style={{
                                         margin: '0 0 2px',
@@ -1220,79 +1129,39 @@ export default function HospitalFlow({
                                       {doc.degrees ||
                                         'MBBS, General Practitioner'}
                                     </p>
-
                                   </div>
-
                                   <DoctorStatusBadge
                                     availability={
                                       availability
                                     }
                                   />
-
                                 </div>
-
                                 <p className="doctor-specialty">
                                   {specs.join(', ')}
                                 </p>
-
-                                <p
-                                  style={{
-                                    fontSize: '11px',
-                                    color: '#d97706',
-                                    fontWeight: 700,
-                                    margin: '2px 0 0',
-                                  }}
-                                >
-                                  ⭐ PTR Trust Score:{' '}
-                                  {doc.ptr_score ||
-                                    '99.0'}
-                                  %
-                                </p>
-
-                                <p className="doctor-hospital-tag">
-                                  {
-                                    doc.hospital
-                                      ?.name
-                                  }
-                                </p>
-
                               </div>
-
                             </div>
-
                             <div className="doctor-card-divider" />
-
                             <div className="doc-stats">
-
                               <div>
-
                                 <p className="doc-stats-label">
                                   Waiting
                                 </p>
-
                                 <p className="doc-stats-value green">
                                   {doc.liveQueue}{' '}
                                   Patients
                                 </p>
-
                               </div>
-
                             </div>
-
                             <div className="doc-footer">
-
                               <div>
-
                                 <p className="doc-fee-label">
                                   Consultation Fee
                                 </p>
-
                                 <DoctorFee
                                   doc={doc}
                                 />
-
                               </div>
-
                               <BookButton
                                 availability={
                                   availability
@@ -1304,25 +1173,15 @@ export default function HospitalFlow({
                                   )
                                 }
                               />
-
                             </div>
-
                           </div>
-
                         );
-
                       })}
-
                   </div>
-
                 )}
-
               </>
-
             ) : (
-
               <>
-
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                   <h3 className="flow-section-title" style={{ margin: 0 }}>
                     Available Hospitals
@@ -1333,27 +1192,20 @@ export default function HospitalFlow({
                 </div>
 
                 {loadingHospitals ? (
-
                   <p className="flow-empty">
                     Loading hospitals...
                   </p>
-
                 ) : hospitals.length === 0 ? (
-
                   <p className="flow-empty">
                     No hospitals available in{' '}
                     {currentCity ||
                       'this area'}{' '}
                     yet.
                   </p>
-
                 ) : (
-
                   <div className="hospital-list">
-
                     {hospitals.map(
                       (hosp) => {
-
                         const isMapLink =
                           hosp.location &&
                           (
@@ -1377,7 +1229,6 @@ export default function HospitalFlow({
                               )}`;
 
                         return (
-
                           <div
                             key={hosp.id}
                             className="hospital-card"
@@ -1387,11 +1238,8 @@ export default function HospitalFlow({
                               )
                             }
                           >
-
                             <div className="hospital-card-main">
-
                               <div className="hospital-icon">
-
                                 <svg
                                   width="24"
                                   height="24"
@@ -1402,91 +1250,58 @@ export default function HospitalFlow({
                                   strokeLinecap="round"
                                   strokeLinejoin="round"
                                 >
-
                                   <path d="M3 21h18" />
-
                                   <path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16" />
-
                                   <path d="M9 9h6" />
-
                                   <path d="M12 6v6" />
-
                                   <path d="M8 21v-4h8v4" />
-
                                 </svg>
-
                               </div>
-
                               <div className="hospital-info">
-
                                 <div className="hospital-title-row">
-
                                   <div>
-
                                     <h4>
                                       {hosp.name}
                                     </h4>
-
                                     {!isMapLink &&
                                       hosp.location && (
-
                                         <p className="hospital-location">
-
                                           <span>
                                             📍
                                           </span>
-
                                           {hosp.location}
-
                                         </p>
-
                                       )}
-
                                   </div>
-
                                   <div className="hospital-arrow">
                                     →
                                   </div>
-
                                 </div>
-
                                 <div className="hospital-meta-row">
-
                                   {availableCounts[
                                     hosp.id
                                   ] > 0 ? (
-
                                     <span className="doctor-available-badge">
-
                                       <span className="availability-dot" />
-
                                       {
                                         availableCounts[
                                           hosp.id
                                         ]
                                       }{' '}
-
                                       Doctor
                                       {availableCounts[
                                         hosp.id
                                       ] > 1
                                         ? 's'
                                         : ''}{' '}
-
                                       Available
-
                                     </span>
-
                                   ) : (
-
                                     <span className="no-doctor-badge">
                                       Check schedule
                                     </span>
-
                                   )}
-
                                 </div>
-
                                 <div style={{ marginTop: '10px' }}>
                                   <a
                                     href={directionsUrl}
@@ -1501,69 +1316,26 @@ export default function HospitalFlow({
                                     <span>📍</span> Directions
                                   </a>
                                 </div>
-
-                                <div className="view-doctors-row" style={{ marginTop: '12px', color: '#10b981', fontWeight: '700', fontSize: '12.5px' }}>
-                                  View Doctors
-                                  <span>
-                                    →
-                                  </span>
-                                </div>
-
                               </div>
-
                             </div>
-
                           </div>
-
                         );
-
                       }
                     )}
-
                   </div>
-
                 )}
-
               </>
-
             )}
-
-            {/* 🛡️ 'BOOK WITH CONFIDENCE' TRUST BANNER AT THE BOTTOM */}
-            <div style={{
-              background: '#e6f4ea', border: '1px solid rgba(16, 185, 129, 0.25)',
-              borderRadius: '16px', padding: '16px 20px', marginTop: '24px',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '24px' }}>📋</span>
-                <div>
-                  <h4 style={{ fontFamily: 'Fraunces, serif', fontSize: '14.5px', color: '#0b332c', margin: '0 0 2px' }}>
-                    Book with confidence
-                  </h4>
-                  <p style={{ fontSize: '11.5px', color: '#475569', margin: 0 }}>
-                    Verified doctors, Real-time queue info, Secure appointments
-                  </p>
-                </div>
-              </div>
-              <span style={{ fontSize: '18px', color: '#10b981' }}>🛡️</span>
-            </div>
-
           </div>
-
         )}
 
         {selectedHospital && (
-
           <div>
-
             <button
               className="flow-back-btn"
               onClick={() => {
-
                 setSelectedHospital(null);
-
                 setDoctors([]);
-
               }}
             >
               ← Back to Hospitals
@@ -1575,55 +1347,43 @@ export default function HospitalFlow({
             </h3>
 
             {loadingDoctors ? (
-
               <p className="flow-empty">
                 Loading doctors...
               </p>
-
             ) : doctors.length === 0 ? (
-
               <p className="flow-empty">
                 No doctors listed for this hospital yet.
               </p>
-
             ) : (
-
               <div className="doctor-list">
-
                 {doctors
                   .sort((a, b) => {
-
                     const getWeight =
                       (doc) => {
-
                         if (
                           doc.status ===
                           'available'
                         ) {
                           return 1;
                         }
-
                         if (
                           doc.status ===
                           'delayed'
                         ) {
                           return 2;
                         }
-
                         if (
                           doc.status ===
                           'on_break'
                         ) {
                           return 3;
                         }
-
                         if (
                           doc.status ===
                           'not_started'
                         ) {
                           return 4;
                         }
-
                         if (
                           doc.status ===
                             'completed' ||
@@ -1632,19 +1392,15 @@ export default function HospitalFlow({
                         ) {
                           return 5;
                         }
-
                         return 2;
-
                       };
 
                     return (
                       getWeight(a) -
                       getWeight(b)
                     );
-
                   })
                   .map((doc) => {
-
                     const availability =
                       getAvailability(doc);
 
@@ -1656,7 +1412,6 @@ export default function HospitalFlow({
                       ];
 
                     return (
-
                       <div
                         key={doc.id}
                         className={`doctor-card ${
@@ -1665,25 +1420,18 @@ export default function HospitalFlow({
                             : 'muted'
                         }`}
                       >
-
                         <div className="doctor-info">
-
                           <DoctorAvatar
                             bookable={
                               availability.bookable
                             }
                           />
-
                           <div className="doctor-details">
-
                             <div className="doctor-details-top">
-
                               <div>
-
                                 <p className="doctor-name">
                                   {doc.name}
                                 </p>
-
                                 <p
                                   style={{
                                     margin: '0 0 2px',
@@ -1695,65 +1443,36 @@ export default function HospitalFlow({
                                   {doc.degrees ||
                                     'MBBS, General Practitioner'}
                                 </p>
-
                               </div>
-
                               <DoctorStatusBadge
                                 availability={
                                   availability
                                 }
                               />
-
                             </div>
-
                             <p className="doctor-specialty">
                               {specs.join(', ')}
                             </p>
-
-                            <p
-                              style={{
-                                fontSize: '11px',
-                                color: '#d97706',
-                                fontWeight: 700,
-                                margin: '2px 0 0',
-                              }}
-                            >
-                              ⭐ PTR Trust Score:{' '}
-                              {doc.ptr_score ||
-                                '99.0'}
-                              %
-                            </p>
-
                           </div>
-
                         </div>
-
                         <div className="doctor-card-divider" />
-
                         <div className="doc-stats">
-
                           <div>
-
                             <p className="doc-stats-label">
                               Schedule
                             </p>
-
                             <DoctorSchedule
                               doc={doc}
                             />
-
                           </div>
-
                           <div
                             style={{
                               textAlign: 'right',
                             }}
                           >
-
                             <p className="doc-stats-label">
                               Waiting
                             </p>
-
                             <p
                               className={`doc-stats-value ${
                                 availability.bookable
@@ -1765,25 +1484,17 @@ export default function HospitalFlow({
                                 ? `${doc.liveQueue} Patients`
                                 : 'Closed'}
                             </p>
-
                           </div>
-
                         </div>
-
                         <div className="doc-footer">
-
                           <div>
-
                             <p className="doc-fee-label">
                               Consultation Fee
                             </p>
-
                             <DoctorFee
                               doc={doc}
                             />
-
                           </div>
-
                           <BookButton
                             availability={
                               availability
@@ -1795,35 +1506,23 @@ export default function HospitalFlow({
                               )
                             }
                           />
-
                         </div>
-
                       </div>
-
                     );
-
                   })}
-
               </div>
-
             )}
 
             {bookingError && (
-
               <p className="flow-booking-error">
                 {bookingError}
               </p>
-
             )}
-
           </div>
-
         )}
-
       </div>
 
       {ticketData && (
-
         <BookingTicket
           appointment={
             ticketData.appointment
@@ -1844,40 +1543,63 @@ export default function HospitalFlow({
             setTicketData(null)
           }
         />
-
       )}
 
+      {/* BOOKING CONFIRMATION & CARE CIRCLE MODAL */}
       {pendingBooking && (
-        <div className="ticket-overlay" style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(6, 43, 37, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-          <div className="ticket-card" style={{ background: '#fff', width: '100%', maxWidth: '400px', borderRadius: '24px', padding: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', boxSizing: 'border-box', maxHeight: '90vh', overflowY: 'auto' }}>
+        <div className="ticket-overlay" style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(6, 43, 37, 0.65)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div className="ticket-card" style={{ background: '#fff', width: '100%', maxWidth: '420px', borderRadius: '24px', padding: '24px', boxShadow: '0 25px 50px rgba(0,0,0,0.25)', boxSizing: 'border-box', maxHeight: '90vh', overflowY: 'auto' }}>
             
-            <div className="ticket-header" style={{ marginBottom: '16px' }}>
-              <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: '19px', color: '#0b332c', margin: 0 }}>
-                Confirm Your Booking
-              </h2>
-              <p style={{ fontSize: '12px', color: '#64748b', margin: '4px 0 0' }}>
-                Dr. {pendingBooking.doc.name} ({pendingBooking.doc.specialty})
-              </p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+              <div>
+                <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: '20px', color: '#0b332c', margin: '0 0 4px' }}>
+                  Confirm Appointment
+                </h2>
+                <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
+                  Dr. {pendingBooking.doc.name} • <span style={{ color: '#10b981', fontWeight: '600' }}>{pendingBooking.doc.specialty}</span>
+                </p>
+              </div>
+              <button onClick={() => setPendingBooking(null)} style={{ background: '#f1f5f9', border: 'none', width: '30px', height: '30px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b', fontWeight: 'bold' }}>✕</button>
             </div>
 
-            {/* 👤 CARE CIRCLE PATIENT SELECTOR */}
-            <div style={{ marginBottom: '14px' }}>
+            <div style={{ background: '#f8f6f0', padding: '14px', borderRadius: '16px', marginBottom: '16px', border: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', marginBottom: '6px' }}>
+                <span style={{ color: '#64748b' }}>Consultation Fee:</span>
+                <strong style={{ color: '#0b332c' }}>₹{pendingBooking.doc.consultation_fee || 500}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px' }}>
+                <span style={{ color: '#64748b' }}>Estimated Wait:</span>
+                <strong style={{ color: '#10b981' }}>Live Queue Token</strong>
+              </div>
+            </div>
+
+            {/* CARE CIRCLE PATIENT SELECTOR */}
+            <div style={{ marginBottom: '16px' }}>
               <label style={{ fontSize: '12px', fontWeight: '700', color: '#0b332c', display: 'block', marginBottom: '6px' }}>
                 Booking For (Care Circle):
               </label>
               <select
-                value={selectedFamilyMember || displayName}
+                value={selectedFamilyMember}
                 onChange={(e) => setSelectedFamilyMember(e.target.value)}
-                style={{ width: '100%', padding: '11px 12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '13.5px', background: '#fff', color: '#0b332c', boxSizing: 'border-box' }}
+                style={{ width: '100%', padding: '12px 14px', borderRadius: '14px', border: '1px solid #e2e8f0', fontSize: '13.5px', background: '#fff', color: '#0b332c', boxSizing: 'border-box', fontWeight: '600' }}
               >
-                <option value={displayName}>{displayName} (Self)</option>
-                {/* Dynamic family members if passed or stored */}
-                <option value="Spouse">Spouse / Family Member</option>
-                <option value="Parent">Parent / Elder</option>
+                <option value={displayName || 'Self (Primary)'}>{displayName || 'Self (Primary)'} (Self - Primary)</option>
+                {familyMembers && familyMembers.length > 0 && familyMembers
+                  .filter(m => m.name !== 'Self (Primary)' && m.name !== displayName)
+                  .map((member, index) => (
+                    <option key={index} value={member.name}>
+                      {member.name} ({member.relation || 'Family Member'})
+                    </option>
+                  ))}
               </select>
+              {(!familyMembers || familyMembers.length <= 1) && (
+                <span style={{ fontSize: '11px', color: '#64748b', marginTop: '4px', display: 'block' }}>
+                  Tip: Add household members via Care Circle to assign bookings to them.
+                </span>
+              )}
             </div>
 
-            <div style={{ marginBottom: '14px' }}>
+            <div style={{ marginBottom: '16px' }}>
               <label style={{ fontSize: '12px', fontWeight: '700', color: '#0b332c', display: 'block', marginBottom: '6px' }}>
                 Contact Phone Number:
               </label>
@@ -1885,13 +1607,9 @@ export default function HospitalFlow({
                 placeholder="Enter 10-digit mobile number"
                 value={contactPhone}
                 onChange={(e) => setContactPhone(e.target.value)}
-                style={{ width: '100%', padding: '11px 12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '13.5px', boxSizing: 'border-box' }}
+                style={{ width: '100%', padding: '12px 14px', borderRadius: '14px', border: '1px solid #e2e8f0', fontSize: '13.5px', boxSizing: 'border-box' }}
               />
             </div>
-
-            <p style={{ fontSize: '12.5px', fontWeight: '700', color: '#10b981', marginBottom: '12px' }}>
-              Consultation Fee: ₹{pendingBooking.doc.consultation_fee || 500}
-            </p>
 
             <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
               <button
@@ -1910,15 +1628,15 @@ export default function HospitalFlow({
             </div>
 
             {selectedPayment === 'upi' && hospitalUpi && (
-              <div style={{ background: '#f8f6f0', padding: '12px', borderRadius: '12px', marginBottom: '14px', border: '1px solid #e2e8f0' }}>
-                <p style={{ fontSize: '12.5px', margin: '0 0 6px', color: '#0b332c' }}>
+              <div style={{ background: '#f8f6f0', padding: '14px', borderRadius: '14px', marginBottom: '16px', border: '1px solid #e2e8f0' }}>
+                <p style={{ fontSize: '12.5px', margin: '0 0 8px', color: '#0b332c' }}>
                   Pay via UPI to: <strong>{hospitalUpi}</strong>
                 </p>
                 <input
                   placeholder="Enter Transaction / UTR ID"
                   value={txnId}
                   onChange={(e) => setTxnId(e.target.value)}
-                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13px', marginBottom: '8px', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '13px', marginBottom: '8px', boxSizing: 'border-box' }}
                 />
                 <input
                   type="file"
@@ -1930,7 +1648,7 @@ export default function HospitalFlow({
             )}
 
             {bookingError && (
-              <p style={{ color: '#ef4444', fontSize: '12px', margin: '0 0 12px', fontWeight: '600' }}>
+              <p style={{ color: '#ef4444', fontSize: '12px', margin: '0 0 12px', fontWeight: '600', background: '#fef2f2', padding: '8px', borderRadius: '8px' }}>
                 {bookingError}
               </p>
             )}
@@ -1938,14 +1656,14 @@ export default function HospitalFlow({
             <button
               onClick={handleConfirmBooking}
               disabled={submittingPayment}
-              style={{ width: '100%', background: '#10b981', color: '#fff', border: 'none', padding: '13px', borderRadius: '12px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', marginBottom: '8px', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)' }}
+              style={{ width: '100%', background: '#10b981', color: '#fff', border: 'none', padding: '14px', borderRadius: '14px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', marginBottom: '10px', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)' }}
             >
               {submittingPayment ? 'Confirming Token...' : '✅ Confirm & Get Token'}
             </button>
 
             <button
               onClick={() => setPendingBooking(null)}
-              style={{ width: '100%', background: '#fff', color: '#64748b', border: '1px solid #e2e8f0', padding: '11px', borderRadius: '12px', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}
+              style={{ width: '100%', background: '#fff', color: '#64748b', border: '1px solid #e2e8f0', padding: '11px', borderRadius: '14px', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}
             >
               Cancel
             </button>
@@ -1954,7 +1672,6 @@ export default function HospitalFlow({
       )}
 
       {showCelebration && (
-
         <div
           className="celebration-overlay"
           style={{
@@ -1969,7 +1686,6 @@ export default function HospitalFlow({
             padding: '16px',
           }}
         >
-
           <div
             style={{
               background: '#fff',
@@ -1985,7 +1701,6 @@ export default function HospitalFlow({
               animation: 'mediq-pop-in 0.35s ease',
             }}
           >
-
             <div
               style={{
                 position: 'absolute',
@@ -2049,9 +1764,7 @@ export default function HospitalFlow({
                 lineHeight: 1.5,
               }}
             >
-              Your queue token has been booked successfully.
-              You can track your live position anytime from
-              your profile.
+              Your queue token has been booked successfully for <strong>{selectedFamilyMember}</strong>.
             </p>
 
             <button
@@ -2073,7 +1786,6 @@ export default function HospitalFlow({
             >
               Great, Thanks!
             </button>
-
           </div>
 
           <style>
@@ -2088,13 +1800,10 @@ export default function HospitalFlow({
               }
             `}
           </style>
-
         </div>
-
       )}
 
       {showProfile && (
-
         <Profile
           user={user}
           displayName={displayName}
@@ -2103,50 +1812,7 @@ export default function HospitalFlow({
           }
           onLogout={onLogout}
         />
-
       )}
-      // Inside HospitalFlow.jsx
-
-// 1. Ensure familyMembers is received in component props:
-export default function HospitalFlow({ user, isGuest, onLogout, displayName, initialCity, lang, t, familyMembers }) {
-  
-  // 2. State for selected care circle member (defaults to Self / displayName)
-  const [selectedFamilyMember, setSelectedFamilyMember] = useState(displayName || 'Self');
-
-  // 3. When confirming booking, pass patient_name / care circle member to Supabase
-  async function handleConfirmBooking() {
-    if (!pendingBooking) return;
-
-    try {
-      setSubmittingPayment(true);
-      setBookingError('');
-
-      const { data, error } = await supabase.from('appointments').insert({
-        hospital_id: pendingBooking.hospitalId,
-        doctor_id: pendingBooking.doc.id,
-        patient_id: user?.id || null,
-        patient_name: selectedFamilyMember, // 👈 Care circle member name or Self
-        payment_method: selectedPayment,
-        payment_status: selectedPayment === 'upi' ? 'verification_pending' : 'pending',
-        upi_txn_id: txnId.trim() || null,
-        status: 'waiting',
-        queue_number: Math.floor(Math.random() * 10) + 1, // or fetched queue sequence
-      }).select().single();
-
-      if (error) throw error;
-
-      // Success workflow
-      alert(`Appointment successfully booked for ${selectedFamilyMember}!`);
-      setPendingBooking(null);
-      // Trigger active ticket display or refresh bookings
-    } catch (err) {
-      console.error('Booking error:', err);
-      setBookingError(err.message || 'Failed to complete booking.');
-    } finally {
-      setSubmittingPayment(false);
-    }
-  }
-
     </div>
   );
 }
