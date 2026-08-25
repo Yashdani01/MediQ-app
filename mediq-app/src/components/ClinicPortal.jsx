@@ -82,12 +82,9 @@ export default function ClinicPortal() {
   const [upiId, setUpiId] = useState('');
   const [upiInput, setUpiInput] = useState('');
   const [savingUpi, setSavingUpi] = useState(false);
-  const [editingUpi, setEditingUpi] = useState(false);
 
-  const [locationStr, setLocationStr] = useState('');
   const [locationInput, setLocationInput] = useState('');
   const [savingLocation, setSavingLocation] = useState(false);
-  const [editingLocation, setEditingLocation] = useState(false);
 
   const [showSettingsDrawer, setShowSettingsDrawer] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
@@ -163,7 +160,6 @@ export default function ClinicPortal() {
   const loadLocation = async (currentPin) => {
     if (!currentPin) return;
     const data = await getHospitalLocation(currentPin);
-    setLocationStr(data || '');
     setLocationInput(data || '');
   };
 
@@ -222,7 +218,6 @@ export default function ClinicPortal() {
       return;
     }
     setUpiId(upiInput.trim());
-    setEditingUpi(false);
   };
 
   const handleSaveLocation = async () => {
@@ -233,8 +228,6 @@ export default function ClinicPortal() {
       setError('Could not save location.');
       return;
     }
-    setLocationStr(locationInput.trim());
-    setEditingLocation(false);
   };
 
   const toggleSpecialty = (spec, list, setList) => {
@@ -354,12 +347,6 @@ export default function ClinicPortal() {
     await loadDoctors(unlockedPin);
   };
 
-  const handleDelete = async (doctorId, name) => {
-    if (!window.confirm(`Remove Dr. ${name} from your clinic?`)) return;
-    await deleteDoctor(unlockedPin, doctorId);
-    await loadDoctors(unlockedPin);
-  };
-
   const handleStatusChange = async (doctorId, status) => {
     await updateDoctorStatus(unlockedPin, doctorId, status, status === 'delayed' ? 10 : 0);
     await loadDoctors(unlockedPin);
@@ -388,13 +375,6 @@ export default function ClinicPortal() {
     setLoadingBookings(true);
     await refreshBookings(doctorId);
     setLoadingBookings(false);
-  };
-
-  const handleCheckIn = async (appointmentId, doctorId) => {
-    setUpdatingPatient(appointmentId);
-    await checkInAppointment(unlockedPin, appointmentId);
-    setUpdatingPatient(null);
-    await refreshBookings(doctorId);
   };
 
   const handleMarkSeen = async (appointmentId, doctorId) => {
@@ -568,7 +548,6 @@ export default function ClinicPortal() {
             const specs = doc.specialties || [doc.specialty || 'General Physician'];
             const statusInfo = STATUS_OPTIONS.find((s) => s.value === doc.status) || STATUS_OPTIONS[0];
 
-            // Smart schedule parser supporting custom_schedule and fallback working_days
             let scheduleDisplay = 'Schedule not set';
             let parsedSchedule = doc.custom_schedule;
             if (typeof parsedSchedule === 'string') {
@@ -646,7 +625,6 @@ export default function ClinicPortal() {
                           <p style={{ fontSize: '12px', color: '#10b981', fontWeight: '700', margin: '0 0 2px' }}>{doc.degrees || 'MBBS'}</p>
                           <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 4px' }}>{specs.join(', ')}</p>
                           
-                          {/* Schedule Display Badge */}
                           <div style={{ fontSize: '11px', color: '#0b332c', background: '#f8f6f0', padding: '4px 10px', borderRadius: '8px', display: 'inline-block', border: '1px solid #e2e8f0', fontWeight: '600' }}>
                             🕒 {scheduleDisplay}
                           </div>
@@ -699,7 +677,7 @@ export default function ClinicPortal() {
                       </div>
                     )}
 
-                    {/* TODAY'S QUEUE EXPANDED LIST */}
+                    {/* TODAY'S QUEUE EXPANDED LIST WITH PRIORITY HIGHLIGHTING */}
                     {expandedDoctor === doc.id && (
                       <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '14px', marginTop: '14px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -718,14 +696,35 @@ export default function ClinicPortal() {
                               const isUpdating = updatingPatient === b.id;
 
                               return (
-                                <div key={b.id} style={{ background: '#f8f6f0', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div 
+                                  key={b.id} 
+                                  style={{ 
+                                    background: b.is_priority ? '#fffbeb' : '#f8f6f0', 
+                                    border: b.is_priority ? '1.5px solid #f59e0b' : '1px solid #e2e8f0', 
+                                    borderRadius: '14px', 
+                                    padding: '12px', 
+                                    display: 'flex', 
+                                    justifyContent: 'space-between', 
+                                    alignItems: 'center',
+                                    boxShadow: b.is_priority ? '0 4px 12px rgba(245, 158, 11, 0.15)' : 'none'
+                                  }}
+                                >
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#10b981', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '800' }}>
+                                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: b.is_priority ? '#d97706' : '#10b981', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '800' }}>
                                       #{b.queue_number || b.token_number || '1'}
                                     </div>
                                     <div>
-                                      <div style={{ fontSize: '13px', fontWeight: '700', color: '#0b332c' }}>{b.patient_name || 'Patient'}</div>
-                                      <div style={{ fontSize: '11px', color: '#64748b' }}>{b.is_walkin ? '🚶 Walk-in' : '📱 App Booking'} • <span style={{ textTransform: 'capitalize', fontWeight: '600', color: isWaiting ? '#d97706' : '#15803d' }}>{b.status}</span></div>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <span style={{ fontSize: '13.5px', fontWeight: '800', color: '#0b332c' }}>{b.patient_name || 'Patient'}</span>
+                                        {b.is_priority && (
+                                          <span style={{ background: '#fef3c7', color: '#92400e', fontSize: '9.5px', fontWeight: '900', padding: '2px 6px', borderRadius: '4px', border: '1px solid #fde047' }}>
+                                            ⚡ Priority
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div style={{ fontSize: '11px', color: '#64748b' }}>
+                                        {b.is_walkin ? '🚶 Walk-in' : '📱 App Booking'} • Fee: ₹{b.consultation_fee || 500} • <span style={{ textTransform: 'capitalize', fontWeight: '600', color: isWaiting ? '#d97706' : '#15803d' }}>{b.status}</span>
+                                      </div>
                                     </div>
                                   </div>
 
