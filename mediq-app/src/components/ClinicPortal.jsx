@@ -496,17 +496,36 @@ export default function ClinicPortal() {
               <input placeholder="MBBS, MD (General)" value={newDegrees} onChange={(e) => setNewDegrees(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '13.5px', boxSizing: 'border-box' }} required />
             </Field>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               <Field label="Consultation Fee (₹)">
                 <input type="number" placeholder="500" value={newFee} onChange={(e) => setNewFee(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '13.5px', boxSizing: 'border-box' }} />
               </Field>
-              <Field label="Avg Time per Patient (Mins)">
-                <input type="number" min="1" value={newAvgMinutes} onChange={(e) => setNewAvgMinutes(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '13.5px', boxSizing: 'border-box' }} />
+              
+              {/* CRITICAL: Average Time per Patient used for Live Queue Wait Time Calculation */}
+              <Field label="Avg Time / Patient (Mins) *">
+                <input 
+                  type="number" 
+                  min="1" 
+                  value={newAvgMinutes} 
+                  onChange={(e) => setNewAvgMinutes(e.target.value)} 
+                  style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #10b981', background: '#f0fdf4', fontSize: '13.5px', fontWeight: 'bold', boxSizing: 'border-box' }} 
+                  required 
+                />
               </Field>
             </div>
 
             <SpecialtySelector selected={newSpecialties} onToggle={(spec) => toggleSpecialty(spec, newSpecialties, setNewSpecialties)} />
-            <ScheduleEditor value={daySchedules} onChange={setDaySchedules} />
+            
+            {/* CRITICAL: Day-wise Clinic Visit Schedule */}
+            <div style={{ background: '#f8f6f0', padding: '12px', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
+              <label style={{ fontSize: '12px', fontWeight: '800', color: '#0b332c', display: 'block', marginBottom: '4px' }}>
+                📅 Doctor Clinic Visit Days & Timings *
+              </label>
+              <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 10px' }}>
+                Check the days this doctor visits your clinic and set their shift hours.
+              </p>
+              <ScheduleEditor value={daySchedules} onChange={setDaySchedules} />
+            </div>
 
             <button type="submit" disabled={savingDoctor} style={{ width: '100%', background: '#0b332c', color: '#fff', border: 'none', padding: '14px', borderRadius: '12px', fontWeight: '700', fontSize: '14px', cursor: 'pointer' }}>
               {savingDoctor ? 'Saving...' : 'Save Doctor Profile'}
