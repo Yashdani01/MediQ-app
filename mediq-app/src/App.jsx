@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
+import { getMyCurrentBooking } from './hospitalData';
 
 import Login from './components/Login';
 import HospitalFlow from './components/HospitalFlow';
@@ -10,7 +11,6 @@ import ClinicPortal from './components/ClinicPortal';
 import PhysioGuideModal from './components/PhysioGuideModal';
 
 import './index.css';
-
 
 const translations = {
   en: {
@@ -62,7 +62,6 @@ const translations = {
     symptomsSubtitle: 'सामान्य स्वास्थ्य संकेतों और आवश्यक चिकित्सा विशेषज्ञों पर विस्तृत मार्गदर्शिका।',
   },
 };
-
 
 /* =========================
    ICON COMPONENT
@@ -172,8 +171,6 @@ function AppIcon({ type, size = 18 }) {
 
   return <svg {...common}>{icons[type]}</svg>;
 }
-
-
 /* =========================
    APP
 ========================= */
@@ -200,7 +197,7 @@ export default function App() {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Interactive Popup Modal States ('family' | 'symptoms' | 'queue' | 'sos' | 'physio' | null)
+  // Interactive Popup Modal States ('family' | 'symptoms' | 'queue' | 'sos' | 'physio' | 'support' | null)
   const [activeModal, setActiveModal] = useState(null);
 
   // Feature Data States
@@ -212,25 +209,23 @@ export default function App() {
 
   const [activeQueueToken, setActiveQueueToken] = useState(null);
 
+  // Fetch active queue token dynamically from Supabase
   useEffect(() => {
     const fetchActiveQueue = async () => {
       if (!session?.user) return;
-      const { data } = await supabase
-        .from('bookings')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .in('status', ['waiting', 'Waiting', 'checked_in'])
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      if (data && data.length > 0) {
-        setActiveQueueToken({
-          number: data[0].queue_number || data[0].token_number || '2',
-          doctorName: data[0].doctor_name || 'Doctor',
-          hospitalName: data[0].hospital_name || 'Clinic'
-        });
-      } else {
-        setActiveQueueToken(null);
+      try {
+        const active = await getMyCurrentBooking(session.user.id);
+        if (active) {
+          setActiveQueueToken({
+            number: active.queue_number || active.token_number || '2',
+            doctorName: active.doctor?.name || 'Doctor',
+            hospitalName: active.hospital?.name || 'Clinic'
+          });
+        } else {
+          setActiveQueueToken(null);
+        }
+      } catch (err) {
+        console.error("Queue fetch error:", err);
       }
     };
 
@@ -307,11 +302,6 @@ export default function App() {
     ]
   };
 
-
-  /* =========================
-     LANGUAGE
-  ========================= */
-
   const changeLanguage = (newLang) => {
     setLang(newLang);
     localStorage.setItem('mediq_lang', newLang);
@@ -319,11 +309,6 @@ export default function App() {
 
   const t = translations[lang] || translations.en;
   const currentSymptoms = commonSymptoms[lang] || commonSymptoms.en;
-
-
-  /* =========================
-     AUTH SESSION
-  ========================= */
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -353,14 +338,8 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-
-  /* =========================
-     PATIENT PROFILE
-  ========================= */
-
   const loadPatientProfile = async (user) => {
     const params = new URLSearchParams(window.location.search);
-
     const pendingName = params.get('name');
     const pendingCity = params.get('city');
 
@@ -383,24 +362,13 @@ export default function App() {
           .single();
 
         setPatientProfile(updated);
-
-        window.history.replaceState(
-          {},
-          '',
-          window.location.pathname
-        );
+        window.history.replaceState({}, '', window.location.pathname);
       } else {
         setPatientProfile(existing);
       }
     } else {
-      const patientCode =
-        'MDQ-' + Math.floor(1000 + Math.random() * 9000);
-
-      const fullName =
-        pendingName ||
-        user.email?.split('@')[0] ||
-        'Patient';
-
+      const patientCode = 'MDQ-' + Math.floor(1000 + Math.random() * 9000);
+      const fullName = pendingName || user.email?.split('@')[0] || 'Patient';
       const userCity = pendingCity || '';
 
       const { data: created } = await supabase
@@ -415,121 +383,49 @@ export default function App() {
         .single();
 
       setPatientProfile(created);
-
-      localStorage.removeItem('mediq_pending_name');
-      localStorage.removeItem('mediq_pending_city');
     }
-
     setProfileLoaded(true);
   };
-
-
-  /* =========================
-     LOADING
-  ========================= */
 
   if (loading || (session?.user && !profileLoaded)) {
     return (
       <div className="app-loading-screen">
-        <div className="app-loading-logo">
-          Medi<span>Q</span>.
-        </div>
-
+        <div className="app-loading-logo">Medi<span>Q</span>.</div>
         <div className="app-loading-spinner" />
-
         <p>{t.loading}</p>
       </div>
     );
   }
 
-
-  /* =========================
-     LOGIN
-  ========================= */
-
   if (!session && !isGuest) {
-    return (
-      <Login
-        onGuestContinue={() => setIsGuest(true)}
-      />
-    );
+    return <Login onGuestContinue={() => setIsGuest(true)} />;
   }
-
-
-  /* =========================
-     LOGOUT
-  ========================= */
 
   const handleLogout = async () => {
     setSidebarOpen(false);
-
     await supabase.auth.signOut();
-
     setIsGuest(false);
     setActiveTab('home');
     setPatientProfile(null);
     setProfileLoaded(false);
   };
 
-
-  /* =========================
-     USER INFO
-  ========================= */
-
-  const displayName =
-    patientProfile?.name ||
-    session?.user?.email?.split('@')[0] ||
-    t.guest;
-
-  const initialCity =
-    patientProfile?.city || '';
-
-  const userInitial =
-    displayName?.charAt(0)?.toUpperCase() || 'G';
-
-
-  /* =========================
-     NAVIGATION ITEMS
-  ========================= */
+  const displayName = patientProfile?.name || session?.user?.email?.split('@')[0] || t.guest;
+  const initialCity = patientProfile?.city || '';
+  const userInitial = displayName?.charAt(0)?.toUpperCase() || 'G';
 
   const navigationItems = [
-    {
-      id: 'home',
-      label: t.home,
-      icon: 'home',
-    },
-    {
-      id: 'triage',
-      label: t.triage,
-      icon: 'triage',
-    },
-    {
-      id: 'reports',
-      label: t.reports,
-      icon: 'reports',
-    },
-    {
-      id: 'bookings',
-      label: t.myBookings,
-      icon: 'bookings',
-    },
+    { id: 'home', label: t.home, icon: 'home' },
+    { id: 'triage', label: t.triage, icon: 'triage' },
+    { id: 'reports', label: t.reports, icon: 'reports' },
+    { id: 'bookings', label: t.myBookings, icon: 'bookings' },
   ];
-
 
   const handleNavigation = (tab) => {
     setActiveTab(tab);
     setSidebarOpen(false);
-
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
-
-  /* =========================
-     PAGE TITLES
-  ========================= */
 
   const pageTitles = {
     home: t.home,
@@ -537,129 +433,58 @@ export default function App() {
     reports: t.reports,
     bookings: t.myBookings,
   };
-
-
   return (
     <div className="mediq-app">
-
       {/* MOBILE HEADER */}
-
       <header className="mobile-app-header">
-        <button
-          className="mobile-menu-btn"
-          onClick={() => setSidebarOpen(true)}
-          aria-label="Open menu"
-        >
+        <button className="mobile-menu-btn" onClick={() => setSidebarOpen(true)} aria-label="Open menu">
           <AppIcon type="menu" />
         </button>
-
-        <div className="mobile-brand">
-          Medi<span>Q</span>.
-        </div>
-
-        <div className="mobile-user-avatar">
-          {userInitial}
-        </div>
+        <div className="mobile-brand">Medi<span>Q</span>.</div>
+        <div className="mobile-user-avatar">{userInitial}</div>
       </header>
 
-
       {/* MOBILE SIDEBAR OVERLAY */}
+      <div className={`sidebar-overlay ${sidebarOpen ? 'show' : ''}`} onClick={() => setSidebarOpen(false)} />
 
-      <div
-        className={`sidebar-overlay ${
-          sidebarOpen ? 'show' : ''
-        }`}
-        onClick={() => setSidebarOpen(false)}
-      />
-
-
-      {/* SIDEBAR (DESKTOP NAV AT TOP + UTILITIES HUB) */}
-
-      <aside
-        className={`app-sidebar ${
-          sidebarOpen ? 'open' : ''
-        }`}
-      >
+      {/* SIDEBAR */}
+      <aside className={`app-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-top">
-
           <div className="sidebar-brand-row">
-            <div className="sidebar-brand">
-              Medi<span>Q</span>.
-            </div>
-
-            <button
-              className="sidebar-close-btn"
-              onClick={() => setSidebarOpen(false)}
-              aria-label="Close menu"
-            >
+            <div className="sidebar-brand">Medi<span>Q</span>.</div>
+            <button className="sidebar-close-btn" onClick={() => setSidebarOpen(false)} aria-label="Close menu">
               <AppIcon type="close" />
             </button>
           </div>
 
-
           {/* USER CARD */}
-
           <div className="sidebar-user-card">
-            <div className="sidebar-avatar">
-              {userInitial}
-            </div>
-
+            <div className="sidebar-avatar">{userInitial}</div>
             <div className="sidebar-user-info">
-              <span className="sidebar-user-label">
-                {isGuest ? t.browsingAs : 'Welcome back'}
-              </span>
-
-              <strong>
-                {displayName}
-              </strong>
+              <span className="sidebar-user-label">{isGuest ? t.browsingAs : 'Welcome back'}</span>
+              <strong>{displayName}</strong>
             </div>
           </div>
 
-
-          {/* DESKTOP NAVIGATION TABS IN SIDEBAR (Desktop Only via CSS class) */}
-
+          {/* DESKTOP NAVIGATION TABS IN SIDEBAR */}
           <nav className="sidebar-nav desktop-only-nav" style={{ marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-            <span className="sidebar-nav-label">
-              Navigation
-            </span>
-
+            <span className="sidebar-nav-label">Navigation</span>
             {navigationItems.map((item) => (
               <button
                 key={item.id}
-                className={`sidebar-nav-item ${
-                  activeTab === item.id
-                    ? 'active'
-                    : ''
-                }`}
-                onClick={() =>
-                  handleNavigation(item.id)
-                }
+                className={`sidebar-nav-item ${activeTab === item.id ? 'active' : ''}`}
+                onClick={() => handleNavigation(item.id)}
               >
-                <span className="sidebar-nav-icon">
-                  <AppIcon type={item.icon} />
-                </span>
-
-                <span>
-                  {item.label}
-                </span>
-
-                {activeTab === item.id && (
-                  <span className="sidebar-active-dot" />
-                )}
+                <span className="sidebar-nav-icon"><AppIcon type={item.icon} /></span>
+                <span>{item.label}</span>
+                {activeTab === item.id && <span className="sidebar-active-dot" />}
               </button>
             ))}
           </nav>
 
-
-          {/* UTILITY CARDS HUB (CARE CIRCLE, SYMPTOMS, LIVE QUEUE, SOS, PHYSIO) */}
-
+          {/* UTILITY CARDS HUB */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-
-            {/* 1. CARE CIRCLE MODAL TRIGGER */}
-            <div 
-              onClick={() => setActiveModal('family')}
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'background 0.2s' }}
-            >
+            <div onClick={() => setActiveModal('family')} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
                 <span style={{ color: 'var(--gold)' }}><AppIcon type="family" size={17} /></span>
                 <div>
@@ -670,11 +495,7 @@ export default function App() {
               <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>→</span>
             </div>
 
-            {/* 2. 20 SYMPTOMS DIRECTORY MODAL TRIGGER */}
-            <div 
-              onClick={() => setActiveModal('symptoms')}
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'background 0.2s' }}
-            >
+            <div onClick={() => setActiveModal('symptoms')} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
                 <span style={{ color: 'var(--gold)' }}><AppIcon type="history" size={17} /></span>
                 <div>
@@ -685,11 +506,7 @@ export default function App() {
               <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>→</span>
             </div>
 
-            {/* 3. PHYSIO & THERAPEUTIC YOGA MODAL TRIGGER */}
-            <div 
-              onClick={() => setActiveModal('physio')}
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'background 0.2s' }}
-            >
+            <div onClick={() => setActiveModal('physio')} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
                 <span style={{ color: 'var(--gold)' }}><AppIcon type="history" size={17} /></span>
                 <div>
@@ -700,11 +517,7 @@ export default function App() {
               <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>→</span>
             </div>
 
-            {/* 4. LIVE QUEUE & BOOKING TRACKER */}
-            <div 
-              onClick={() => setActiveModal('queue')}
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'background 0.2s' }}
-            >
+            <div onClick={() => setActiveModal('queue')} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
                 <span style={{ color: 'var(--gold)' }}><AppIcon type="queue" size={17} /></span>
                 <div>
@@ -715,11 +528,7 @@ export default function App() {
               <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: activeQueueToken ? '#4ade80' : 'rgba(255,255,255,0.3)' }}></span>
             </div>
 
-            {/* 5. EMERGENCY SOS HUB MODAL TRIGGER */}
-            <div 
-              onClick={() => setActiveModal('sos')}
-              style={{ background: 'rgba(195, 79, 61, 0.12)', border: '1px solid rgba(195, 79, 61, 0.25)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}
-            >
+            <div onClick={() => setActiveModal('sos')} style={{ background: 'rgba(195, 79, 61, 0.12)', border: '1px solid rgba(195, 79, 61, 0.25)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
                 <span style={{ color: '#ffd8d2' }}><AppIcon type="sos" size={17} /></span>
                 <div>
@@ -730,75 +539,49 @@ export default function App() {
               <span style={{ fontSize: '12px', color: '#ffd8d2' }}>→</span>
             </div>
 
+            {/* HELP & SUPPORT SIDEBAR CARD */}
+            <div onClick={() => setActiveModal('support')} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+                <span style={{ color: 'var(--gold)' }}><AppIcon type="history" size={17} /></span>
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: '700', color: '#fff' }}>Help & Support</div>
+                  <div style={{ fontSize: '10.5px', color: 'rgba(255,255,255,0.6)' }}>WhatsApp & Email</div>
+                </div>
+              </div>
+              <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>→</span>
+            </div>
           </div>
-
         </div>
 
-
         {/* SIDEBAR FOOTER */}
-
         <div className="sidebar-footer">
-
           <div className="language-selector">
-            <div className="language-selector-icon">
-              <AppIcon type="globe" size={17} />
-            </div>
-
-            <select
-              value={lang}
-              onChange={(e) =>
-                changeLanguage(e.target.value)
-              }
-            >
-              <option value="en">
-                English
-              </option>
-
-              <option value="bn">
-                বাংলা
-              </option>
-
-              <option value="hi">
-                हिन्दी
-              </option>
+            <div className="language-selector-icon"><AppIcon type="globe" size={17} /></div>
+            <select value={lang} onChange={(e) => changeLanguage(e.target.value)}>
+              <option value="en">English</option>
+              <option value="bn">বাংলা</option>
+              <option value="hi">हिन्दी</option>
             </select>
           </div>
-
-
-          <button
-            className="sidebar-logout"
-            onClick={handleLogout}
-          >
+          <button className="sidebar-logout" onClick={handleLogout}>
             <AppIcon type="logout" size={18} />
-
-            <span>
-              {t.logout}
-            </span>
+            <span>{t.logout}</span>
           </button>
         </div>
       </aside>
 
-
       {/* INTERACTIVE POPUP MODALS */}
-
       {activeModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(6, 43, 37, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
           <div style={{ background: 'var(--white)', width: '100%', maxWidth: activeModal === 'symptoms' || activeModal === 'physio' ? '650px' : '400px', borderRadius: '24px', padding: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', position: 'relative', maxHeight: '85vh', overflowY: 'auto' }}>
-            
-            {/* CLOSE BUTTON */}
-            <button 
-              onClick={() => setActiveModal(null)}
-              style={{ position: 'absolute', top: '20px', right: '20px', background: 'var(--sand-100)', border: 'none', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--ink)' }}
-            >
+            <button onClick={() => setActiveModal(null)} style={{ position: 'absolute', top: '20px', right: '20px', background: 'var(--sand-100)', border: 'none', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--ink)' }}>
               ✕
             </button>
 
-            {/* MODAL 1: CARE CIRCLE */}
             {activeModal === 'family' && (
               <div>
                 <h3 style={{ margin: '0 0 4px', fontFamily: 'Fraunces, serif', fontSize: '20px', color: 'var(--teal-900)' }}>Care Circle</h3>
                 <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--ink-soft)' }}>Add household members so you can assign appointments to them during checkout.</p>
-                
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
                   {familyMembers.map((m) => (
                     <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--sand-50)', padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--line)' }}>
@@ -807,54 +590,31 @@ export default function App() {
                     </div>
                   ))}
                 </div>
-
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <input 
-                    type="text" 
-                    placeholder="Enter family member name" 
-                    value={newFamilyName}
-                    onChange={(e) => setNewFamilyName(e.target.value)}
-                    style={{ flex: 1, padding: '10px 12px', borderRadius: '12px', border: '1px solid var(--line)', fontSize: '13px', outline: 'none' }}
-                  />
-                  <select 
-                    value={newFamilyRelation}
-                    onChange={(e) => setNewFamilyRelation(e.target.value)}
-                    style={{ padding: '10px', borderRadius: '12px', border: '1px solid var(--line)', fontSize: '12px', background: 'var(--white)' }}
-                  >
+                  <input type="text" placeholder="Enter family member name" value={newFamilyName} onChange={(e) => setNewFamilyName(e.target.value)} style={{ flex: 1, padding: '10px 12px', borderRadius: '12px', border: '1px solid var(--line)', fontSize: '13px', outline: 'none' }} />
+                  <select value={newFamilyRelation} onChange={(e) => setNewFamilyRelation(e.target.value)} style={{ padding: '10px', borderRadius: '12px', border: '1px solid var(--line)', fontSize: '12px', background: 'var(--white)' }}>
                     <option value="Parent">Parent</option>
                     <option value="Spouse">Spouse</option>
                     <option value="Child">Child</option>
                     <option value="Other">Other</option>
                   </select>
                 </div>
-                <button 
-                  onClick={() => {
-                    if (newFamilyName.trim()) {
-                      setFamilyMembers([...familyMembers, { id: Date.now(), name: newFamilyName, relation: newFamilyRelation }]);
-                      setNewFamilyName('');
-                    }
-                  }}
-                  style={{ width: '100%', marginTop: '10px', background: 'var(--teal-900)', color: '#fff', border: 'none', padding: '11px', borderRadius: '12px', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}
-                >
+                <button onClick={() => { if (newFamilyName.trim()) { setFamilyMembers([...familyMembers, { id: Date.now(), name: newFamilyName, relation: newFamilyRelation }]); setNewFamilyName(''); } }} style={{ width: '100%', marginTop: '10px', background: 'var(--teal-900)', color: '#fff', border: 'none', padding: '11px', borderRadius: '12px', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}>
                   Add Family Member
                 </button>
               </div>
             )}
 
-            {/* MODAL 2: 20 SYMPTOMS MEDICAL DIRECTORY (MULTI-LINGUAL) */}
             {activeModal === 'symptoms' && (
               <div>
                 <h3 style={{ margin: '0 0 4px', fontFamily: 'Fraunces, serif', fontSize: '20px', color: 'var(--teal-900)' }}>{t.symptomsTitle}</h3>
                 <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--ink-soft)' }}>{t.symptomsSubtitle}</p>
-                
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {currentSymptoms.map((item, idx) => (
                     <div key={idx} style={{ background: 'var(--sand-50)', padding: '12px 14px', borderRadius: '14px', border: '1px solid var(--line)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
                         <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--teal-900)' }}>{item.symptom}</span>
-                        <span style={{ background: 'var(--teal-900)', color: 'var(--gold)', fontSize: '10.5px', fontWeight: '700', padding: '3px 10px', borderRadius: '100px', whiteSpace: 'nowrap' }}>
-                          {item.specialist}
-                        </span>
+                        <span style={{ background: 'var(--teal-900)', color: 'var(--gold)', fontSize: '10.5px', fontWeight: '700', padding: '3px 10px', borderRadius: '100px', whiteSpace: 'nowrap' }}>{item.specialist}</span>
                       </div>
                       <div style={{ fontSize: '12px', color: 'var(--ink-soft)', lineHeight: '1.4' }}>{item.meaning}</div>
                     </div>
@@ -863,17 +623,14 @@ export default function App() {
               </div>
             )}
 
-            {/* MODAL 3: PHYSIO & THERAPEUTIC YOGA GUIDE */}
             {activeModal === 'physio' && (
               <PhysioGuideModal onClose={() => setActiveModal(null)} />
             )}
 
-            {/* MODAL 4: LIVE QUEUE TRACKER */}
             {activeModal === 'queue' && (
               <div>
                 <h3 style={{ margin: '0 0 4px', fontFamily: 'Fraunces, serif', fontSize: '20px', color: 'var(--teal-900)' }}>Live Queue Tracker</h3>
                 <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--ink-soft)' }}>Monitor your active hospital or clinic consultation tokens in real-time.</p>
-                
                 {activeQueueToken ? (
                   <div style={{ background: 'var(--sand-50)', padding: '16px', borderRadius: '16px', border: '1px solid var(--line)', textAlign: 'center' }}>
                     <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--teal-700)', textTransform: 'uppercase' }}>Active Token #{activeQueueToken.number}</div>
@@ -888,107 +645,69 @@ export default function App() {
               </div>
             )}
 
-            {/* MODAL 5: EMERGENCY SOS & AMBULANCE */}
             {activeModal === 'sos' && (
               <div>
                 <h3 style={{ margin: '0 0 4px', fontFamily: 'Fraunces, serif', fontSize: '20px', color: '#c34f3d' }}>Emergency & SOS Hub</h3>
                 <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--ink-soft)' }}>Tap any emergency service below to instantly invoke your phone dialer:</p>
-                
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <a href="tel:102" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fbe8e4', border: '1px solid #fca5a5', padding: '14px', borderRadius: '14px', textDecoration: 'none', color: '#c34f3d', fontWeight: '700', fontSize: '14px' }}>
-                    <span>🚑 National Ambulance</span>
-                    <span>102 →</span>
+                    <span>🚑 National Ambulance</span><span>102 →</span>
                   </a>
                   <a href="tel:112" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fbe8e4', border: '1px solid #fca5a5', padding: '14px', borderRadius: '14px', textDecoration: 'none', color: '#c34f3d', fontWeight: '700', fontSize: '14px' }}>
-                    <span>🚨 Emergency Response (ERSS)</span>
-                    <span>112 →</span>
+                    <span>🚨 Emergency Response (ERSS)</span><span>112 →</span>
                   </a>
                   <a href="tel:101" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fbe8e4', border: '1px solid #fca5a5', padding: '14px', borderRadius: '14px', textDecoration: 'none', color: '#c34f3d', fontWeight: '700', fontSize: '14px' }}>
-                    <span>🚒 Fire Department</span>
-                    <span>101 →</span>
+                    <span>🚒 Fire Department</span><span>101 →</span>
                   </a>
                 </div>
               </div>
             )}
 
+            {activeModal === 'support' && (
+              <div>
+                <h3 style={{ margin: '0 0 4px', fontFamily: 'Fraunces, serif', fontSize: '20px', color: 'var(--teal-900)' }}>MediQ Helpdesk</h3>
+                <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--ink-soft)' }}>Choose your preferred channel to connect with our support team:</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <a href="https://wa.me/918585058779?text=Hello%20MediQ%20Support,%20I%20need%20assistance." target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '14px', borderRadius: '14px', textDecoration: 'none', color: '#166534', fontWeight: '700', fontSize: '13px' }}>
+                    <span>🟢 WhatsApp Support (+91 85850 58779)</span><span>→</span>
+                  </a>
+                  <a href="mailto:helpdesk.mediq@gmail.com?subject=Support%20Request%20-%20MediQ" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sand-50)', border: '1px solid var(--line)', padding: '14px', borderRadius: '14px', textDecoration: 'none', color: 'var(--teal-900)', fontWeight: '700', fontSize: '13px' }}>
+                    <span>✉️ Email Support (helpdesk.mediq@gmail.com)</span><span>→</span>
+                  </a>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
 
-
       {/* MAIN APPLICATION */}
-
       <div className="app-main">
-
-        {/* DESKTOP HEADER */}
-
         <header className="desktop-app-header">
-
           <div className="desktop-page-info">
-            <span className="desktop-page-eyebrow">
-              MediQ Patient Portal
-            </span>
-
-            <h1>
-              {pageTitles[activeTab]}
-            </h1>
+            <span className="desktop-page-eyebrow">MediQ Patient Portal</span>
+            <h1>{pageTitles[activeTab]}</h1>
           </div>
-
-
           <div className="desktop-header-actions">
-
             <div className="desktop-language">
               <AppIcon type="globe" size={17} />
-
-              <select
-                value={lang}
-                onChange={(e) =>
-                  changeLanguage(e.target.value)
-                }
-              >
-                <option value="en">
-                  English
-                </option>
-
-                <option value="bn">
-                  বাংলা
-                </option>
-
-                <option value="hi">
-                  हिन्दी
-                </option>
+              <select value={lang} onChange={(e) => changeLanguage(e.target.value)}>
+                <option value="en">English</option>
+                <option value="bn">বাংলা</option>
+                <option value="hi">हिन्दी</option>
               </select>
             </div>
-
-
             <div className="desktop-profile">
-              <div className="desktop-profile-avatar">
-                {userInitial}
-              </div>
-
+              <div className="desktop-profile-avatar">{userInitial}</div>
               <div className="desktop-profile-info">
-                <strong>
-                  {displayName}
-                </strong>
-
-                <span>
-                  {isGuest
-                    ? 'Guest access'
-                    : 'Patient'}
-                </span>
+                <strong>{displayName}</strong>
+                <span>{isGuest ? 'Guest access' : 'Patient'}</span>
               </div>
             </div>
-
           </div>
         </header>
 
-
-        {/* PAGE CONTENT */}
-
         <main className="app-content">
-
-          {/* HOME */}
-
           {activeTab === 'home' && (
             <HospitalFlow
               user={session?.user || null}
@@ -1001,75 +720,34 @@ export default function App() {
             />
           )}
 
-
-          {/* TRIAGE */}
-
           {activeTab === 'triage' && (
             <SymptomTriage
-              onClose={() =>
-                handleNavigation('home')
-              }
-              onSelectSpecialty={() => {
-                handleNavigation('home');
-              }}
+              onClose={() => handleNavigation('home')}
+              onSelectSpecialty={() => handleNavigation('home')}
             />
           )}
-
-
-          {/* REPORTS */}
 
           {activeTab === 'reports' && (
-            <Reports
-              user={session?.user || null}
-              lang={lang}
-            />
+            <Reports user={session?.user || null} lang={lang} />
           )}
 
-
-          {/* BOOKINGS */}
-
-          {activeTab === 'bookings' && (
-            <MyBookings />
-          )}
-
+          {activeTab === 'bookings' && <MyBookings />}
         </main>
       </div>
 
-
       {/* MOBILE BOTTOM NAV */}
-
       <nav className="mobile-bottom-nav">
-
         {navigationItems.map((item) => (
           <button
             key={item.id}
-            className={
-              activeTab === item.id
-                ? 'active'
-                : ''
-            }
-            onClick={() =>
-              handleNavigation(item.id)
-            }
+            className={activeTab === item.id ? 'active' : ''}
+            onClick={() => handleNavigation(item.id)}
           >
-            <span className="mobile-nav-icon">
-              <AppIcon
-                type={item.icon}
-                size={21}
-              />
-            </span>
-
-            <span>
-              {item.label}
-            </span>
+            <span className="mobile-nav-icon"><AppIcon type={item.icon} size={21} /></span>
+            <span>{item.label}</span>
           </button>
         ))}
-
       </nav>
-
     </div>
   );
 }
-const handleWhatsAppSupport = () => {
-  window.open('https://wa.me/918585058779?text=Hello%20MediQ%20Support,%20I%20need%20assistance%20with%20my%20app.', '_blank');
-};
