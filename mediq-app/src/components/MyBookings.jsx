@@ -235,7 +235,7 @@ export default function MyBookings() {
                     boxShadow: booking.is_priority ? '0 4px 15px rgba(245, 158, 11, 0.15)' : '0 4px 12px rgba(0,0,0,0.02)'
                   }}
                 >
-                  <div className="booking-card-top" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                 <div className="booking-card-top" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                     <div className="doctor-info" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                       <div className="doctor-avatar" style={{ width: '45px', height: '45px', background: '#e6f4ea', color: '#0b332c', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: '700' }}>
                         {doctorName.charAt(0).toUpperCase()}
@@ -252,6 +252,7 @@ export default function MyBookings() {
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
+                      {/* PRIORITY PASS BADGE ON PATIENT BOOKING */}
                       {booking.is_priority && (
                         <span style={{ background: '#fef3c7', color: '#92400e', fontSize: '10px', fontWeight: '900', padding: '3px 8px', borderRadius: '6px', border: '1px solid #fde047' }}>
                           ⚡ Priority Pass
