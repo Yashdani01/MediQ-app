@@ -396,7 +396,7 @@ export default function App() {
         'Patient';
 
       const userCity = pendingCity || '';
-
+      className={`ticket-progress-fill ${isCancelled ? 'cancelled' : ''}`}
       const { data: created } = await supabase
         .from('patients')
         .insert({
