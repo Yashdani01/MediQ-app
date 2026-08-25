@@ -666,110 +666,59 @@ export default function HospitalFlow({
 
     if (selectedPayment === 'upi') {
       if (paymentExpired) {
-        setBookingError(
-          'Payment time expired. Please try booking again.'
-        );
+        setBookingError('Payment time expired. Please try booking again.');
         setPendingBooking(null);
         return;
       }
 
-      if (
-        !txnId.trim() ||
-        !screenshotFile
-      ) {
-        setBookingError(
-          'Please enter the transaction ID and upload a payment screenshot.'
-        );
+      if (!txnId.trim() || !screenshotFile) {
+        setBookingError('Please enter the transaction ID and upload a payment screenshot.');
         return;
       }
 
       setSubmittingPayment(true);
 
-      const {
-        url,
-        error: uploadError,
-      } =
-        await uploadPaymentScreenshot(
-          screenshotFile
-        );
+      const { url, error: uploadError } = await uploadPaymentScreenshot(screenshotFile);
 
       if (uploadError) {
         setSubmittingPayment(false);
-        setBookingError(
-          'Could not upload screenshot. Please try again.'
-        );
+        setBookingError('Could not upload screenshot. Please try again.');
         return;
       }
 
-      const {
-        data: appointment,
-        error,
-      } =
-        await bookAppointment(
-          user.id,
-          doc.id,
-          hospitalId,
-          'upi',
-          txnId.trim(),
-          url,
-          contactPhone.trim(),
-          selectedFamilyMember,
-          isPriority
-        );
-
-      setSubmittingPayment(false);
-
-      if (error) {
-        setBookingError(
-          'Something went wrong while booking. Please try again.'
-        );
-        setPendingBooking(null);
-        return;
-      }
-
-      setTicketData({
-        appointment,
-        doctor: {
-          name: doc.name,
-          specialty: doc.specialty,
-          avg_minutes_per_patient:
-            doc.avg_minutes_per_patient,
-        },
-        patientsAheadOverride:
-          doc.liveQueue,
-        paymentMethod: 'upi',
-        upiInfo:
-          hospitalUpi
-            ? { upiId: hospitalUpi }
-            : null,
-      });
-
-      setPendingBooking(null);
-      setTxnId('');
-      setScreenshotFile(null);
-      setShowCelebration(true);
-      return;
-    }
-
-    setSubmittingPayment(true);
-
-    const {
-      data: appointment,
-      error,
-    } =
-      await bookAppointment(
+      const { data: appointment, error } = await bookAppointment(
         user.id,
         doc.id,
         hospitalId,
-        'cash',
-        null,
-        null,
+        'upi',
+        txnId.trim(),
+        url,
         contactPhone.trim(),
-        selectedFamilyMember,
-        isPriority
+        selectedFamilyMember, // <-- Pass Care Circle member name
+        isPriority            // <-- Pass priority flag
       );
 
+      setSubmittingPayment(false);
+      // ... rest of UPI confirmation
+    }
+
+    // CASH BOOKING CONFIRMATION
+    setSubmittingPayment(true);
+
+    const { data: appointment, error } = await bookAppointment(
+      user.id,
+      doc.id,
+      hospitalId,
+      'cash',
+      null,
+      null,
+      contactPhone.trim(),
+      selectedFamilyMember, // <-- Pass Care Circle member name
+      isPriority            // <-- Pass priority flag
+    );
+
     setSubmittingPayment(false);
+    // ... rest of cash confirmation
 
     if (error) {
       setBookingError(
