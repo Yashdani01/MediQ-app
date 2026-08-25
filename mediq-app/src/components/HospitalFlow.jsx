@@ -2105,6 +2105,47 @@ export default function HospitalFlow({
         />
 
       )}
+      // Inside HospitalFlow.jsx
+
+// 1. Ensure familyMembers is received in component props:
+export default function HospitalFlow({ user, isGuest, onLogout, displayName, initialCity, lang, t, familyMembers }) {
+  
+  // 2. State for selected care circle member (defaults to Self / displayName)
+  const [selectedFamilyMember, setSelectedFamilyMember] = useState(displayName || 'Self');
+
+  // 3. When confirming booking, pass patient_name / care circle member to Supabase
+  async function handleConfirmBooking() {
+    if (!pendingBooking) return;
+
+    try {
+      setSubmittingPayment(true);
+      setBookingError('');
+
+      const { data, error } = await supabase.from('appointments').insert({
+        hospital_id: pendingBooking.hospitalId,
+        doctor_id: pendingBooking.doc.id,
+        patient_id: user?.id || null,
+        patient_name: selectedFamilyMember, // 👈 Care circle member name or Self
+        payment_method: selectedPayment,
+        payment_status: selectedPayment === 'upi' ? 'verification_pending' : 'pending',
+        upi_txn_id: txnId.trim() || null,
+        status: 'waiting',
+        queue_number: Math.floor(Math.random() * 10) + 1, // or fetched queue sequence
+      }).select().single();
+
+      if (error) throw error;
+
+      // Success workflow
+      alert(`Appointment successfully booked for ${selectedFamilyMember}!`);
+      setPendingBooking(null);
+      // Trigger active ticket display or refresh bookings
+    } catch (err) {
+      console.error('Booking error:', err);
+      setBookingError(err.message || 'Failed to complete booking.');
+    } finally {
+      setSubmittingPayment(false);
+    }
+  }
 
     </div>
   );
