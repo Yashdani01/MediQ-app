@@ -11,7 +11,6 @@ import PhysioGuideModal from './components/PhysioGuideModal';
 
 import './index.css';
 
-
 const translations = {
   en: {
     loading: 'Loading MediQ...',
@@ -62,7 +61,6 @@ const translations = {
     symptomsSubtitle: 'सामान्य स्वास्थ्य संकेतों और आवश्यक चिकित्सा विशेषज्ञों पर विस्तृत मार्गदर्शिका।',
   },
 };
-
 
 /* =========================
    ICON COMPONENT
@@ -173,7 +171,6 @@ function AppIcon({ type, size = 18 }) {
   return <svg {...common}>{icons[type]}</svg>;
 }
 
-
 /* =========================
    APP
 ========================= */
@@ -200,7 +197,7 @@ export default function App() {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Interactive Popup Modal States ('family' | 'symptoms' | 'queue' | 'sos' | 'physio' | null)
+  // Interactive Popup Modal States ('family' | 'symptoms' | 'queue' | 'sos' | 'physio' | 'support' | null)
   const [activeModal, setActiveModal] = useState(null);
 
   // Feature Data States
@@ -282,7 +279,6 @@ export default function App() {
     ]
   };
 
-
   /* =========================
      LANGUAGE
   ========================= */
@@ -295,9 +291,8 @@ export default function App() {
   const t = translations[lang] || translations.en;
   const currentSymptoms = commonSymptoms[lang] || commonSymptoms.en;
 
-
   /* =========================
-     AUTH SESSION
+     AUTH SESSION & LIVE QUEUE SYNC
   ========================= */
 
   useEffect(() => {
@@ -307,6 +302,7 @@ export default function App() {
 
       if (session?.user) {
         loadPatientProfile(session.user);
+        fetchActiveQueue(session.user.id);
       } else {
         setProfileLoaded(true);
       }
@@ -320,6 +316,7 @@ export default function App() {
 
       if (session?.user) {
         loadPatientProfile(session.user);
+        fetchActiveQueue(session.user.id);
       } else {
         setProfileLoaded(true);
       }
@@ -328,6 +325,28 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
+  async function fetchActiveQueue(userId) {
+    try {
+      const { data, error } = await supabase
+        .from('appointments')
+        .select('queue_number, status, doctors(name), hospitals(name)')
+        .eq('patient_id', userId)
+        .in('status', ['waiting', 'checked_in'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!error && data) {
+        setActiveQueueToken({
+          number: data.queue_number,
+          doctorName: data.doctors?.name || 'Doctor',
+          hospitalName: data.hospitals?.name || 'Hospital'
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching active queue:', err);
+    }
+  }
 
   /* =========================
      PATIENT PROFILE
@@ -390,117 +409,10 @@ export default function App() {
         .single();
 
       setPatientProfile(created);
-
-      localStorage.removeItem('mediq_pending_name');
-      localStorage.removeItem('mediq_pending_city');
     }
 
     setProfileLoaded(true);
   };
-
-
-  /* =========================
-     LIVE QUEUE TRACKER
-  ========================= */
-  useEffect(() => {
-    if (!session?.user) {
-      setActiveQueueToken(null);
-      return;
-    }
-
-    let bookingChannel;
-
-    const loadActiveBooking = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('bookings')
-          .select(`
-            *,
-            hospitals (
-              name
-            ),
-            doctors (
-              name
-            )
-          `)
-          .eq('user_id', session.user.id)
-          .in('status', ['confirmed', 'upcoming', 'waiting', 'checked_in'])
-          .order('appointment_date', { ascending: true })
-          .order('appointment_time', { ascending: true })
-          .limit(1)
-          .maybeSingle();
-
-        if (error) {
-          console.error('Error loading active booking:', error);
-          setActiveQueueToken(null);
-          return;
-        }
-
-        if (data) {
-          setActiveQueueToken({
-            id: data.id,
-            number:
-              data.queue_number ||
-              data.token_number ||
-              data.token ||
-              'Pending',
-
-            doctorName:
-              data.doctors?.name ||
-              data.doctor_name ||
-              'Doctor',
-
-            hospitalName:
-              data.hospitals?.name ||
-              data.hospital_name ||
-              'Hospital',
-
-            status: data.status,
-            appointmentDate: data.appointment_date,
-            appointmentTime: data.appointment_time,
-          });
-        } else {
-          setActiveQueueToken(null);
-        }
-      } catch (error) {
-        console.error('Live queue error:', error);
-        setActiveQueueToken(null);
-      }
-    };
-
-    loadActiveBooking();
-
-
-    /* REALTIME SUPABASE LISTENER */
-
-    bookingChannel = supabase
-      .channel(`patient-bookings-${session.user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'bookings',
-          filter: `user_id=eq.${session.user.id}`,
-        },
-        () => {
-          loadActiveBooking();
-        }
-      )
-      .subscribe();
-
-
-    return () => {
-      if (bookingChannel) {
-        supabase.removeChannel(bookingChannel);
-      }
-    };
-  }, [session?.user?.id]);
-
-
-  /* =========================
-     LOADING
-  ========================= */
 
   if (loading || (session?.user && !profileLoaded)) {
     return (
@@ -508,18 +420,11 @@ export default function App() {
         <div className="app-loading-logo">
           Medi<span>Q</span>.
         </div>
-
         <div className="app-loading-spinner" />
-
         <p>{t.loading}</p>
       </div>
     );
   }
-
-
-  /* =========================
-     LOGIN
-  ========================= */
 
   if (!session && !isGuest) {
     return (
@@ -528,11 +433,6 @@ export default function App() {
       />
     );
   }
-
-
-  /* =========================
-     LOGOUT
-  ========================= */
 
   const handleLogout = async () => {
     setSidebarOpen(false);
@@ -545,11 +445,6 @@ export default function App() {
     setProfileLoaded(false);
   };
 
-
-  /* =========================
-     USER INFO
-  ========================= */
-
   const displayName =
     patientProfile?.name ||
     session?.user?.email?.split('@')[0] ||
@@ -560,11 +455,6 @@ export default function App() {
 
   const userInitial =
     displayName?.charAt(0)?.toUpperCase() || 'G';
-
-
-  /* =========================
-     NAVIGATION ITEMS
-  ========================= */
 
   const navigationItems = [
     {
@@ -589,7 +479,6 @@ export default function App() {
     },
   ];
 
-
   const handleNavigation = (tab) => {
     setActiveTab(tab);
     setSidebarOpen(false);
@@ -600,11 +489,6 @@ export default function App() {
     });
   };
 
-
-  /* =========================
-     PAGE TITLES
-  ========================= */
-
   const pageTitles = {
     home: t.home,
     triage: t.triage,
@@ -612,12 +496,10 @@ export default function App() {
     bookings: t.myBookings,
   };
 
-
   return (
     <div className="mediq-app">
 
       {/* MOBILE HEADER */}
-
       <header className="mobile-app-header">
         <button
           className="mobile-menu-btn"
@@ -636,9 +518,7 @@ export default function App() {
         </div>
       </header>
 
-
       {/* MOBILE SIDEBAR OVERLAY */}
-
       <div
         className={`sidebar-overlay ${
           sidebarOpen ? 'show' : ''
@@ -646,9 +526,7 @@ export default function App() {
         onClick={() => setSidebarOpen(false)}
       />
 
-
-      {/* SIDEBAR (DESKTOP NAV AT TOP + UTILITIES HUB) */}
-
+      {/* SIDEBAR */}
       <aside
         className={`app-sidebar ${
           sidebarOpen ? 'open' : ''
@@ -670,9 +548,7 @@ export default function App() {
             </button>
           </div>
 
-
           {/* USER CARD */}
-
           <div className="sidebar-user-card">
             <div className="sidebar-avatar">
               {userInitial}
@@ -689,9 +565,7 @@ export default function App() {
             </div>
           </div>
 
-
-          {/* DESKTOP NAVIGATION TABS IN SIDEBAR (Desktop Only via CSS class) */}
-
+          {/* DESKTOP NAVIGATION TABS IN SIDEBAR */}
           <nav className="sidebar-nav desktop-only-nav" style={{ marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
             <span className="sidebar-nav-label">
               Navigation
@@ -724,9 +598,7 @@ export default function App() {
             ))}
           </nav>
 
-
-          {/* UTILITY CARDS HUB (CARE CIRCLE, SYMPTOMS, LIVE QUEUE, SOS, PHYSIO) */}
-
+          {/* UTILITY CARDS HUB */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
 
             {/* 1. CARE CIRCLE MODAL TRIGGER */}
@@ -804,13 +676,26 @@ export default function App() {
               <span style={{ fontSize: '12px', color: '#ffd8d2' }}>→</span>
             </div>
 
+            {/* 6. NEED HELP / SUPPORT MODAL TRIGGER */}
+            <div 
+              onClick={() => setActiveModal('support')}
+              style={{ background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.25)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '2px' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+                <span style={{ color: '#6ee7b7' }}>🎧</span>
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: '700', color: '#6ee7b7' }}>Need Help? (Support)</div>
+                  <div style={{ fontSize: '10.5px', color: 'rgba(255,255,255,0.6)' }}>WhatsApp & Email Helpdesk</div>
+                </div>
+              </div>
+              <span style={{ fontSize: '12px', color: '#6ee7b7' }}>→</span>
+            </div>
+
           </div>
 
         </div>
 
-
         {/* SIDEBAR FOOTER */}
-
         <div className="sidebar-footer">
 
           <div className="language-selector">
@@ -824,37 +709,23 @@ export default function App() {
                 changeLanguage(e.target.value)
               }
             >
-              <option value="en">
-                English
-              </option>
-
-              <option value="bn">
-                বাংলা
-              </option>
-
-              <option value="hi">
-                हिन्दी
-              </option>
+              <option value="en">English</option>
+              <option value="bn">বাংলা</option>
+              <option value="hi">हिन्दी</option>
             </select>
           </div>
-
 
           <button
             className="sidebar-logout"
             onClick={handleLogout}
           >
             <AppIcon type="logout" size={18} />
-
-            <span>
-              {t.logout}
-            </span>
+            <span>{t.logout}</span>
           </button>
         </div>
       </aside>
 
-
       {/* INTERACTIVE POPUP MODALS */}
-
       {activeModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(6, 43, 37, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
           <div style={{ background: 'var(--white)', width: '100%', maxWidth: activeModal === 'symptoms' || activeModal === 'physio' ? '650px' : '400px', borderRadius: '24px', padding: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', position: 'relative', maxHeight: '85vh', overflowY: 'auto' }}>
@@ -895,8 +766,8 @@ export default function App() {
                     onChange={(e) => setNewFamilyRelation(e.target.value)}
                     style={{ padding: '10px', borderRadius: '12px', border: '1px solid var(--line)', fontSize: '12px', background: 'var(--white)' }}
                   >
-                    <option value="Parent">Parent</option>
                     <option value="Spouse">Spouse</option>
+                    <option value="Parent">Parent</option>
                     <option value="Child">Child</option>
                     <option value="Other">Other</option>
                   </select>
@@ -915,7 +786,7 @@ export default function App() {
               </div>
             )}
 
-            {/* MODAL 2: 20 SYMPTOMS MEDICAL DIRECTORY (MULTI-LINGUAL) */}
+            {/* MODAL 2: 20 SYMPTOMS MEDICAL DIRECTORY */}
             {activeModal === 'symptoms' && (
               <div>
                 <h3 style={{ margin: '0 0 4px', fontFamily: 'Fraunces, serif', fontSize: '20px', color: 'var(--teal-900)' }}>{t.symptomsTitle}</h3>
@@ -985,83 +856,83 @@ export default function App() {
               </div>
             )}
 
+            {/* MODAL 6: SUPPORT & HELPDESK (WHATSAPP + EMAIL) */}
+            {activeModal === 'support' && (
+              <div>
+                <h3 style={{ margin: '0 0 6px', fontFamily: 'Fraunces, serif', fontSize: '20px', color: '#0b332c' }}>MediQ Helpdesk</h3>
+                <p style={{ margin: '0 0 20px', fontSize: '13px', color: '#64748b' }}>Choose your preferred channel to connect with our support team:</p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
+                  <a href="https://wa.me/918585058779?text=Hello%20MediQ%20Support,%20I%20need%20assistance." target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '14px 16px', borderRadius: '14px', textDecoration: 'none', color: '#166534', fontWeight: '700', fontSize: '13.5px' }}>
+                    <span style={{ fontSize: '20px' }}>🟢</span>
+                    <div style={{ flex: 1 }}>
+                      <div>WhatsApp Chat</div>
+                      <div style={{ fontSize: '11px', color: '#15803d', fontWeight: 'normal' }}>+91 85850 58779</div>
+                    </div>
+                    <span>→</span>
+                  </a>
+
+                  <a href="mailto:helpdesk.mediq@gmail.com?subject=Support%20Request%20-%20MediQ" style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#f8f6f0', border: '1px solid #e2e8f0', padding: '14px 16px', borderRadius: '14px', textDecoration: 'none', color: '#0b332c', fontWeight: '700', fontSize: '13.5px' }}>
+                    <span style={{ fontSize: '20px' }}>✉️</span>
+                    <div style={{ flex: 1 }}>
+                      <div>Email Support</div>
+                      <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 'normal' }}>helpdesk.mediq@gmail.com</div>
+                    </div>
+                    <span>→</span>
+                  </a>
+                </div>
+
+                <button onClick={() => setActiveModal(null)} style={{ width: '100%', background: '#0b332c', color: '#fff', border: 'none', padding: '12px', borderRadius: '12px', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}>Close</button>
+              </div>
+            )}
+
           </div>
         </div>
       )}
 
-
       {/* MAIN APPLICATION */}
-
       <div className="app-main">
 
         {/* DESKTOP HEADER */}
-
         <header className="desktop-app-header">
-
           <div className="desktop-page-info">
             <span className="desktop-page-eyebrow">
               MediQ Patient Portal
             </span>
-
             <h1>
               {pageTitles[activeTab]}
             </h1>
           </div>
 
-
           <div className="desktop-header-actions">
-
             <div className="desktop-language">
               <AppIcon type="globe" size={17} />
-
               <select
                 value={lang}
                 onChange={(e) =>
                   changeLanguage(e.target.value)
                 }
               >
-                <option value="en">
-                  English
-                </option>
-
-                <option value="bn">
-                  বাংলা
-                </option>
-
-                <option value="hi">
-                  हिन्दी
-                </option>
+                <option value="en">English</option>
+                <option value="bn">বাংলা</option>
+                <option value="hi">हिन्दी</option>
               </select>
             </div>
-
 
             <div className="desktop-profile">
               <div className="desktop-profile-avatar">
                 {userInitial}
               </div>
-
               <div className="desktop-profile-info">
-                <strong>
-                  {displayName}
-                </strong>
-
-                <span>
-                  {isGuest
-                    ? 'Guest access'
-                    : 'Patient'}
-                </span>
+                <strong>{displayName}</strong>
+                <span>{isGuest ? 'Guest access' : 'Patient'}</span>
               </div>
             </div>
-
           </div>
         </header>
 
-
         {/* PAGE CONTENT */}
-
         <main className="app-content">
-
-          {/* HOME */}
 
           {activeTab === 'home' && (
             <HospitalFlow
@@ -1072,11 +943,9 @@ export default function App() {
               initialCity={initialCity}
               lang={lang}
               t={t}
+              familyMembers={familyMembers}
             />
           )}
-
-
-          {/* TRIAGE */}
 
           {activeTab === 'triage' && (
             <SymptomTriage
@@ -1089,9 +958,6 @@ export default function App() {
             />
           )}
 
-
-          {/* REPORTS */}
-
           {activeTab === 'reports' && (
             <Reports
               user={session?.user || null}
@@ -1099,48 +965,40 @@ export default function App() {
             />
           )}
 
-
-          {/* BOOKINGS */}
-
           {activeTab === 'bookings' && (
-            <MyBookings />
+            <MyBookings onOpenSupport={() => setActiveModal('support')} />
           )}
 
         </main>
+      </div>
+
+      {/* MOBILE BOTTOM NAV */}
+      <nav className="mobile-bottom-nav">
+        {navigationItems.map((item) => (
+          <button
+            key={item.id}
+            className={
+              activeTab === item.id
+                ? 'active'
+                : ''
+            }
+            onClick={() =>
+              handleNavigation(item.id)
+            }
+          >
+            <span className="mobile-nav-icon">
+              <AppIcon
+                type={item.icon}
+                size={21}
+              />
+            </span>
+            <span>
+              {item.label}
+            </span>
+          </button>
+        ))}
+      </nav>
+
     </div>
-
-
-    {/* MOBILE BOTTOM NAV */}
-
-    <nav className="mobile-bottom-nav">
-
-      {navigationItems.map((item) => (
-        <button
-          key={item.id}
-          className={
-            activeTab === item.id
-              ? 'active'
-              : ''
-          }
-          onClick={() =>
-            handleNavigation(item.id)
-          }
-        >
-          <span className="mobile-nav-icon">
-            <AppIcon
-              type={item.icon}
-              size={21}
-            />
-          </span>
-
-          <span>
-            {item.label}
-          </span>
-        </button>
-      ))}
-
-    </nav>
-
-  </div>
   );
 }
