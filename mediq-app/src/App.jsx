@@ -639,20 +639,8 @@ export default function App() {
 
             {activeModal === 'physio' && <PhysioGuideModal onClose={() => setActiveModal(null)} />}
 
-            {activeModal === 'queue' && (
-              <div>
-                <h3 style={{ margin: '0 0 4px', fontFamily: 'Fraunces, serif', fontSize: '20px', color: 'var(--teal-900)' }}>Live Queue Tracker</h3>
-                <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--ink-soft)' }}>Monitor your active hospital or clinic consultation tokens in real-time.</p>
-                {activeQueueToken ? (
-                  <div style={{ background: 'var(--sand-50)', padding: '16px', borderRadius: '16px', border: '1px solid var(--line)', textAlign: 'center' }}>
-                    <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--teal-700)', textTransform: 'uppercase' }}>Active Token #{activeQueueToken.number}</div>
-                    <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--teal-900)', margin: '6px 0' }}>Dr. {activeQueueToken.doctorName}</div>
-                    <div style={{ fontSize: '13px', color: 'var(--ink-soft)' }}>{activeQueueToken.hospitalName}</div>
-                  </div>
-                ) : (
-                  <div style={{ textAlign: 'center', padding: '30px 10px', color: 'var(--ink-soft)', fontSize: '13px' }}>You do not have any active queue bookings right now. Book a token from the home screen to track it live here.</div>
-                )}
-              </div>
+          {activeModal === 'queue' && (
+              <LiveQueueTracker user={session?.user || null} onClose={() => setActiveModal(null)} />
             )}
 
             {activeModal === 'sos' && (
