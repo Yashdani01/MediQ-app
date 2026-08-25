@@ -572,8 +572,19 @@ export default function App() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
                   {familyMembers.map((m) => (
                     <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--sand-50)', padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--line)' }}>
-                      <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--ink)' }}>{m.name}</span>
-                      <span style={{ fontSize: '11px', color: 'var(--teal-700)', fontWeight: '700', background: 'var(--sand-200)', padding: '2px 8px', borderRadius: '6px' }}>{m.relation || 'Self'}</span>
+                      <div>
+                        <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--ink)' }}>{m.name}</span>
+                        <span style={{ marginLeft: '8px', fontSize: '11px', color: 'var(--teal-700)', fontWeight: '700', background: 'var(--sand-200)', padding: '2px 8px', borderRadius: '6px' }}>{m.relation || 'Self'}</span>
+                      </div>
+                      {m.name !== 'Self (Primary)' && (
+                        <button 
+                          onClick={() => setFamilyMembers(familyMembers.filter(item => item.id !== m.id))}
+                          style={{ background: '#fee2e2', border: 'none', color: '#dc2626', width: '24px', height: '24px', borderRadius: '50%', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
+                          title="Remove member"
+                        >
+                          ✕
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -589,7 +600,6 @@ export default function App() {
                 <button onClick={() => { if (newFamilyName.trim()) { setFamilyMembers([...familyMembers, { id: Date.now(), name: newFamilyName, relation: newFamilyRelation }]); setNewFamilyName(''); }}} style={{ width: '100%', marginTop: '10px', background: 'var(--teal-900)', color: '#fff', border: 'none', padding: '11px', borderRadius: '12px', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}>Add Family Member</button>
               </div>
             )}
-
             {activeModal === 'symptoms' && (
               <div>
                 <h3 style={{ margin: '0 0 4px', fontFamily: 'Fraunces, serif', fontSize: '20px', color: 'var(--teal-900)' }}>{t.symptomsTitle}</h3>
