@@ -18,68 +18,21 @@ import {
 } from '../hospitalData';
 
 import { supabase } from '../supabaseClient';
-import './Login.css';
 
 const STATUS_OPTIONS = [
-  {
-    value: 'available',
-    label: 'Available',
-    color: '#0f9f78',
-    soft: '#e8f8f2',
-  },
-  {
-    value: 'delayed',
-    label: 'Delayed',
-    color: '#c98917',
-    soft: '#fff7df',
-  },
-  {
-    value: 'on_break',
-    label: 'On Break',
-    color: '#64748b',
-    soft: '#f1f5f9',
-  },
-  {
-    value: 'not_started',
-    label: 'Not Started',
-    color: '#dc5a50',
-    soft: '#fff0ef',
-  },
-  {
-    value: 'on_leave',
-    label: 'On Leave / Holiday',
-    color: '#dc5a50',
-    soft: '#fff0ef',
-  },
-  {
-    value: 'completed',
-    label: 'Done for Today',
-    color: '#64748b',
-    soft: '#f1f5f9',
-  },
+  { value: 'available', label: 'Available', color: '#10b981', soft: '#dcfce7' },
+  { value: 'delayed', label: 'Delayed', color: '#f59e0b', soft: '#fef3c7' },
+  { value: 'on_break', label: 'On Break', color: '#64748b', soft: '#f1f5f9' },
+  { value: 'not_started', label: 'Not Started', color: '#ef4444', soft: '#fee2e2' },
+  { value: 'on_leave', label: 'On Leave', color: '#ef4444', soft: '#fee2e2' },
+  { value: 'completed', label: 'Done Today', color: '#64748b', soft: '#f1f5f9' },
 ];
 
 const SPECIALTIES = [
-  'General Physician',
-  'Gynecologist',
-  'Orthopedic',
-  'ENT Specialist',
-  'Dermatologist',
-  'Pediatrician',
-  'Cardiologist',
-  'Dentist',
-  'Ophthalmologist',
-  'Psychiatrist',
-  'Neurologist',
-  'Urologist',
-  'Gastroenterologist',
-  'General Surgeon',
-  'Diabetologist',
-  'Nephrologist',
-  'Pulmonologist',
-  'Homeopath',
-  'Ayurvedic Physician',
-  'Physiotherapist',
+  'General Physician', 'Gynecologist', 'Orthopedic', 'ENT Specialist',
+  'Dermatologist', 'Pediatrician', 'Cardiologist', 'Dentist',
+  'Ophthalmologist', 'Psychiatrist', 'Neurologist', 'Urologist',
+  'Gastroenterologist', 'General Surgeon', 'Diabetologist', 'Physiotherapist',
 ];
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -96,11 +49,9 @@ const DEFAULT_SCHEDULE = {
 
 function formatTime(t) {
   if (!t) return '';
-
   const [h, m] = t.split(':').map(Number);
   const period = h >= 12 ? 'PM' : 'AM';
   const hour = h % 12 === 0 ? 12 : h % 12;
-
   return `${hour}:${String(m).padStart(2, '0')} ${period}`;
 }
 
@@ -116,61 +67,6 @@ function getInitials(name = '') {
       .toUpperCase() || 'DR'
   );
 }
-
-const cardStyle = {
-  background: '#ffffff',
-  border: '1px solid #e8e4dc',
-  borderRadius: 24,
-  boxShadow: '0 10px 28px rgba(32,44,39,0.06)',
-};
-
-const inputStyle = {
-  width: '100%',
-  boxSizing: 'border-box',
-  padding: '12px 14px',
-  borderRadius: 14,
-  border: '1px solid #dedbd3',
-  background: '#fff',
-  color: '#173a34',
-  fontSize: 14,
-  outline: 'none',
-};
-
-const primaryBtn = {
-  border: 'none',
-  background: '#123c35',
-  color: '#fff',
-  fontWeight: 800,
-  cursor: 'pointer',
-  borderRadius: 14,
-};
-
-const goldBtn = {
-  border: 'none',
-  background: '#c99d43',
-  color: '#173a34',
-  fontWeight: 800,
-  cursor: 'pointer',
-  borderRadius: 14,
-};
-
-const ghostBtn = {
-  border: '1px solid #dfdbd2',
-  background: '#fff',
-  color: '#24433d',
-  fontWeight: 700,
-  cursor: 'pointer',
-  borderRadius: 14,
-};
-
-const dangerBtn = {
-  border: '1px solid #f1c9c5',
-  background: '#fff5f4',
-  color: '#c94f45',
-  fontWeight: 800,
-  cursor: 'pointer',
-  borderRadius: 14,
-};
 
 export default function ClinicPortal() {
   const [pin, setPin] = useState('');
@@ -195,15 +91,12 @@ export default function ClinicPortal() {
 
   const [showSettingsDrawer, setShowSettingsDrawer] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
-
   const [showAddForm, setShowAddForm] = useState(false);
 
   const [newName, setNewName] = useState('');
   const [newDegrees, setNewDegrees] = useState('MBBS, MD');
   const [newPtr, setNewPtr] = useState('99.0');
-  const [newSpecialties, setNewSpecialties] = useState([
-    'General Physician',
-  ]);
+  const [newSpecialties, setNewSpecialties] = useState(['General Physician']);
   const [newAvgMinutes, setNewAvgMinutes] = useState('10');
   const [newFee, setNewFee] = useState('');
   const [daySchedules, setDaySchedules] = useState(DEFAULT_SCHEDULE);
@@ -215,8 +108,7 @@ export default function ClinicPortal() {
   const [editPtr, setEditPtr] = useState('');
   const [editSpecialties, setEditSpecialties] = useState([]);
   const [editFee, setEditFee] = useState('');
-  const [editDaySchedules, setEditDaySchedules] =
-    useState(DEFAULT_SCHEDULE);
+  const [editDaySchedules, setEditDaySchedules] = useState(DEFAULT_SCHEDULE);
 
   const [showWalkinForm, setShowWalkinForm] = useState(null);
   const [walkinName, setWalkinName] = useState('');
@@ -230,7 +122,6 @@ export default function ClinicPortal() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const hId = params.get('hospital_id');
-
     if (hId) {
       supabase
         .from('hospitals')
@@ -245,27 +136,17 @@ export default function ClinicPortal() {
 
   const loadDoctors = async (currentPin) => {
     if (!currentPin) return;
-
     setRefreshing(true);
-
     try {
       const data = await getDoctorsForClinic(currentPin);
-
       setDoctors(data || []);
-
       const bookingsMap = {};
-
       if (data?.length) {
         for (const doc of data) {
-          const bookings = await getTodaysBookings(
-            currentPin,
-            doc.id
-          );
-
+          const bookings = await getTodaysBookings(currentPin, doc.id);
           bookingsMap[doc.id] = bookings || [];
         }
       }
-
       setBookingsByDoctor(bookingsMap);
     } finally {
       setRefreshing(false);
@@ -274,52 +155,40 @@ export default function ClinicPortal() {
 
   const loadUpi = async (currentPin) => {
     if (!currentPin) return;
-
     const data = await getHospitalUpi(currentPin);
-
     setUpiId(data || '');
     setUpiInput(data || '');
   };
 
   const loadLocation = async (currentPin) => {
     if (!currentPin) return;
-
     const data = await getHospitalLocation(currentPin);
-
     setLocationStr(data || '');
     setLocationInput(data || '');
   };
 
   useEffect(() => {
     if (!unlocked || !unlockedPin) return undefined;
-
     loadDoctors(unlockedPin);
     loadUpi(unlockedPin);
     loadLocation(unlockedPin);
-
     const interval = setInterval(() => {
       loadDoctors(unlockedPin);
     }, 30000);
-
     return () => clearInterval(interval);
   }, [unlocked, unlockedPin]);
 
   const handleUnlock = async (e) => {
     e.preventDefault();
-
     setLoading(true);
     setError('');
-
     const cleanPin = pin.trim();
-
     const hospitalId = await checkClinicPin(cleanPin);
-
     if (!hospitalId) {
       setError('Invalid Access PIN. Please try again.');
       setLoading(false);
       return;
     }
-
     const { data: hospData } = await supabase
       .from('hospitals')
       .select('name')
@@ -329,7 +198,6 @@ export default function ClinicPortal() {
     if (hospData?.name) {
       setClinicName(hospData.name);
     }
-
     setUnlockedPin(cleanPin);
     setUnlocked(true);
     setLoading(false);
@@ -347,40 +215,24 @@ export default function ClinicPortal() {
 
   const handleSaveUpi = async () => {
     setSavingUpi(true);
-
-    const { error: saveError } =
-      await updateHospitalUpi(
-        unlockedPin,
-        upiInput.trim()
-      );
-
+    const { error: saveError } = await updateHospitalUpi(unlockedPin, upiInput.trim());
     setSavingUpi(false);
-
     if (saveError) {
       setError('Could not save UPI ID.');
       return;
     }
-
     setUpiId(upiInput.trim());
     setEditingUpi(false);
   };
 
   const handleSaveLocation = async () => {
     setSavingLocation(true);
-
-    const { error: saveError } =
-      await updateHospitalLocation(
-        unlockedPin,
-        locationInput.trim()
-      );
-
+    const { error: saveError } = await updateHospitalLocation(unlockedPin, locationInput.trim());
     setSavingLocation(false);
-
     if (saveError) {
       setError('Could not save location.');
       return;
     }
-
     setLocationStr(locationInput.trim());
     setEditingLocation(false);
   };
@@ -397,19 +249,13 @@ export default function ClinicPortal() {
 
   const handleAddDoctor = async (e) => {
     e.preventDefault();
-
     if (!newName.trim()) {
       alert('Please enter doctor name.');
       return;
     }
-
     setSavingDoctor(true);
     setError('');
-
-    const activeDays = Object.keys(daySchedules).filter(
-      (day) => daySchedules[day].active
-    );
-
+    const activeDays = Object.keys(daySchedules).filter((day) => daySchedules[day].active);
     try {
       await addDoctor(
         unlockedPin,
@@ -422,13 +268,8 @@ export default function ClinicPortal() {
         JSON.stringify(daySchedules),
         newFee ? parseFloat(newFee) : 0
       );
-
-      const latestDocs =
-        await getDoctorsForClinic(unlockedPin);
-
-      const justAdded =
-        latestDocs?.[latestDocs.length - 1];
-
+      const latestDocs = await getDoctorsForClinic(unlockedPin);
+      const justAdded = latestDocs?.[latestDocs.length - 1];
       if (justAdded) {
         await supabase
           .from('doctors')
@@ -440,7 +281,6 @@ export default function ClinicPortal() {
           })
           .eq('id', justAdded.id);
       }
-
       setNewName('');
       setNewDegrees('MBBS, MD');
       setNewPtr('99.0');
@@ -448,16 +288,10 @@ export default function ClinicPortal() {
       setNewAvgMinutes('10');
       setNewFee('');
       setDaySchedules(DEFAULT_SCHEDULE);
-
       setShowAddForm(false);
-
       await loadDoctors(unlockedPin);
     } catch (err) {
-      alert(
-        `Error adding doctor: ${
-          err.message || String(err)
-        }`
-      );
+      alert(`Error adding doctor: ${err.message || String(err)}`);
     } finally {
       setSavingDoctor(false);
     }
@@ -465,2623 +299,446 @@ export default function ClinicPortal() {
 
   const startEdit = (doc) => {
     setEditingId(doc.id);
-
     setEditName(doc.name);
-
-    setEditDegrees(
-      doc.degrees || 'MBBS'
-    );
-
-    setEditPtr(
-      String(doc.ptr_score || 99.0)
-    );
-
-    setEditSpecialties(
-      doc.specialties || [
-        doc.specialty || 'General Physician',
-      ]
-    );
-
-    setEditFee(
-      doc.consultation_fee != null
-        ? String(doc.consultation_fee)
-        : ''
-    );
-
-    setEditDaySchedules(
-      doc.custom_schedule || DEFAULT_SCHEDULE
-    );
+    setEditDegrees(doc.degrees || 'MBBS');
+    setEditPtr(String(doc.ptr_score || 99.0));
+    setEditSpecialties(doc.specialties || [doc.specialty || 'General Physician']);
+    setEditFee(doc.consultation_fee != null ? String(doc.consultation_fee) : '');
+    setEditDaySchedules(doc.custom_schedule || DEFAULT_SCHEDULE);
   };
 
   const handleSaveEdit = async (doctorId) => {
-    const activeDays =
-      Object.keys(editDaySchedules).filter(
-        (day) => editDaySchedules[day]?.active
-      );
-
-    await updateDoctor(
-      unlockedPin,
-      doctorId,
-      editName,
-      editSpecialties.join(', '),
-      10,
-      activeDays,
-      '10:00',
-      '14:00',
-      '',
-      editFee ? parseFloat(editFee) : null
-    );
-
-    await supabase
-      .from('doctors')
-      .update({
-        degrees: editDegrees,
-        ptr_score: parseFloat(editPtr) || 99.0,
-        specialties: editSpecialties,
-        custom_schedule: editDaySchedules,
-      })
-      .eq('id', doctorId);
-
+    const activeDays = Object.keys(editDaySchedules).filter((day) => editDaySchedules[day]?.active);
+    await updateDoctor(unlockedPin, doctorId, editName, editSpecialties.join(', '), 10, activeDays, '10:00', '14:00', '', editFee ? parseFloat(editFee) : null);
+    await supabase.from('doctors').update({
+      degrees: editDegrees,
+      ptr_score: parseFloat(editPtr) || 99.0,
+      specialties: editSpecialties,
+      custom_schedule: editDaySchedules,
+    }).eq('id', doctorId);
     setEditingId(null);
-
     await loadDoctors(unlockedPin);
   };
 
-  const handleDelete = async (
-    doctorId,
-    name
-  ) => {
-    if (
-      !window.confirm(
-        `Remove Dr. ${name} from your clinic?`
-      )
-    ) {
-      return;
-    }
-
-    await deleteDoctor(
-      unlockedPin,
-      doctorId
-    );
-
+  const handleDelete = async (doctorId, name) => {
+    if (!window.confirm(`Remove Dr. ${name} from your clinic?`)) return;
+    await deleteDoctor(unlockedPin, doctorId);
     await loadDoctors(unlockedPin);
   };
 
-  const handleStatusChange = async (
-    doctorId,
-    status
-  ) => {
-    await updateDoctorStatus(
-      unlockedPin,
-      doctorId,
-      status,
-      status === 'delayed' ? 10 : 0
-    );
-
+  const handleStatusChange = async (doctorId, status) => {
+    await updateDoctorStatus(unlockedPin, doctorId, status, status === 'delayed' ? 10 : 0);
     await loadDoctors(unlockedPin);
   };
 
   const refreshBookings = async (doctorId) => {
-    const data = await getTodaysBookings(
-      unlockedPin,
-      doctorId
-    );
-
-    setBookingsByDoctor((prev) => ({
-      ...prev,
-      [doctorId]: data || [],
-    }));
+    const data = await getTodaysBookings(unlockedPin, doctorId);
+    setBookingsByDoctor((prev) => ({ ...prev, [doctorId]: data || [] }));
   };
 
-  const handleWalkinSubmit = async (
-    doctorId
-  ) => {
+  const handleWalkinSubmit = async (doctorId) => {
     if (!walkinName.trim()) return;
-
-    await addWalkinBooking(
-      unlockedPin,
-      doctorId,
-      walkinName.trim(),
-      walkinPhone.trim()
-    );
-
+    await addWalkinBooking(unlockedPin, doctorId, walkinName.trim(), walkinPhone.trim());
     setWalkinName('');
     setWalkinPhone('');
-
     await refreshBookings(doctorId);
     await loadDoctors(unlockedPin);
   };
 
-  const toggleTodaysPatients = async (
-    doctorId
-  ) => {
+  const toggleTodaysPatients = async (doctorId) => {
     if (expandedDoctor === doctorId) {
       setExpandedDoctor(null);
       return;
     }
-
     setExpandedDoctor(doctorId);
-
     setLoadingBookings(true);
-
     await refreshBookings(doctorId);
-
     setLoadingBookings(false);
   };
 
-  const handleCheckIn = async (
-    appointmentId,
-    doctorId
-  ) => {
+  const handleCheckIn = async (appointmentId, doctorId) => {
     setUpdatingPatient(appointmentId);
-
-    const { error: checkInError } =
-      await checkInAppointment(
-        unlockedPin,
-        appointmentId
-      );
-
+    await checkInAppointment(unlockedPin, appointmentId);
     setUpdatingPatient(null);
-
-    if (checkInError) {
-      setError('Could not check in patient.');
-      return;
-    }
-
     await refreshBookings(doctorId);
   };
 
-  const handleMarkSeen = async (
-    appointmentId,
-    doctorId
-  ) => {
+  const handleMarkSeen = async (appointmentId, doctorId) => {
     setUpdatingPatient(appointmentId);
-
-    const { error: seenError } =
-      await markAppointmentSeen(
-        unlockedPin,
-        appointmentId
-      );
-
+    await markAppointmentSeen(unlockedPin, appointmentId);
     setUpdatingPatient(null);
-
-    if (seenError) {
-      console.error(
-        'Mark seen error:',
-        seenError
-      );
-
-      setError(
-        'Could not update patient status.'
-      );
-
-      return;
-    }
-
     await refreshBookings(doctorId);
     await loadDoctors(unlockedPin);
   };
 
-  const handleNoShowCancel = async (
-    appointmentId,
-    doctorId
-  ) => {
-    if (
-      !window.confirm(
-        'Mark this patient as cancelled / did not show?'
-      )
-    ) {
-      return;
-    }
-
+  const handleNoShowCancel = async (appointmentId, doctorId) => {
+    if (!window.confirm('Mark this patient as cancelled / did not show?')) return;
     setUpdatingPatient(appointmentId);
-
-    const { error: cancelError } =
-      await cancelAppointment(
-        appointmentId
-      );
-
+    await cancelAppointment(appointmentId);
     setUpdatingPatient(null);
-
-    if (cancelError) {
-      console.error(
-        'Cancel appointment error:',
-        cancelError
-      );
-
-      setError(
-        'Could not cancel booking.'
-      );
-
-      return;
-    }
-
     await refreshBookings(doctorId);
     await loadDoctors(unlockedPin);
   };
-
-  /* LOGIN SCREEN */
 
   if (!unlocked) {
     return (
-      <div
-        style={{
-          minHeight: '100vh',
-          background:
-            'radial-gradient(circle at top right, rgba(201,157,67,0.15), transparent 32%), #f6f3ed',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: 20,
-          fontFamily:
-            'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-        }}
-      >
-        <div
-          style={{
-            ...cardStyle,
-            width: '100%',
-            maxWidth: 410,
-            padding: '34px 28px 28px',
-            textAlign: 'center',
-          }}
-        >
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 7,
-              background: '#edf7f3',
-              border: '1px solid #cfe8de',
-              color: '#0f7b60',
-              fontSize: 11,
-              fontWeight: 800,
-              padding: '6px 12px',
-              borderRadius: 999,
-              marginBottom: 22,
-            }}
-          >
-            <span
-              style={{
-                width: 7,
-                height: 7,
-                borderRadius: '50%',
-                background: '#0f9f78',
-              }}
-            />
-
-            MEDIQ SECURE ACCESS
-          </div>
-
-          <div
-            style={{
-              width: 72,
-              height: 72,
-              borderRadius: 24,
-              background: '#123c35',
-              color: '#d7b45e',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 18px',
-              fontSize: 28,
-            }}
-          >
-            ✚
-          </div>
-
-          <h1
-            style={{
-              fontFamily:
-                'Georgia, "Times New Roman", serif',
-              fontSize: 28,
-              color: '#173a34',
-              margin: '0 0 8px',
-            }}
-          >
-            {clinicName}
-          </h1>
-
-          <p
-            style={{
-              fontSize: 13,
-              lineHeight: 1.6,
-              color: '#78817d',
-              margin: '0 0 28px',
-            }}
-          >
-            Clinic staff portal
-            <br />
-            Enter your secure access PIN to continue.
-          </p>
-
-          <form
-            onSubmit={handleUnlock}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 12,
-            }}
-          >
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0b332c 0%, #062b25 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, fontFamily: 'sans-serif' }}>
+        <div style={{ background: '#fff', width: '100%', maxWidth: '400px', borderRadius: '24px', padding: '32px 24px', boxShadow: '0 20px 40px rgba(0,0,0,0.3)', textAlign: 'center' }}>
+          <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: '#e6f4ea', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: '28px', fontWeight: 'bold' }}>✚</div>
+          <h1 style={{ fontFamily: 'Fraunces, serif', fontSize: '22px', color: '#0b332c', margin: '0 0 6px' }}>{clinicName}</h1>
+          <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 24px' }}>Secure Staff Access Portal. Enter 4-digit PIN.</p>
+          <form onSubmit={handleUnlock} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <input
               type="password"
               inputMode="numeric"
-              placeholder="••••••"
+              placeholder="••••"
               maxLength={6}
               value={pin}
-              onChange={(e) =>
-                setPin(
-                  e.target.value.replace(/\D/g, '')
-                )
-              }
+              onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
               required
-              style={{
-                ...inputStyle,
-                textAlign: 'center',
-                fontSize: 24,
-                fontWeight: 800,
-                letterSpacing: 9,
-                padding: '16px',
-              }}
+              style={{ width: '100%', padding: '14px', borderRadius: '14px', border: '1px solid #e2e8f0', textAlign: 'center', fontSize: '24px', fontWeight: 'bold', letterSpacing: '8px', boxSizing: 'border-box' }}
             />
-
-            <button
-              type="submit"
-              disabled={loading || !pin}
-              style={{
-                ...primaryBtn,
-                width: '100%',
-                padding: '15px',
-                fontSize: 14,
-                opacity:
-                  loading || !pin ? 0.55 : 1,
-              }}
-            >
-              {loading
-                ? 'Verifying access...'
-                : 'Enter Clinic Portal →'}
+            <button type="submit" disabled={loading || !pin} style={{ width: '100%', background: '#10b981', color: '#fff', border: 'none', padding: '14px', borderRadius: '14px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', opacity: loading || !pin ? 0.6 : 1 }}>
+              {loading ? 'Verifying...' : 'Access Portal →'}
             </button>
           </form>
-
-          {error && (
-            <p
-              style={{
-                color: '#b7473e',
-                fontSize: 13,
-                margin: '16px 0 0',
-                background: '#fff1ef',
-                border:
-                  '1px solid #f1cbc7',
-                padding: '10px 12px',
-                borderRadius: 12,
-              }}
-            >
-              {error}
-            </p>
-          )}
+          {error && <p style={{ color: '#ef4444', fontSize: '12px', marginTop: '12px', background: '#fef2f2', padding: '8px', borderRadius: '8px', fontWeight: '600' }}>{error}</p>}
         </div>
       </div>
     );
   }
-
-  const allBookings =
-    Object.values(bookingsByDoctor).flat();
-
-  const totalBookings =
-    allBookings.length;
-
-  const waitingBookings =
-    allBookings.filter(
-      (b) => b.status === 'waiting'
-    ).length;
-
-  const completedBookings =
-    allBookings.filter(
-      (b) =>
-        b.status === 'completed' ||
-        b.status === 'seen'
-    ).length;
-
-  const todayDateStr =
-    new Date().toLocaleDateString(
-      'en-US',
-      {
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
-      }
-    );
+  const allBookings = Object.values(bookingsByDoctor).flat();
+  const totalBookings = allBookings.length;
+  const waitingBookings = allBookings.filter((b) => b.status === 'waiting' || b.status === 'checked_in').length;
+  const completedBookings = allBookings.filter((b) => b.status === 'completed' || b.status === 'seen').length;
+  const todayDateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: '#f6f3ed',
-        color: '#173a34',
-        fontFamily:
-          'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-      }}
-    >
-      <div
-        style={{
-          maxWidth: 680,
-          margin: '0 auto',
-          padding: '18px 14px 48px',
-          boxSizing: 'border-box',
-        }}
-      >
-        {/* HEADER */}
-
-        <div
-          style={{
-            background: '#fdfcf9',
-            borderRadius: 24,
-            padding: '18px',
-            marginBottom: 14,
-            border: '1px solid #ebe7de',
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              justifyContent:
-                'space-between',
-              gap: 12,
-              alignItems: 'flex-start',
-            }}
-          >
-            <div style={{ minWidth: 0 }}>
-              <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  color: '#0f7b60',
-                  fontSize: 10,
-                  fontWeight: 900,
-                  letterSpacing: 1,
-                  marginBottom: 7,
-                }}
-              >
-                <span
-                  style={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: '50%',
-                    background: '#0f9f78',
-                  }}
-                />
-
-                MEDIQ CLINIC PORTAL
-              </div>
-
-              <h1
-                style={{
-                  margin: 0,
-                  fontFamily:
-                    'Georgia, "Times New Roman", serif',
-                  color: '#173a34',
-                  fontSize: 25,
-                  lineHeight: 1.12,
-                }}
-              >
-                {clinicName}
-              </h1>
-
-              <p
-                style={{
-                  margin: '6px 0 0',
-                  fontSize: 12,
-                  color: '#8a918e',
-                }}
-              >
-                {todayDateStr}
-              </p>
-            </div>
-
-            <button
-              onClick={() =>
-                loadDoctors(unlockedPin)
-              }
-              disabled={refreshing}
-              style={{
-                width: 42,
-                height: 42,
-                borderRadius: 14,
-                border:
-                  '1px solid #e4e0d7',
-                background: '#fff',
-                color: '#173a34',
-                cursor: 'pointer',
-                fontSize: 18,
-                opacity:
-                  refreshing ? 0.6 : 1,
-              }}
-            >
-              ↻
-            </button>
-          </div>
-
-          <div
-            style={{
-              display: 'flex',
-              gap: 8,
-              marginTop: 18,
-              flexWrap: 'wrap',
-            }}
-          >
-            <button
-              onClick={() =>
-                setShowSettingsDrawer(
-                  !showSettingsDrawer
-                )
-              }
-              style={{
-                ...ghostBtn,
-                padding: '10px 14px',
-                fontSize: 12,
-              }}
-            >
-              ⚙ Clinic Settings
-            </button>
-
-            <button
-              onClick={handleLogout}
-              style={{
-                ...dangerBtn,
-                padding: '10px 14px',
-                fontSize: 12,
-              }}
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-
-        {/* STATS */}
-
-        <div style={{ marginBottom: 22 }}>
-          <p
-            style={{
-              margin: '0 0 9px 4px',
-              fontSize: 11,
-              fontWeight: 900,
-              color: '#8a918e',
-              textTransform: 'uppercase',
-              letterSpacing: 0.8,
-            }}
-          >
-            Today at a glance
-          </p>
-
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns:
-                'repeat(3, minmax(0, 1fr))',
-              gap: 8,
-            }}
-          >
-            {[
-              {
-                label: 'Total',
-                value: totalBookings,
-                color: '#173a34',
-                bg: '#fff',
-              },
-              {
-                label: 'Waiting',
-                value: waitingBookings,
-                color: '#b67c13',
-                bg: '#fffaf0',
-              },
-              {
-                label: 'Completed',
-                value: completedBookings,
-                color: '#0f8c6b',
-                bg: '#f0faf6',
-              },
-            ].map((item) => (
-              <div
-                key={item.label}
-                style={{
-                  background: item.bg,
-                  border:
-                    '1px solid #e9e5dc',
-                  borderRadius: 18,
-                  padding: '14px 12px',
-                }}
-              >
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 10,
-                    fontWeight: 800,
-                    color: '#8a918e',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  {item.label}
-                </p>
-
-                <p
-                  style={{
-                    margin: '5px 0 0',
-                    fontSize: 24,
-                    fontWeight: 900,
-                    color: item.color,
-                  }}
-                >
-                  {item.value}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* SETTINGS */}
-
-        {showSettingsDrawer && (
-          <div
-            style={{
-              ...cardStyle,
-              padding: 16,
-              marginBottom: 22,
-              background: '#fffdf8',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent:
-                  'space-between',
-                alignItems: 'center',
-                marginBottom: 14,
-              }}
-            >
-              <div>
-                <p
-                  style={{
-                    margin: 0,
-                    color: '#9a7a35',
-                    fontSize: 10,
-                    fontWeight: 900,
-                    letterSpacing: 0.8,
-                  }}
-                >
-                  CLINIC MANAGEMENT
-                </p>
-
-                <h3
-                  style={{
-                    margin: '4px 0 0',
-                    color: '#173a34',
-                    fontSize: 17,
-                  }}
-                >
-                  Settings & Payment
-                </h3>
-              </div>
-
-              <button
-                onClick={() =>
-                  setShowSettingsDrawer(false)
-                }
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 10,
-                  border:
-                    '1px solid #e3ded4',
-                  background: '#fff',
-                  color: '#65716d',
-                  cursor: 'pointer',
-                }}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div
-              style={{
-                display: 'grid',
-                gap: 12,
-              }}
-            >
-              {/* LOCATION */}
-
-              <div
-                style={{
-                  padding: 14,
-                  borderRadius: 18,
-                  background: '#f8f7f2',
-                  border:
-                    '1px solid #ebe7de',
-                }}
-              >
-                <p
-                  style={{
-                    margin: '0 0 4px',
-                    fontSize: 13,
-                    fontWeight: 800,
-                  }}
-                >
-                  📍 Clinic Location
-                </p>
-
-                <p
-                  style={{
-                    margin: '0 0 12px',
-                    fontSize: 12,
-                    color: '#7c8581',
-                  }}
-                >
-                  Add the Google Maps link patients
-                  can use for navigation.
-                </p>
-
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: 8,
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  <button
-                    onClick={() => {
-                      setLocationInput(locationStr);
-
-                      setEditingLocation(
-                        !editingLocation
-                      );
-                    }}
-                    style={{
-                      ...ghostBtn,
-                      padding: '9px 12px',
-                      fontSize: 12,
-                    }}
-                  >
-                    {locationStr
-                      ? 'Edit Map Link'
-                      : '+ Add Map Link'}
-                  </button>
-
-                  {locationStr && (
-                    <a
-                      href={locationStr}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{
-                        ...primaryBtn,
-                        padding: '9px 12px',
-                        fontSize: 12,
-                        textDecoration: 'none',
-                      }}
-                    >
-                      Test Route →
-                    </a>
-                  )}
-                </div>
-
-                {editingLocation && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 8,
-                      marginTop: 10,
-                    }}
-                  >
-                    <input
-                      placeholder="Paste Google Maps share link"
-                      value={locationInput}
-                      onChange={(e) =>
-                        setLocationInput(
-                          e.target.value
-                        )
-                      }
-                      style={inputStyle}
-                    />
-
-                    <button
-                      onClick={handleSaveLocation}
-                      disabled={savingLocation}
-                      style={{
-                        ...primaryBtn,
-                        padding: 11,
-                      }}
-                    >
-                      {savingLocation
-                        ? 'Saving...'
-                        : 'Save Location'}
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* UPI */}
-
-              <div
-                style={{
-                  padding: 14,
-                  borderRadius: 18,
-                  background: '#f8f7f2',
-                  border:
-                    '1px solid #ebe7de',
-                }}
-              >
-                <p
-                  style={{
-                    margin: '0 0 4px',
-                    fontSize: 13,
-                    fontWeight: 800,
-                  }}
-                >
-                  ₹ Clinic UPI Payment
-                </p>
-
-                <p
-                  style={{
-                    margin: '0 0 12px',
-                    fontSize: 12,
-                    color: '#7c8581',
-                  }}
-                >
-                  Manage the UPI ID and show a
-                  payment QR code.
-                </p>
-
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: 8,
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  <button
-                    onClick={() => {
-                      setUpiInput(upiId);
-
-                      setEditingUpi(
-                        !editingUpi
-                      );
-                    }}
-                    style={{
-                      ...ghostBtn,
-                      padding: '9px 12px',
-                      fontSize: 12,
-                    }}
-                  >
-                    {upiId
-                      ? 'Edit UPI ID'
-                      : '+ Add UPI ID'}
-                  </button>
-
-                  {upiId && (
-                    <button
-                      onClick={() =>
-                        setShowQrModal(true)
-                      }
-                      style={{
-                        ...goldBtn,
-                        padding: '9px 12px',
-                        fontSize: 12,
-                      }}
-                    >
-                      Show Payment QR
-                    </button>
-                  )}
-                </div>
-
-                {editingUpi && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 8,
-                      marginTop: 10,
-                    }}
-                  >
-                    <input
-                      placeholder="Clinic UPI ID"
-                      value={upiInput}
-                      onChange={(e) =>
-                        setUpiInput(
-                          e.target.value
-                        )
-                      }
-                      style={inputStyle}
-                    />
-
-                    <button
-                      onClick={handleSaveUpi}
-                      disabled={savingUpi}
-                      style={{
-                        ...primaryBtn,
-                        padding: 11,
-                      }}
-                    >
-                      {savingUpi
-                        ? 'Saving...'
-                        : 'Save UPI ID'}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {error && (
-          <div
-            style={{
-              marginBottom: 16,
-              padding: '11px 13px',
-              borderRadius: 14,
-              background: '#fff1ef',
-              border:
-                '1px solid #f0cbc6',
-              color: '#b7473e',
-              fontSize: 13,
-            }}
-          >
-            {error}
-          </div>
-        )}
-
-        {/* DOCTOR HEADER */}
-
-        <div
-          style={{
-            display: 'flex',
-            justifyContent:
-              'space-between',
-            alignItems: 'end',
-            gap: 12,
-            margin: '0 2px 12px',
-          }}
-        >
+    <div style={{ minHeight: '100vh', background: '#f8f6f0', color: '#0b332c', fontFamily: 'sans-serif', paddingBottom: '60px' }}>
+      <div style={{ maxWidth: '680px', margin: '0 auto', padding: '20px 16px', boxSizing: 'border-box' }}>
+        
+        {/* TOP HEADER */}
+        <div style={{ background: '#fff', borderRadius: '20px', padding: '20px', marginBottom: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 15px rgba(0,0,0,0.02)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <p
-              style={{
-                margin: 0,
-                color: '#9a7a35',
-                fontSize: 10,
-                fontWeight: 900,
-                letterSpacing: 0.8,
-              }}
-            >
-              DOCTOR ROSTER
-            </p>
-
-            <h2
-              style={{
-                margin: '4px 0 0',
-                fontFamily:
-                  'Georgia, "Times New Roman", serif',
-                fontSize: 23,
-                color: '#173a34',
-              }}
-            >
-              Manage your doctors
-            </h2>
+            <div style={{ fontSize: '10.5px', fontWeight: '800', color: '#10b981', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '2px' }}>Clinic Staff Portal</div>
+            <h1 style={{ fontFamily: 'Fraunces, serif', fontSize: '22px', color: '#0b332c', margin: '0 0 4px' }}>{clinicName}</h1>
+            <p style={{ fontSize: '11.5px', color: '#64748b', margin: 0 }}>📅 {todayDateStr}</p>
           </div>
-
-          <span
-            style={{
-              background: '#eaf5f0',
-              color: '#0f7b60',
-              borderRadius: 999,
-              padding: '7px 10px',
-              fontSize: 11,
-              fontWeight: 800,
-            }}
-          >
-            {doctors.length} Doctor
-            {doctors.length === 1 ? '' : 's'}
-          </span>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button onClick={() => loadDoctors(unlockedPin)} disabled={refreshing} style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', width: '38px', height: '38px', borderRadius: '12px', cursor: 'pointer', fontSize: '16px', color: '#0b332c' }}>↻</button>
+            <button onClick={() => setShowSettingsDrawer(!showSettingsDrawer)} style={{ background: '#e6f4ea', border: '1px solid #bbf7d0', padding: '8px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: '700', color: '#0b332c', cursor: 'pointer' }}>⚙ Settings</button>
+            <button onClick={handleLogout} style={{ background: '#fef2f2', border: '1px solid #fca5a5', padding: '8px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: '700', color: '#dc2626', cursor: 'pointer' }}>Logout</button>
+          </div>
         </div>
 
-        {/* EMPTY STATE */}
+        {/* STATS AT A GLANCE */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '16px' }}>
+          {[
+            { label: 'Total Tokens', value: totalBookings, bg: '#fff', color: '#0b332c' },
+            { label: 'Waiting Queue', value: waitingBookings, bg: '#fffbeb', color: '#d97706' },
+            { label: 'Completed', value: completedBookings, bg: '#f0fdf4', color: '#15803d' },
+          ].map((st, idx) => (
+            <div key={idx} style={{ background: st.bg, border: '1px solid #e2e8f0', borderRadius: '16px', padding: '14px', textAlign: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+              <div style={{ fontSize: '10.5px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px' }}>{st.label}</div>
+              <div style={{ fontSize: '24px', fontWeight: '900', color: st.color, fontFamily: 'Fraunces, serif' }}>{st.value}</div>
+            </div>
+          ))}
+        </div>
 
-        {doctors.length === 0 && (
-          <div
-            style={{
-              ...cardStyle,
-              padding: '34px 20px',
-              textAlign: 'center',
-              marginBottom: 14,
-            }}
-          >
-            <div
-              style={{
-                fontSize: 36,
-                marginBottom: 8,
-              }}
-            >
-              🩺
+        {/* SETTINGS DRAWER */}
+        {showSettingsDrawer && (
+          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '20px', marginBottom: '16px', boxShadow: '0 4px 15px rgba(0,0,0,0.04)' }}>
+            <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '18px', color: '#0b332c', margin: '0 0 12px' }}>Clinic Settings & UPI QR</h3>
+            
+            <div style={{ marginBottom: '14px' }}>
+              <label style={{ fontSize: '12px', fontWeight: '700', color: '#0b332c', display: 'block', marginBottom: '6px' }}>Google Maps Location Link:</label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input placeholder="Paste Google Maps URL" value={locationInput} onChange={(e) => setLocationInput(e.target.value)} style={{ flex: 1, padding: '10px 12px', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '13px' }} />
+                <button onClick={handleSaveLocation} disabled={savingLocation} style={{ background: '#0b332c', color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '10px', fontWeight: '700', fontSize: '12px', cursor: 'pointer' }}>{savingLocation ? 'Saving...' : 'Save'}</button>
+              </div>
             </div>
 
-            <h3
-              style={{
-                fontFamily:
-                  'Georgia, "Times New Roman", serif',
-                margin: '0 0 6px',
-              }}
-            >
-              No doctors added yet
-            </h3>
-
-            <p
-              style={{
-                margin: 0,
-                fontSize: 13,
-                color: '#7c8581',
-              }}
-            >
-              Add your first doctor profile to
-              start managing appointments.
-            </p>
-          </div>
-        )}
-
-        {/* DOCTOR CARDS */}
-
-        {doctors.map((doc) => {
-          const isEditing =
-            editingId === doc.id;
-
-          const docBookings =
-            bookingsByDoctor[doc.id] || [];
-
-          const docWaitingCount =
-            docBookings.filter(
-              (b) =>
-                b.status === 'waiting'
-            ).length;
-
-          const specs =
-            doc.specialties || [
-              doc.specialty ||
-                'General Physician',
-            ];
-
-          const scheduleObj =
-            doc.custom_schedule || {};
-
-          const statusInfo =
-            STATUS_OPTIONS.find(
-              (s) =>
-                s.value === doc.status
-            ) || STATUS_OPTIONS[0];
-
-          return (
-            <div
-              key={doc.id}
-              style={{
-                ...cardStyle,
-                padding: 16,
-                marginBottom: 14,
-              }}
-            >
-              {isEditing ? (
-                <>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent:
-                        'space-between',
-                      alignItems: 'center',
-                      marginBottom: 12,
-                    }}
-                  >
-                    <div>
-                      <p
-                        style={{
-                          margin: 0,
-                          color: '#9a7a35',
-                          fontSize: 10,
-                          fontWeight: 900,
-                        }}
-                      >
-                        EDIT PROFILE
-                      </p>
-
-                      <h3
-                        style={{
-                          margin: '4px 0 0',
-                        }}
-                      >
-                        Doctor Details
-                      </h3>
-                    </div>
-
-                    <button
-                      onClick={() =>
-                        setEditingId(null)
-                      }
-                      style={{
-                        border: 'none',
-                        background:
-                          'transparent',
-                        fontSize: 20,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      ✕
-                    </button>
-                  </div>
-
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 10,
-                    }}
-                  >
-                    <input
-                      value={editName}
-                      onChange={(e) =>
-                        setEditName(
-                          e.target.value
-                        )
-                      }
-                      style={inputStyle}
-                      placeholder="Doctor Name"
-                    />
-
-                    <input
-                      value={editDegrees}
-                      onChange={(e) =>
-                        setEditDegrees(
-                          e.target.value
-                        )
-                      }
-                      style={inputStyle}
-                      placeholder="Degrees"
-                    />
-
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns:
-                          '1fr 1fr',
-                        gap: 8,
-                      }}
-                    >
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={editPtr}
-                        onChange={(e) =>
-                          setEditPtr(
-                            e.target.value
-                          )
-                        }
-                        style={inputStyle}
-                        placeholder="PTR Score"
-                      />
-
-                      <input
-                        type="number"
-                        value={editFee}
-                        onChange={(e) =>
-                          setEditFee(
-                            e.target.value
-                          )
-                        }
-                        style={inputStyle}
-                        placeholder="Fee ₹"
-                      />
-                    </div>
-
-                    <SpecialtySelector
-                      selected={
-                        editSpecialties
-                      }
-                      onToggle={(spec) =>
-                        toggleSpecialty(
-                          spec,
-                          editSpecialties,
-                          setEditSpecialties
-                        )
-                      }
-                    />
-
-                    <ScheduleEditor
-                      value={
-                        editDaySchedules
-                      }
-                      onChange={
-                        setEditDaySchedules
-                      }
-                    />
-
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns:
-                          '1fr 1fr',
-                        gap: 8,
-                      }}
-                    >
-                      <button
-                        onClick={() =>
-                          handleSaveEdit(
-                            doc.id
-                          )
-                        }
-                        style={{
-                          ...primaryBtn,
-                          padding: 12,
-                        }}
-                      >
-                        Save Changes
-                      </button>
-
-                      <button
-                        onClick={() =>
-                          setEditingId(null)
-                        }
-                        style={{
-                          ...ghostBtn,
-                          padding: 12,
-                        }}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  {/* DOCTOR INFO */}
-
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent:
-                        'space-between',
-                      gap: 12,
-                      alignItems:
-                        'flex-start',
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: 'flex',
-                        gap: 11,
-                        minWidth: 0,
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: 48,
-                          height: 48,
-                          flex: '0 0 48px',
-                          borderRadius: 17,
-                          background:
-                            '#123c35',
-                          color: '#d7b45e',
-                          display: 'flex',
-                          alignItems:
-                            'center',
-                          justifyContent:
-                            'center',
-                          fontSize: 14,
-                          fontWeight: 900,
-                        }}
-                      >
-                        {getInitials(
-                          doc.name
-                        )}
-                      </div>
-
-                      <div>
-                        <h3
-                          style={{
-                            margin: 0,
-                            fontSize: 16,
-                          }}
-                        >
-                          {doc.name}
-                        </h3>
-
-                        <p
-                          style={{
-                            margin:
-                              '3px 0 0',
-                            fontSize: 11,
-                            color:
-                              '#a0782b',
-                            fontWeight: 800,
-                          }}
-                        >
-                          {doc.degrees ||
-                            'MBBS, General Practitioner'}
-                        </p>
-
-                        <p
-                          style={{
-                            margin:
-                              '4px 0 0',
-                            fontSize: 11,
-                            color:
-                              '#7c8581',
-                          }}
-                        >
-                          {specs.join(' • ')}
-                        </p>
-                      </div>
-                    </div>
-
-                    <span
-                      style={{
-                        background:
-                          statusInfo.soft,
-                        color:
-                          statusInfo.color,
-                        borderRadius: 999,
-                        padding: '6px 9px',
-                        fontSize: 10,
-                        fontWeight: 900,
-                      }}
-                    >
-                      {statusInfo.label}
-                    </span>
-                  </div>
-
-                  {/* INFO PILLS */}
-
-                  <div
-                    style={{
-                      display: 'flex',
-                      gap: 8,
-                      flexWrap: 'wrap',
-                      marginTop: 14,
-                    }}
-                  >
-                    <span
-                      style={{
-                        background:
-                          '#faf7ef',
-                        color: '#9a7a35',
-                        border:
-                          '1px solid #eee2c8',
-                        padding: '6px 9px',
-                        borderRadius: 10,
-                        fontSize: 11,
-                        fontWeight: 800,
-                      }}
-                    >
-                      ★ PTR{' '}
-                      {doc.ptr_score ||
-                        '99.0'}
-                      %
-                    </span>
-
-                    {doc.consultation_fee !=
-                      null && (
-                      <span
-                        style={{
-                          background:
-                            '#edf8f3',
-                          color:
-                            '#0f7b60',
-                          border:
-                            '1px solid #d5eadf',
-                          padding:
-                            '6px 9px',
-                          borderRadius: 10,
-                          fontSize: 11,
-                          fontWeight: 800,
-                        }}
-                      >
-                        ₹
-                        {
-                          doc.consultation_fee
-                        }{' '}
-                        Fee
-                      </span>
-                    )}
-
-                    <span
-                      style={{
-                        background:
-                          '#f4f5f3',
-                        color: '#68746f',
-                        padding: '6px 9px',
-                        borderRadius: 10,
-                        fontSize: 11,
-                        fontWeight: 800,
-                      }}
-                    >
-                      {docWaitingCount} Waiting
-                    </span>
-                  </div>
-
-                  {/* STATUS */}
-
-                  <div
-                    style={{
-                      marginTop: 15,
-                      padding: 12,
-                      borderRadius: 17,
-                      background:
-                        '#faf9f6',
-                      border:
-                        '1px solid #ebe7de',
-                    }}
-                  >
-                    <p
-                      style={{
-                        margin: '0 0 8px',
-                        color: '#8a918e',
-                        fontSize: 10,
-                        fontWeight: 900,
-                        letterSpacing: 0.6,
-                      }}
-                    >
-                      LIVE QUEUE STATUS
-                    </p>
-
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: 6,
-                      }}
-                    >
-                      {STATUS_OPTIONS.map(
-                        (opt) => {
-                          const active =
-                            doc.status ===
-                            opt.value;
-
-                          return (
-                            <button
-                              key={
-                                opt.value
-                              }
-                              onClick={() =>
-                                handleStatusChange(
-                                  doc.id,
-                                  opt.value
-                                )
-                              }
-                              style={{
-                                padding:
-                                  '7px 9px',
-                                borderRadius: 10,
-                                fontSize: 10,
-                                fontWeight: 800,
-                                cursor:
-                                  'pointer',
-                                border: active
-                                  ? `1px solid ${opt.color}`
-                                  : '1px solid #e5e1d9',
-                                background:
-                                  active
-                                    ? opt.soft
-                                    : '#fff',
-                                color: active
-                                  ? opt.color
-                                  : '#78817d',
-                              }}
-                            >
-                              {
-                                opt.label
-                              }
-                            </button>
-                          );
-                        }
-                      )}
-                    </div>
-                  </div>
-
-                  {/* SCHEDULE */}
-
-                  <div
-                    style={{
-                      marginTop: 12,
-                      padding: 12,
-                      borderRadius: 17,
-                      background:
-                        '#faf9f6',
-                      border:
-                        '1px solid #ebe7de',
-                    }}
-                  >
-                    <p
-                      style={{
-                        margin: '0 0 8px',
-                        color: '#8a918e',
-                        fontSize: 10,
-                        fontWeight: 900,
-                      }}
-                    >
-                      CONSULTATION SCHEDULE
-                    </p>
-
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: 6,
-                      }}
-                    >
-                      {DAYS.map((day) => {
-                        const slot =
-                          scheduleObj[day];
-
-                        if (
-                          !slot?.active
-                        ) {
-                          return null;
-                        }
-
-                        return (
-                          <span
-                            key={day}
-                            style={{
-                              fontSize: 10,
-                              color:
-                                '#31544c',
-                              background:
-                                '#fff',
-                              border:
-                                '1px solid #e5e1d9',
-                              padding:
-                                '6px 8px',
-                              borderRadius: 9,
-                              fontWeight: 700,
-                            }}
-                          >
-                            {day} ·{' '}
-                            {formatTime(
-                              slot.start
-                            )}
-                            –
-                            {formatTime(
-                              slot.end
-                            )}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* ACTIONS */}
-
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns:
-                        '1.65fr 1fr',
-                      gap: 8,
-                      marginTop: 14,
-                    }}
-                  >
-                    <button
-                      onClick={() =>
-                        toggleTodaysPatients(
-                          doc.id
-                        )
-                      }
-                      style={{
-                        ...(expandedDoctor ===
-                        doc.id
-                          ? ghostBtn
-                          : primaryBtn),
-                        padding: 12,
-                        fontSize: 12,
-                      }}
-                    >
-                      {expandedDoctor ===
-                      doc.id
-                        ? 'Hide Queue'
-                        : `Manage Queue (${docWaitingCount})`}
-                    </button>
-
-                    <button
-                      onClick={() =>
-                        setShowWalkinForm(
-                          showWalkinForm ===
-                            doc.id
-                            ? null
-                            : doc.id
-                        )
-                      }
-                      style={{
-                        ...goldBtn,
-                        padding: 12,
-                        fontSize: 12,
-                      }}
-                    >
-                      + Walk-in
-                    </button>
-                  </div>
-
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns:
-                        '1fr 1fr',
-                      gap: 8,
-                      marginTop: 8,
-                    }}
-                  >
-                    <button
-                      onClick={() =>
-                        startEdit(doc)
-                      }
-                      style={{
-                        ...ghostBtn,
-                        padding: 10,
-                        fontSize: 12,
-                      }}
-                    >
-                      Edit Doctor
-                    </button>
-
-                    <button
-                      onClick={() =>
-                        handleDelete(
-                          doc.id,
-                          doc.name
-                        )
-                      }
-                      style={{
-                        ...dangerBtn,
-                        padding: 10,
-                        fontSize: 12,
-                      }}
-                    >
-                      Remove Doctor
-                    </button>
-                  </div>
-
-                  {/* WALK-IN */}
-
-                  {showWalkinForm ===
-                    doc.id && (
-                    <div
-                      style={{
-                        marginTop: 12,
-                        padding: 13,
-                        borderRadius: 18,
-                        background:
-                          '#fffaf0',
-                        border:
-                          '1px solid #eee0bd',
-                      }}
-                    >
-                      <p
-                        style={{
-                          margin:
-                            '0 0 10px',
-                          color:
-                            '#85611d',
-                          fontSize: 12,
-                          fontWeight: 900,
-                        }}
-                      >
-                        Add Walk-in Patient
-                      </p>
-
-                      <div
-                        style={{
-                          display: 'flex',
-                          flexDirection:
-                            'column',
-                          gap: 8,
-                        }}
-                      >
-                        <input
-                          placeholder="Patient name"
-                          value={walkinName}
-                          onChange={(e) =>
-                            setWalkinName(
-                              e.target.value
-                            )
-                          }
-                          style={
-                            inputStyle
-                          }
-                        />
-
-                        <input
-                          placeholder="Phone (optional)"
-                          value={walkinPhone}
-                          onChange={(e) =>
-                            setWalkinPhone(
-                              e.target.value
-                            )
-                          }
-                          style={
-                            inputStyle
-                          }
-                        />
-
-                        <button
-                          onClick={() =>
-                            handleWalkinSubmit(
-                              doc.id
-                            )
-                          }
-                          style={{
-                            ...primaryBtn,
-                            padding: 11,
-                          }}
-                        >
-                          Create Token
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* QUEUE */}
-
-                  {expandedDoctor ===
-                    doc.id && (
-                    <div
-                      style={{
-                        marginTop: 15,
-                        paddingTop: 14,
-                        borderTop:
-                          '1px solid #ebe7de',
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: 'flex',
-                          justifyContent:
-                            'space-between',
-                          alignItems:
-                            'center',
-                          marginBottom: 10,
-                        }}
-                      >
-                        <div>
-                          <p
-                            style={{
-                              margin: 0,
-                              color:
-                                '#9a7a35',
-                              fontSize: 10,
-                              fontWeight: 900,
-                            }}
-                          >
-                            TODAY'S QUEUE
-                          </p>
-
-                          <h4
-                            style={{
-                              margin:
-                                '4px 0 0',
-                            }}
-                          >
-                            {
-                              docBookings.length
-                            }{' '}
-                            Patient
-                            {docBookings.length ===
-                            1
-                              ? ''
-                              : 's'}
-                          </h4>
-                        </div>
-
-                        <button
-                          onClick={() =>
-                            refreshBookings(
-                              doc.id
-                            )
-                          }
-                          style={{
-                            ...ghostBtn,
-                            padding:
-                              '8px 10px',
-                            fontSize: 11,
-                          }}
-                        >
-                          Refresh
-                        </button>
-                      </div>
-
-                      {loadingBookings ? (
-                        <p
-                          style={{
-                            textAlign:
-                              'center',
-                            color:
-                              '#8a918e',
-                          }}
-                        >
-                          Loading queue...
-                        </p>
-                      ) : docBookings.length ===
-                        0 ? (
-                        <div
-                          style={{
-                            padding:
-                              '22px 12px',
-                            textAlign:
-                              'center',
-                            background:
-                              '#faf9f6',
-                            borderRadius: 16,
-                            color:
-                              '#8a918e',
-                            fontSize: 13,
-                          }}
-                        >
-                          No bookings for today yet.
-                        </div>
-                      ) : (
-                        docBookings.map(
-                          (b) => {
-                            const isWaiting =
-                              b.status ===
-                              'waiting';
-
-                            const isUpdating =
-                              updatingPatient ===
-                              b.id;
-
-                            return (
-                              <div
-                                key={b.id}
-                                style={{
-                                  background:
-                                    '#faf9f6',
-                                  border:
-                                    '1px solid #ebe7de',
-                                  borderRadius: 18,
-                                  padding: 13,
-                                  marginBottom: 9,
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    display:
-                                      'flex',
-                                    justifyContent:
-                                      'space-between',
-                                    gap: 10,
-                                    alignItems:
-                                      'flex-start',
-                                  }}
-                                >
-                                  <div
-                                    style={{
-                                      display:
-                                        'flex',
-                                      gap: 10,
-                                    }}
-                                  >
-                                    <div
-                                      style={{
-                                        width: 38,
-                                        height: 38,
-                                        borderRadius: 13,
-                                        background:
-                                          '#123c35',
-                                        color:
-                                          '#d7b45e',
-                                        display:
-                                          'flex',
-                                        alignItems:
-                                          'center',
-                                        justifyContent:
-                                          'center',
-                                        fontSize: 13,
-                                        fontWeight: 900,
-                                      }}
-                                    >
-                                      #
-                                      {
-                                        b.token_number
-                                      }
-                                    </div>
-
-                                    <div>
-                                      <h5
-                                        style={{
-                                          margin:
-                                            '1px 0 2px',
-                                          fontSize: 14,
-                                        }}
-                                      >
-                                        {b.patient_name ||
-                                          'Patient'}
-                                      </h5>
-
-                                      <p
-                                        style={{
-                                          margin: 0,
-                                          fontSize: 11,
-                                          color:
-                                            '#8a918e',
-                                        }}
-                                      >
-                                        {b.is_walkin
-                                          ? 'Walk-in patient'
-                                          : 'App booking'}
-                                      </p>
-                                    </div>
-                                  </div>
-
-                                  <span
-                                    style={{
-                                      fontSize: 10,
-                                      fontWeight: 900,
-                                      padding:
-                                        '5px 8px',
-                                      borderRadius: 999,
-                                      background:
-                                        isWaiting
-                                          ? '#fff4dc'
-                                          : '#edf8f3',
-                                      color:
-                                        isWaiting
-                                          ? '#aa7413'
-                                          : '#0f8c6b',
-                                    }}
-                                  >
-                                    {isWaiting
-                                      ? 'WAITING'
-                                      : 'COMPLETED'}
-                                  </span>
-                                </div>
-
-                                {isWaiting ? (
-                                  <div
-                                    style={{
-                                      display:
-                                        'grid',
-                                      gridTemplateColumns:
-                                        '1fr 1fr 1fr',
-                                      gap: 7,
-                                      marginTop: 11,
-                                    }}
-                                  >
-                                    <button
-                                      onClick={() =>
-                                        handleCheckIn(
-                                          b.id,
-                                          doc.id
-                                        )
-                                      }
-                                      disabled={
-                                        isUpdating
-                                      }
-                                      style={{
-                                        ...ghostBtn,
-                                        padding: 9,
-                                        fontSize: 10,
-                                      }}
-                                    >
-                                      Check In
-                                    </button>
-
-                                    <button
-                                      onClick={() =>
-                                        handleMarkSeen(
-                                          b.id,
-                                          doc.id
-                                        )
-                                      }
-                                      disabled={
-                                        isUpdating
-                                      }
-                                      style={{
-                                        ...primaryBtn,
-                                        padding: 9,
-                                        fontSize: 10,
-                                      }}
-                                    >
-                                      Mark Seen
-                                    </button>
-
-                                    <button
-                                      onClick={() =>
-                                        handleNoShowCancel(
-                                          b.id,
-                                          doc.id
-                                        )
-                                      }
-                                      disabled={
-                                        isUpdating
-                                      }
-                                      style={{
-                                        ...dangerBtn,
-                                        padding: 9,
-                                        fontSize: 10,
-                                      }}
-                                    >
-                                      Cancel
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <p
-                                    style={{
-                                      color:
-                                        '#0f8c6b',
-                                      fontWeight: 800,
-                                      fontSize: 11,
-                                      margin:
-                                        '10px 0 0',
-                                    }}
-                                  >
-                                    ✓ Completed / Seen
-                                  </p>
-                                )}
-                              </div>
-                            );
-                          }
-                        )
-                      )}
-                    </div>
-                  )}
-                </>
+            <div>
+              <label style={{ fontSize: '12px', fontWeight: '700', color: '#0b332c', display: 'block', marginBottom: '6px' }}>Clinic UPI ID (for Online Payments):</label>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                <input placeholder="e.g. clinic@paytm" value={upiInput} onChange={(e) => setUpiInput(e.target.value)} style={{ flex: 1, padding: '10px 12px', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '13px' }} />
+                <button onClick={handleSaveUpi} disabled={savingUpi} style={{ background: '#0b332c', color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '10px', fontWeight: '700', fontSize: '12px', cursor: 'pointer' }}>{savingUpi ? 'Saving...' : 'Save'}</button>
+              </div>
+              {upiId && (
+                <button onClick={() => setShowQrModal(true)} style={{ background: '#fef3c7', border: '1px solid #fde047', color: '#92400e', padding: '8px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>
+                  📱 View Payment QR Code
+                </button>
               )}
             </div>
-          );
-        })}
+          </div>
+        )}
 
-        {/* ADD DOCTOR BUTTON */}
+        {error && <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', color: '#dc2626', padding: '12px', borderRadius: '12px', fontSize: '13px', fontWeight: '600', marginBottom: '16px' }}>{error}</div>}
 
-        <button
-          onClick={() =>
-            setShowAddForm(!showAddForm)
-          }
-          style={{
-            ...(showAddForm
-              ? ghostBtn
-              : primaryBtn),
-            width: '100%',
-            padding: 14,
-            fontSize: 14,
-            marginTop: 4,
-          }}
-        >
-          {showAddForm
-            ? 'Close Add Doctor Form'
-            : '+ Add New Doctor'}
-        </button>
+        {/* DOCTOR ROSTER HEADER */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: '18px', color: '#0b332c', margin: 0 }}>Doctor Roster ({doctors.length})</h2>
+          <button onClick={() => setShowAddForm(!showAddForm)} style={{ background: '#10b981', color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '12px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 12px rgba(16,185,129,0.2)' }}>
+            {showAddForm ? 'Close Form' : '+ Add Doctor'}
+          </button>
+        </div>
 
         {/* ADD DOCTOR FORM */}
-
         {showAddForm && (
-          <form
-            onSubmit={handleAddDoctor}
-            style={{
-              ...cardStyle,
-              marginTop: 12,
-              padding: 16,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 12,
-            }}
-          >
-            <div>
-              <p
-                style={{
-                  margin: 0,
-                  color: '#9a7a35',
-                  fontSize: 10,
-                  fontWeight: 900,
-                  letterSpacing: 0.8,
-                }}
-              >
-                NEW DOCTOR
-              </p>
-
-              <h3
-                style={{
-                  margin: '4px 0 0',
-                  fontFamily:
-                    'Georgia, "Times New Roman", serif',
-                  color: '#173a34',
-                  fontSize: 22,
-                }}
-              >
-                Create Doctor Profile
-              </h3>
-            </div>
-
+          <form onSubmit={handleAddDoctor} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '20px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '18px', color: '#0b332c', margin: '0 0 4px' }}>Add New Doctor</h3>
+            
             <Field label="Doctor Name *">
-              <input
-                placeholder="e.g. Dr. Gautam Banerjee"
-                value={newName}
-                onChange={(e) =>
-                  setNewName(e.target.value)
-                }
-                style={inputStyle}
-                required
-              />
+              <input placeholder="Dr. Gautam Banerjee" value={newName} onChange={(e) => setNewName(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '13.5px', boxSizing: 'border-box' }} required />
             </Field>
 
             <Field label="Degrees & Qualifications *">
-              <input
-                placeholder="e.g. MBBS, MD (General Medicine)"
-                value={newDegrees}
-                onChange={(e) =>
-                  setNewDegrees(e.target.value)
-                }
-                style={inputStyle}
-                required
-              />
+              <input placeholder="MBBS, MD (General)" value={newDegrees} onChange={(e) => setNewDegrees(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '13.5px', boxSizing: 'border-box' }} required />
             </Field>
 
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns:
-                  '1fr 1fr',
-                gap: 9,
-              }}
-            >
-              <Field label="Consultation Fee ₹">
-                <input
-                  type="number"
-                  placeholder="500"
-                  value={newFee}
-                  onChange={(e) =>
-                    setNewFee(e.target.value)
-                  }
-                  style={inputStyle}
-                />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <Field label="Consultation Fee (₹)">
+                <input type="number" placeholder="500" value={newFee} onChange={(e) => setNewFee(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '13.5px', boxSizing: 'border-box' }} />
               </Field>
-
-              <Field label="PTR Trust Score %">
-                <input
-                  type="number"
-                  step="0.1"
-                  placeholder="99.5"
-                  value={newPtr}
-                  onChange={(e) =>
-                    setNewPtr(e.target.value)
-                  }
-                  style={inputStyle}
-                />
+              <Field label="Avg Time per Patient (Mins)">
+                <input type="number" min="1" value={newAvgMinutes} onChange={(e) => setNewAvgMinutes(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '13.5px', boxSizing: 'border-box' }} />
               </Field>
             </div>
 
-            <Field label="Average Consultation Time (Minutes)">
-              <input
-                type="number"
-                min="1"
-                value={newAvgMinutes}
-                onChange={(e) =>
-                  setNewAvgMinutes(
-                    e.target.value
-                  )
-                }
-                style={inputStyle}
-              />
-            </Field>
+            <SpecialtySelector selected={newSpecialties} onToggle={(spec) => toggleSpecialty(spec, newSpecialties, setNewSpecialties)} />
+            <ScheduleEditor value={daySchedules} onChange={setDaySchedules} />
 
-            <SpecialtySelector
-              selected={newSpecialties}
-              onToggle={(spec) =>
-                toggleSpecialty(
-                  spec,
-                  newSpecialties,
-                  setNewSpecialties
-                )
-              }
-            />
-
-            <ScheduleEditor
-              value={daySchedules}
-              onChange={setDaySchedules}
-            />
-
-            <button
-              type="submit"
-              disabled={savingDoctor}
-              style={{
-                ...primaryBtn,
-                padding: 14,
-                fontSize: 14,
-                opacity:
-                  savingDoctor ? 0.65 : 1,
-              }}
-            >
-              {savingDoctor
-                ? 'Saving Doctor...'
-                : 'Save Doctor Profile'}
+            <button type="submit" disabled={savingDoctor} style={{ width: '100%', background: '#0b332c', color: '#fff', border: 'none', padding: '14px', borderRadius: '12px', fontWeight: '700', fontSize: '14px', cursor: 'pointer' }}>
+              {savingDoctor ? 'Saving...' : 'Save Doctor Profile'}
             </button>
           </form>
+        )}
+
+        {/* DOCTOR LIST CARDS */}
+        {doctors.length === 0 ? (
+          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '40px 20px', textAlign: 'center' }}>
+            <div style={{ fontSize: '32px', marginBottom: '8px' }}>👨‍⚕️</div>
+            <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '18px', color: '#0b332c', margin: '0 0 4px' }}>No Doctors Added</h3>
+            <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>Click "+ Add Doctor" above to set up your clinic roster.</p>
+          </div>
+        ) : (
+          doctors.map((doc) => {
+            const isEditing = editingId === doc.id;
+            const docBookings = bookingsByDoctor[doc.id] || [];
+            const waitingCount = docBookings.filter((b) => b.status === 'waiting' || b.status === 'checked_in').length;
+            const specs = doc.specialties || [doc.specialty || 'General Physician'];
+            const statusInfo = STATUS_OPTIONS.find((s) => s.value === doc.status) || STATUS_OPTIONS[0];
+
+            return (
+              <div key={doc.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '20px', marginBottom: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
+                {isEditing ? (
+                  <div>
+                    <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '18px', color: '#0b332c', margin: '0 0 12px' }}>Edit Doctor: {doc.name}</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' }}>
+                      <input value={editName} onChange={(e) => setEditName(e.target.value)} style={{ padding: '10px', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '13px' }} placeholder="Name" />
+                      <input value={editDegrees} onChange={(e) => setEditDegrees(e.target.value)} style={{ padding: '10px', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '13px' }} placeholder="Degrees" />
+                      <input type="number" value={editFee} onChange={(e) => setEditFee(e.target.value)} style={{ padding: '10px', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '13px' }} placeholder="Fee ₹" />
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button onClick={() => setEditingId(null)} style={{ flex: 1, background: '#f1f5f9', border: 'none', padding: '10px', borderRadius: '10px', fontWeight: '700', cursor: 'pointer' }}>Cancel</button>
+                      <button onClick={() => handleSaveEdit(doc.id)} style={{ flex: 1, background: '#10b981', color: '#fff', border: 'none', padding: '10px', borderRadius: '10px', fontWeight: '700', cursor: 'pointer' }}>Save Changes</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
+                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                        <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: '#0b332c', color: '#d7b45e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: '800' }}>
+                          {getInitials(doc.name)}
+                        </div>
+                        <div>
+                          <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '17px', color: '#0b332c', margin: '0 0 2px' }}>{doc.name}</h3>
+                          <p style={{ fontSize: '12px', color: '#10b981', fontWeight: '700', margin: '0 0 2px' }}>{doc.degrees || 'MBBS'}</p>
+                          <p style={{ fontSize: '11px', color: '#64748b', margin: 0 }}>{specs.join(', ')}</p>
+                        </div>
+                      </div>
+
+                      <span style={{ fontSize: '11px', fontWeight: '800', padding: '4px 10px', borderRadius: '100px', background: statusInfo.soft, color: statusInfo.color }}>
+                        {statusInfo.label}
+                      </span>
+                    </div>
+
+                    {/* STATUS SELECTOR CHIPS */}
+                    <div style={{ background: '#f8f6f0', padding: '12px', borderRadius: '14px', marginBottom: '14px', border: '1px solid #e2e8f0' }}>
+                      <span style={{ fontSize: '10.5px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Change Queue Status:</span>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                        {STATUS_OPTIONS.map((opt) => (
+                          <button
+                            key={opt.value}
+                            onClick={() => handleStatusChange(doc.id, opt.value)}
+                            style={{ padding: '6px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', cursor: 'pointer', border: doc.status === opt.value ? `1.5px solid ${opt.color}` : '1px solid #cbd5e1', background: doc.status === opt.value ? opt.soft : '#fff', color: doc.status === opt.value ? opt.color : '#64748b' }}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* ACTION BUTTONS */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '14px' }}>
+                      <button onClick={() => toggleTodaysPatients(doc.id)} style={{ background: '#0b332c', color: '#fff', border: 'none', padding: '10px', borderRadius: '10px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>
+                        {expandedDoctor === doc.id ? 'Hide Queue' : `Queue (${waitingCount})`}
+                      </button>
+                      <button onClick={() => setShowWalkinForm(showWalkinForm === doc.id ? null : doc.id)} style={{ background: '#f59e0b', color: '#fff', border: 'none', padding: '10px', borderRadius: '10px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>
+                        + Walk-in
+                      </button>
+                      <button onClick={() => startEdit(doc)} style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', color: '#0b332c', padding: '10px', borderRadius: '10px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>
+                        Edit / Remove
+                      </button>
+                    </div>
+
+                    {/* WALK-IN FORM */}
+                    {showWalkinForm === doc.id && (
+                      <div style={{ background: '#fef3c7', border: '1px solid #fde047', borderRadius: '14px', padding: '14px', marginBottom: '14px' }}>
+                        <h4 style={{ margin: '0 0 8px', fontSize: '13px', color: '#92400e', fontWeight: '800' }}>Add Offline Walk-in Patient</h4>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <input placeholder="Patient Name *" value={walkinName} onChange={(e) => setWalkinName(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13px' }} />
+                          <input placeholder="Phone Number (Optional)" value={walkinPhone} onChange={(e) => setWalkinPhone(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13px' }} />
+                          <button onClick={() => handleWalkinSubmit(doc.id)} style={{ background: '#d97706', color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: '700', fontSize: '12.5px', cursor: 'pointer' }}>Generate Walk-in Token</button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TODAY'S QUEUE EXPANDED LIST */}
+                    {expandedDoctor === doc.id && (
+                      <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '14px', marginTop: '14px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                          <h4 style={{ margin: 0, fontSize: '13px', color: '#0b332c', fontWeight: '800' }}>Today's Patient Queue ({docBookings.length})</h4>
+                          <button onClick={() => refreshBookings(doc.id)} style={{ background: 'transparent', border: 'none', color: '#10b981', fontSize: '11.5px', fontWeight: '700', cursor: 'pointer' }}>Refresh List</button>
+                        </div>
+
+                        {loadingBookings ? (
+                          <p style={{ textAlign: 'center', fontSize: '12px', color: '#64748b' }}>Loading queue...</p>
+                        ) : docBookings.length === 0 ? (
+                          <p style={{ textAlign: 'center', fontSize: '12px', color: '#64748b', padding: '12px', background: '#f8f6f0', borderRadius: '10px' }}>No patients booked for this doctor today.</p>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {docBookings.map((b) => {
+                              const isWaiting = b.status?.toLowerCase() === 'waiting' || b.status?.toLowerCase() === 'checked_in';
+                              const isUpdating = updatingPatient === b.id;
+
+                              return (
+                                <div key={b.id} style={{ background: '#f8f6f0', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#10b981', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '800' }}>
+                                      #{b.queue_number || b.token_number || '1'}
+                                    </div>
+                                    <div>
+                                      <div style={{ fontSize: '13px', fontWeight: '700', color: '#0b332c' }}>{b.patient_name || 'Patient'}</div>
+                                      <div style={{ fontSize: '11px', color: '#64748b' }}>{b.is_walkin ? '🚶 Walk-in' : '📱 App Booking'} • <span style={{ textTransform: 'capitalize', fontWeight: '600', color: isWaiting ? '#d97706' : '#15803d' }}>{b.status}</span></div>
+                                    </div>
+                                  </div>
+
+                                  <div style={{ display: 'flex', gap: '6px' }}>
+                                    {isWaiting ? (
+                                      <>
+                                        <button onClick={() => handleMarkSeen(b.id, doc.id)} disabled={isUpdating} style={{ background: '#10b981', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}>
+                                          Mark Seen
+                                        </button>
+                                        <button onClick={() => handleNoShowCancel(b.id, doc.id)} disabled={isUpdating} style={{ background: '#fee2e2', color: '#dc2626', border: 'none', padding: '6px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}>
+                                          Cancel
+                                        </button>
+                                      </>
+                                    ) : (
+                                      <span style={{ fontSize: '11px', fontWeight: '700', color: '#15803d' }}>✓ Done</span>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })
         )}
       </div>
 
       {/* QR MODAL */}
-
       {showQrModal && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background:
-              'rgba(20,30,27,0.56)',
-            backdropFilter: 'blur(7px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 16,
-            zIndex: 1000,
-          }}
-        >
-          <div
-            style={{
-              background: '#fffdf8',
-              border:
-                '1px solid #ebe4d8',
-              borderRadius: 28,
-              padding: 22,
-              width: '100%',
-              maxWidth: 360,
-              textAlign: 'center',
-              boxShadow:
-                '0 22px 60px rgba(0,0,0,0.22)',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent:
-                  'space-between',
-                alignItems: 'center',
-                marginBottom: 18,
-              }}
-            >
-              <div
-                style={{
-                  textAlign: 'left',
-                }}
-              >
-                <p
-                  style={{
-                    margin: 0,
-                    color: '#9a7a35',
-                    fontSize: 10,
-                    fontWeight: 900,
-                  }}
-                >
-                  CLINIC PAYMENT
-                </p>
-
-                <h3
-                  style={{
-                    margin: '4px 0 0',
-                  }}
-                >
-                  Scan & Pay
-                </h3>
-              </div>
-
-              <button
-                onClick={() =>
-                  setShowQrModal(false)
-                }
-                style={{
-                  width: 34,
-                  height: 34,
-                  borderRadius: 11,
-                  border:
-                    '1px solid #e2ddd4',
-                  background: '#fff',
-                  cursor: 'pointer',
-                }}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div
-              style={{
-                background: '#fff',
-                border:
-                  '1px solid #ece7dc',
-                padding: 16,
-                borderRadius: 22,
-                display: 'inline-block',
-                marginBottom: 12,
-              }}
-            >
+        <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(6, 43, 37, 0.65)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div style={{ background: '#fff', width: '100%', maxWidth: '340px', borderRadius: '24px', padding: '24px', textAlign: 'center', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
+            <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '18px', color: '#0b332c', margin: '0 0 12px' }}>Clinic Payment QR</h3>
+            <div style={{ background: '#f8f6f0', padding: '16px', borderRadius: '16px', display: 'inline-block', marginBottom: '12px', border: '1px solid #e2e8f0' }}>
               <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(
-                  `upi://pay?pa=${upiId}&pn=${encodeURIComponent(
-                    clinicName
-                  )}&cu=INR`
-                )}`}
-                alt="Clinic UPI QR Code"
-                style={{
-                  width: 210,
-                  height: 210,
-                  display: 'block',
-                }}
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`upi://pay?pa=${upiId}&pn=${encodeURIComponent(clinicName)}&cu=INR`)}`}
+                alt="UPI QR Code"
+                style={{ width: '180px', height: '180px', display: 'block' }}
               />
             </div>
-
-            <p
-              style={{
-                margin: '0 0 14px',
-                color: '#7c8581',
-                fontSize: 12,
-              }}
-            >
-              Paying to <strong>{upiId}</strong>
-            </p>
-
-            <button
-              onClick={() =>
-                setShowQrModal(false)
-              }
-              style={{
-                ...primaryBtn,
-                width: '100%',
-                padding: 13,
-              }}
-            >
-              Close
-            </button>
+            <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 16px' }}>UPI ID: <strong>{upiId}</strong></p>
+            <button onClick={() => setShowQrModal(false)} style={{ width: '100%', background: '#0b332c', color: '#fff', border: 'none', padding: '12px', borderRadius: '12px', fontWeight: '700', cursor: 'pointer' }}>Close</button>
           </div>
         </div>
       )}
     </div>
   );
 }
-
-/* REUSABLE FIELD */
-
-function Field({
-  label,
-  children,
-}) {
+function Field({ label, children }) {
   return (
     <div>
-      <label
-        style={{
-          display: 'block',
-          marginBottom: 5,
-          color: '#697570',
-          fontSize: 11,
-          fontWeight: 800,
-        }}
-      >
-        {label}
-      </label>
-
+      <label style={{ display: 'block', marginBottom: '5px', color: '#0b332c', fontSize: '12px', fontWeight: '700' }}>{label}</label>
       {children}
     </div>
   );
 }
 
-/* SPECIALTY SELECTOR */
-
-function SpecialtySelector({
-  selected,
-  onToggle,
-}) {
+function SpecialtySelector({ selected, onToggle }) {
   return (
     <div>
-      <p
-        style={{
-          margin: '0 0 7px',
-          color: '#697570',
-          fontSize: 11,
-          fontWeight: 800,
-        }}
-      >
-        SPECIALTIES — MULTIPLE ALLOWED
-      </p>
-
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 6,
-        }}
-      >
-        {SPECIALTIES.map(
-          (spec) => {
-            const active =
-              selected.includes(spec);
-
-            return (
-              <button
-                key={spec}
-                type="button"
-                onClick={() =>
-                  onToggle(spec)
-                }
-                style={{
-                  padding: '7px 9px',
-                  borderRadius: 10,
-                  border: active
-                    ? '1px solid #123c35'
-                    : '1px solid #e1ddd5',
-                  background: active
-                    ? '#123c35'
-                    : '#fff',
-                  color: active
-                    ? '#fff'
-                    : '#65716d',
-                  fontSize: 10,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                }}
-              >
-                {spec}
-              </button>
-            );
-          }
-        )}
+      <label style={{ display: 'block', marginBottom: '6px', color: '#0b332c', fontSize: '12px', fontWeight: '700' }}>Specialties (Multiple Allowed):</label>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+        {SPECIALTIES.map((spec) => {
+          const active = selected.includes(spec);
+          return (
+            <button
+              key={spec}
+              type="button"
+              onClick={() => onToggle(spec)}
+              style={{ padding: '6px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', cursor: 'pointer', border: active ? '1.5px solid #10b981' : '1px solid #cbd5e1', background: active ? '#dcfce7' : '#fff', color: active ? '#15803d' : '#64748b' }}
+            >
+              {spec}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-/* SCHEDULE EDITOR */
-
-function ScheduleEditor({
-  value,
-  onChange,
-}) {
-  const updateDay = (
-    day,
-    patch
-  ) => {
+function ScheduleEditor({ value, onChange }) {
+  const updateDay = (day, patch) => {
     onChange({
       ...value,
       [day]: {
-        ...(value[day] || {
-          active: false,
-          start: '10:00',
-          end: '14:00',
-        }),
+        ...(value[day] || { active: false, start: '10:00', end: '14:00' }),
         ...patch,
       },
     });
   };
 
   return (
-    <div
-      style={{
-        background: '#faf9f6',
-        border:
-          '1px solid #ebe7de',
-        padding: 12,
-        borderRadius: 18,
-      }}
-    >
-      <p
-        style={{
-          margin: '0 0 10px',
-          color: '#173a34',
-          fontSize: 12,
-          fontWeight: 900,
-        }}
-      >
-        🕒 Day-wise Consultation Timings
-      </p>
-
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 7,
-        }}
-      >
+    <div style={{ background: '#f8f6f0', border: '1px solid #e2e8f0', padding: '14px', borderRadius: '14px' }}>
+      <p style={{ margin: '0 0 10px', color: '#0b332c', fontSize: '12px', fontWeight: '800' }}>🕒 Day-wise Consultation Timings</p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {DAYS.map((day) => {
-          const slot =
-            value[day] || {
-              active: false,
-              start: '10:00',
-              end: '14:00',
-            };
-
+          const slot = value[day] || { active: false, start: '10:00', end: '14:00' };
           return (
-            <div
-              key={day}
-              style={{
-                display: 'grid',
-                gridTemplateColumns:
-                  '42px 24px 1fr 16px 1fr',
-                gap: 6,
-                alignItems: 'center',
-                background: '#fff',
-                border:
-                  '1px solid #ebe7de',
-                borderRadius: 12,
-                padding: '7px 8px',
-              }}
-            >
-              <span
-                style={{
-                  fontSize: 11,
-                  fontWeight: 900,
-                  color: slot.active
-                    ? '#173a34'
-                    : '#9aa19e',
-                }}
-              >
-                {day}
-              </span>
-
-              <input
-                type="checkbox"
-                checked={slot.active}
-                onChange={(e) =>
-                  updateDay(day, {
-                    active:
-                      e.target.checked,
-                  })
-                }
-              />
-
-              <input
-                type="time"
-                value={slot.start}
-                onChange={(e) =>
-                  updateDay(day, {
-                    start:
-                      e.target.value,
-                  })
-                }
-                style={{
-                  width: '100%',
-                  minWidth: 0,
-                  border:
-                    '1px solid #e4e0d7',
-                  borderRadius: 8,
-                  padding: '6px 5px',
-                  color: '#35514a',
-                  background: '#fff',
-                  fontSize: 10,
-                  boxSizing:
-                    'border-box',
-                }}
-              />
-
-              <span
-                style={{
-                  color: '#9aa19e',
-                  fontSize: 10,
-                  textAlign: 'center',
-                }}
-              >
-                to
-              </span>
-
-              <input
-                type="time"
-                value={slot.end}
-                onChange={(e) =>
-                  updateDay(day, {
-                    end:
-                      e.target.value,
-                  })
-                }
-                style={{
-                  width: '100%',
-                  minWidth: 0,
-                  border:
-                    '1px solid #e4e0d7',
-                  borderRadius: 8,
-                  padding: '6px 5px',
-                  color: '#35514a',
-                  background: '#fff',
-                  fontSize: 10,
-                  boxSizing:
-                    'border-box',
-                }}
-              />
+            <div key={day} style={{ display: 'grid', gridTemplateColumns: '40px 24px 1fr 16px 1fr', gap: '6px', alignItems: 'center', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '6px 8px' }}>
+              <span style={{ fontSize: '11px', fontWeight: '700', color: slot.active ? '#0b332c' : '#94a3b8' }}>{day}</span>
+              <input type="checkbox" checked={slot.active} onChange={(e) => updateDay(day, { active: e.target.checked })} />
+              <input type="time" value={slot.start} onChange={(e) => updateDay(day, { start: e.target.value })} style={{ width: '100%', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '4px', fontSize: '11px' }} />
+              <span style={{ fontSize: '10px', color: '#94a3b8', textAlign: 'center' }}>to</span>
+              <input type="time" value={slot.end} onChange={(e) => updateDay(day, { end: e.target.value })} style={{ width: '100%', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '4px', fontSize: '11px' }} />
             </div>
           );
         })}
