@@ -261,13 +261,11 @@ export default function HospitalFlow({
   const [isListening, setIsListening] =
     useState(false);
 
-  // Care Circle State defaulting to Self / displayName
   const [selectedFamilyMember, setSelectedFamilyMember] =
     useState(displayName || 'Self (Primary)');
 
   const [showCelebration, setShowCelebration] =
     useState(false);
-
   const getDynamicGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good Morning, MediQ';
@@ -794,7 +792,6 @@ export default function HospitalFlow({
     setSearchTerm('');
     setActiveSpecialty('');
   };
-
   return (
     <div
       className="flow-page"
@@ -1063,7 +1060,6 @@ export default function HospitalFlow({
                 </button>
               ))}
             </div>
-
             {isSearchActive ? (
               <>
                 <h3 className="flow-section-title">
@@ -1521,7 +1517,6 @@ export default function HospitalFlow({
           </div>
         )}
       </div>
-
       {ticketData && (
         <BookingTicket
           appointment={
@@ -1583,20 +1578,16 @@ export default function HospitalFlow({
                 onChange={(e) => setSelectedFamilyMember(e.target.value)}
                 style={{ width: '100%', padding: '12px 14px', borderRadius: '14px', border: '1px solid #e2e8f0', fontSize: '13.5px', background: '#fff', color: '#0b332c', boxSizing: 'border-box', fontWeight: '600' }}
               >
-                <option value={displayName || 'Self (Primary)'}>{displayName || 'Self (Primary)'} (Self - Primary)</option>
-                {familyMembers && familyMembers.length > 0 && familyMembers
-                  .filter(m => m.name !== 'Self (Primary)' && m.name !== displayName)
-                  .map((member, index) => (
+                <option value={displayName || 'Self (Primary)'}>{displayName || 'Self (Primary)'} (Self)</option>
+                {familyMembers && familyMembers.map((member, index) => {
+                  if (member.name === 'Self (Primary)' || member.name === displayName) return null;
+                  return (
                     <option key={index} value={member.name}>
                       {member.name} ({member.relation || 'Family Member'})
                     </option>
-                  ))}
+                  );
+                })}
               </select>
-              {(!familyMembers || familyMembers.length <= 1) && (
-                <span style={{ fontSize: '11px', color: '#64748b', marginTop: '4px', display: 'block' }}>
-                  Tip: Add household members via Care Circle to assign bookings to them.
-                </span>
-              )}
             </div>
 
             <div style={{ marginBottom: '16px' }}>
@@ -1787,19 +1778,6 @@ export default function HospitalFlow({
               Great, Thanks!
             </button>
           </div>
-
-          <style>
-            {`
-              @keyframes mediq-pop-in {
-                from { opacity: 0; transform: scale(0.9) translateY(10px); }
-                to { opacity: 1; transform: scale(1) translateY(0); }
-              }
-              @keyframes mediq-check-pop {
-                from { opacity: 0; transform: scale(0.5); }
-                to { opacity: 1; transform: scale(1); }
-              }
-            `}
-          </style>
         </div>
       )}
 
