@@ -210,7 +210,32 @@ export default function App() {
   const [newFamilyName, setNewFamilyName] = useState('');
   const [newFamilyRelation, setNewFamilyRelation] = useState('Parent');
 
-  const [activeQueueToken] = useState(null);
+  const [activeQueueToken, setActiveQueueToken] = useState(null);
+
+  useEffect(() => {
+    const fetchActiveQueue = async () => {
+      if (!session?.user) return;
+      const { data } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .in('status', ['waiting', 'Waiting', 'checked_in'])
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (data && data.length > 0) {
+        setActiveQueueToken({
+          number: data[0].queue_number || data[0].token_number || '2',
+          doctorName: data[0].doctor_name || 'Doctor',
+          hospitalName: data[0].hospital_name || 'Clinic'
+        });
+      } else {
+        setActiveQueueToken(null);
+      }
+    };
+
+    fetchActiveQueue();
+  }, [session]);
 
   // 20 Common Symptoms Multi-Lingual Directory Data
   const commonSymptoms = {
