@@ -1,4 +1,3 @@
-```jsx
 // src/components/BookingTicket.jsx
 
 import React, {
@@ -395,10 +394,7 @@ const BookingTicket = ({
             />
 
             <circle
-              className={
-                `ticket-progress-fill ` +
-                `${isCancelled ? 'cancelled' : ''}`
-              }
+              className={`ticket-progress-fill ${isCancelled ? 'cancelled' : ''}`}
               cx="60"
               cy="60"
               r="50"
@@ -756,4 +752,3 @@ const BookingTicket = ({
 };
 
 export default BookingTicket;
-```
