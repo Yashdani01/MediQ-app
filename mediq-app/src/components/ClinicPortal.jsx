@@ -305,15 +305,19 @@ export default function ClinicPortal() {
     setEditSpecialties(doc.specialties || [doc.specialty || 'General Physician']);
     setEditFee(doc.consultation_fee != null ? String(doc.consultation_fee) : '');
     
-    // Merge saved custom schedule cleanly with defaults so checkboxes stay checked & times stay filled
+    // Properly parse custom_schedule so checkboxes and timings load correctly
     const mergedSchedule = { ...DEFAULT_SCHEDULE };
-    if (doc.custom_schedule) {
+    let rawSchedule = doc.custom_schedule;
+    if (typeof rawSchedule === 'string') {
+      try { rawSchedule = JSON.parse(rawSchedule); } catch (e) { rawSchedule = null; }
+    }
+    if (rawSchedule) {
       for (const day of DAYS) {
-        if (doc.custom_schedule[day]) {
+        if (rawSchedule[day]) {
           mergedSchedule[day] = {
-            active: Boolean(doc.custom_schedule[day].active),
-            start: doc.custom_schedule[day].start || '10:00',
-            end: doc.custom_schedule[day].end || '14:00',
+            active: Boolean(rawSchedule[day].active),
+            start: rawSchedule[day].start || '10:00',
+            end: rawSchedule[day].end || '14:00',
           };
         }
       }
@@ -323,8 +327,6 @@ export default function ClinicPortal() {
 
   const handleSaveEdit = async (doctorId) => {
     const activeDays = Object.keys(editDaySchedules).filter((day) => editDaySchedules[day]?.active);
-    
-    // Get first active day's start/end time as primary fallback
     const firstActiveDay = activeDays[0] || 'Mon';
     const startTime = editDaySchedules[firstActiveDay]?.start || '10:00';
     const endTime = editDaySchedules[firstActiveDay]?.end || '14:00';
@@ -352,6 +354,7 @@ export default function ClinicPortal() {
     setEditingId(null);
     await loadDoctors(unlockedPin);
   };
+
   const handleDelete = async (doctorId, name) => {
     if (!window.confirm(`Remove Dr. ${name} from your clinic?`)) return;
     await deleteDoctor(unlockedPin, doctorId);
@@ -439,6 +442,7 @@ export default function ClinicPortal() {
       </div>
     );
   }
+
   const allBookings = Object.values(bookingsByDoctor).flat();
   const totalBookings = allBookings.length;
   const waitingBookings = allBookings.filter((b) => b.status === 'waiting' || b.status === 'checked_in').length;
@@ -528,34 +532,19 @@ export default function ClinicPortal() {
               <input placeholder="MBBS, MD (General)" value={newDegrees} onChange={(e) => setNewDegrees(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '13.5px', boxSizing: 'border-box' }} required />
             </Field>
 
-<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               <Field label="Consultation Fee (₹)">
                 <input type="number" placeholder="500" value={newFee} onChange={(e) => setNewFee(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '13.5px', boxSizing: 'border-box' }} />
               </Field>
-              
-              {/* CRITICAL: Average Time per Patient used for Live Queue Wait Time Calculation */}
               <Field label="Avg Time / Patient (Mins) *">
-                <input 
-                  type="number" 
-                  min="1" 
-                  value={newAvgMinutes} 
-                  onChange={(e) => setNewAvgMinutes(e.target.value)} 
-                  style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #10b981', background: '#f0fdf4', fontSize: '13.5px', fontWeight: 'bold', boxSizing: 'border-box' }} 
-                  required 
-                />
+                <input type="number" min="1" value={newAvgMinutes} onChange={(e) => setNewAvgMinutes(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #10b981', background: '#f0fdf4', fontSize: '13.5px', fontWeight: 'bold', boxSizing: 'border-box' }} required />
               </Field>
             </div>
 
             <SpecialtySelector selected={newSpecialties} onToggle={(spec) => toggleSpecialty(spec, newSpecialties, setNewSpecialties)} />
             
-            {/* CRITICAL: Day-wise Clinic Visit Schedule */}
             <div style={{ background: '#f8f6f0', padding: '12px', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
-              <label style={{ fontSize: '12px', fontWeight: '800', color: '#0b332c', display: 'block', marginBottom: '4px' }}>
-                📅 Doctor Clinic Visit Days & Timings *
-              </label>
-              <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 10px' }}>
-                Check the days this doctor visits your clinic and set their shift hours.
-              </p>
+              <label style={{ fontSize: '12px', fontWeight: '800', color: '#0b332c', display: 'block', marginBottom: '4px' }}>📅 Doctor Clinic Visit Days & Timings *</label>
               <ScheduleEditor value={daySchedules} onChange={setDaySchedules} />
             </div>
 
@@ -580,81 +569,82 @@ export default function ClinicPortal() {
             const specs = doc.specialties || [doc.specialty || 'General Physician'];
             const statusInfo = STATUS_OPTIONS.find((s) => s.value === doc.status) || STATUS_OPTIONS[0];
 
+            let parsedSchedule = doc.custom_schedule;
+            if (typeof parsedSchedule === 'string') {
+              try { parsedSchedule = JSON.parse(parsedSchedule); } catch (e) { parsedSchedule = null; }
+            }
+
             return (
               <div key={doc.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '20px', marginBottom: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
-              {isEditing ? (
-                <div style={{ background: '#fcfbf9', border: '1px solid #10b981', borderRadius: '16px', padding: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                    <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '18px', color: '#0b332c', margin: 0 }}>Edit Doctor Profile</h3>
-                    <span style={{ fontSize: '11px', background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '6px', fontWeight: '700' }}>Active Editing</span>
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' }}>
-                    <div>
-                      <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Doctor Name</label>
-                      <input value={editName} onChange={(e) => setEditName(e.target.value)} style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13.5px', boxSizing: 'border-box' }} placeholder="Doctor Name" />
+                {isEditing ? (
+                  <div style={{ background: '#fcfbf9', border: '1px solid #10b981', borderRadius: '16px', padding: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                      <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '18px', color: '#0b332c', margin: 0 }}>Edit Doctor Profile</h3>
+                      <span style={{ fontSize: '11px', background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '6px', fontWeight: '700' }}>Active Editing</span>
                     </div>
 
-                    <div>
-                      <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Degrees & Qualifications</label>
-                      <input value={editDegrees} onChange={(e) => setEditDegrees(e.target.value)} style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13.5px', boxSizing: 'border-box' }} placeholder="Degrees" />
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' }}>
                       <div>
-                        <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Consultation Fee (₹)</label>
-                        <input type="number" value={editFee} onChange={(e) => setEditFee(e.target.value)} style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13.5px', boxSizing: 'border-box' }} placeholder="Fee ₹" />
+                        <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Doctor Name</label>
+                        <input value={editName} onChange={(e) => setEditName(e.target.value)} style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13.5px', boxSizing: 'border-box' }} placeholder="Doctor Name" />
                       </div>
+
                       <div>
-                        <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Avg Time / Patient (Mins)</label>
-                        <input type="number" min="1" value={doc.avg_minutes_per_patient || 10} onChange={(e) => {
-                          // Optional state handler if you want to update avg minutes on edit
-                        }} style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13.5px', boxSizing: 'border-box' }} placeholder="10" />
+                        <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Degrees & Qualifications</label>
+                        <input value={editDegrees} onChange={(e) => setEditDegrees(e.target.value)} style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13.5px', boxSizing: 'border-box' }} placeholder="Degrees" />
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                        <div>
+                          <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Consultation Fee (₹)</label>
+                          <input type="number" value={editFee} onChange={(e) => setEditFee(e.target.value)} style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13.5px', boxSizing: 'border-box' }} placeholder="Fee ₹" />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Avg Time / Patient (Mins)</label>
+                          <input type="number" min="1" value={doc.avg_minutes_per_patient || 10} readOnly style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#f8f9fa', fontSize: '13.5px', boxSizing: 'border-box' }} />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Specialties</label>
+                        <SpecialtySelector selected={editSpecialties} onToggle={(spec) => toggleSpecialty(spec, editSpecialties, setEditSpecialties)} />
+                      </div>
+
+                      <div>
+                        <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Clinic Visit Days & Timings</label>
+                        <ScheduleEditor value={editDaySchedules} onChange={setEditDaySchedules} />
                       </div>
                     </div>
 
-                    {/* Specialty Selector for Editing */}
-                    <div>
-                      <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Specialties</label>
-                      <SpecialtySelector selected={editSpecialties} onToggle={(spec) => toggleSpecialty(spec, editSpecialties, setEditSpecialties)} />
-                    </div>
-
-                    {/* Schedule Editor for Editing */}
-                    <div>
-                      <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Clinic Visit Days & Timings</label>
-                      <ScheduleEditor value={editDaySchedules} onChange={setEditDaySchedules} />
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '14px' }}>
+                      <button onClick={() => setEditingId(null)} style={{ flex: 1, background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '12px', borderRadius: '10px', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}>Cancel</button>
+                      <button onClick={() => handleSaveEdit(doc.id)} style={{ flex: 1, background: '#10b981', color: '#fff', border: 'none', padding: '12px', borderRadius: '10px', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}>Save Changes</button>
                     </div>
                   </div>
-
-                  <div style={{ display: 'flex', gap: '8px', marginTop: '14px' }}>
-                    <button onClick={() => setEditingId(null)} style={{ flex: 1, background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '12px', borderRadius: '10px', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}>Cancel</button>
-                    <button onClick={() => handleSaveEdit(doc.id)} style={{ flex: 1, background: '#10b981', color: '#fff', border: 'none', padding: '12px', borderRadius: '10px', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}>Save Changes</button>
-                  </div>
-                </div>
-              ) : (
+                ) : (
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
                       <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                         <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: '#0b332c', color: '#d7b45e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: '800' }}>
                           {getInitials(doc.name)}
                         </div>
-                       <div>
-                        <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '17px', color: '#0b332c', margin: '0 0 2px' }}>{doc.name}</h3>
-                        <p style={{ fontSize: '12px', color: '#10b981', fontWeight: '700', margin: '0 0 2px' }}>{doc.degrees || 'MBBS'}</p>
-                        <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 4px' }}>{specs.join(', ')}</p>
-                        
-                       {/* Display Clinic Visit Days & Timings clearly */}
-                        <div style={{ marginTop: '4px', fontSize: '11px', color: '#0b332c', background: '#f8f6f0', padding: '5px 10px', borderRadius: '8px', display: 'inline-block', border: '1px solid #e2e8f0', fontWeight: '600' }}>
-                          🕒 {doc.custom_schedule ? (
-                            Object.keys(doc.custom_schedule)
-                              .filter(d => doc.custom_schedule[d]?.active)
-                              .map(d => `${d} · ${formatTime(doc.custom_schedule[d].start)} – ${formatTime(doc.custom_schedule[d].end)}`)
-                              .join(' | ') || 'No active days selected'
-                          ) : (
-                            doc.working_days?.join(', ') || 'Schedule not set'
-                          )}
+                        <div>
+                          <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '17px', color: '#0b332c', margin: '0 0 2px' }}>{doc.name}</h3>
+                          <p style={{ fontSize: '12px', color: '#10b981', fontWeight: '700', margin: '0 0 2px' }}>{doc.degrees || 'MBBS'}</p>
+                          <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 4px' }}>{specs.join(', ')}</p>
+                          
+                          {/* Cleanly formatted Schedule display badge */}
+                          <div style={{ fontSize: '11px', color: '#0b332c', background: '#f8f6f0', padding: '4px 10px', borderRadius: '8px', display: 'inline-block', border: '1px solid #e2e8f0', fontWeight: '600' }}>
+                            🕒 {parsedSchedule ? (
+                              Object.keys(parsedSchedule)
+                                .filter(d => parsedSchedule[d]?.active)
+                                .map(d => `${d} · ${formatTime(parsedSchedule[d].start)} – ${formatTime(parsedSchedule[d].end)}`)
+                                .join(' | ') || 'No active days selected'
+                            ) : (
+                              doc.working_days?.join(', ') || 'Schedule not set'
+                            )}
+                          </div>
                         </div>
-                      </div>
                       </div>
 
                       <span style={{ fontSize: '11px', fontWeight: '800', padding: '4px 10px', borderRadius: '100px', background: statusInfo.soft, color: statusInfo.color }}>
@@ -782,6 +772,7 @@ export default function ClinicPortal() {
     </div>
   );
 }
+
 function Field({ label, children }) {
   return (
     <div>
@@ -834,10 +825,10 @@ function ScheduleEditor({ value, onChange }) {
           return (
             <div key={day} style={{ display: 'grid', gridTemplateColumns: '40px 24px 1fr 16px 1fr', gap: '6px', alignItems: 'center', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '6px 8px' }}>
               <span style={{ fontSize: '11px', fontWeight: '700', color: slot.active ? '#0b332c' : '#94a3b8' }}>{day}</span>
-              <input type="checkbox" checked={slot.active} onChange={(e) => updateDay(day, { active: e.target.checked })} />
-              <input type="time" value={slot.start} onChange={(e) => updateDay(day, { start: e.target.value })} style={{ width: '100%', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '4px', fontSize: '11px' }} />
+              <input type="checkbox" checked={Boolean(slot.active)} onChange={(e) => updateDay(day, { active: e.target.checked })} />
+              <input type="time" value={slot.start || '10:00'} onChange={(e) => updateDay(day, { start: e.target.value })} style={{ width: '100%', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '4px', fontSize: '11px' }} />
               <span style={{ fontSize: '10px', color: '#94a3b8', textAlign: 'center' }}>to</span>
-              <input type="time" value={slot.end} onChange={(e) => updateDay(day, { end: e.target.value })} style={{ width: '100%', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '4px', fontSize: '11px' }} />
+              <input type="time" value={slot.end || '14:00'} onChange={(e) => updateDay(day, { end: e.target.value })} style={{ width: '100%', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '4px', fontSize: '11px' }} />
             </div>
           );
         })}
