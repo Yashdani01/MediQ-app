@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
-
+import LiveQueueTracker from './components/LiveQueueTracker';
 import Login from './components/Login';
 import HospitalFlow from './components/HospitalFlow';
 import MyBookings from './components/MyBookings';
