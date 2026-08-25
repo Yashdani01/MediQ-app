@@ -309,17 +309,35 @@ export default function ClinicPortal() {
 
   const handleSaveEdit = async (doctorId) => {
     const activeDays = Object.keys(editDaySchedules).filter((day) => editDaySchedules[day]?.active);
-    await updateDoctor(unlockedPin, doctorId, editName, editSpecialties.join(', '), 10, activeDays, '10:00', '14:00', '', editFee ? parseFloat(editFee) : null);
+    
+    // Get first active day's start/end time as primary fallback
+    const firstActiveDay = activeDays[0] || 'Mon';
+    const startTime = editDaySchedules[firstActiveDay]?.start || '10:00';
+    const endTime = editDaySchedules[firstActiveDay]?.end || '14:00';
+
+    await updateDoctor(
+      unlockedPin,
+      doctorId,
+      editName,
+      editSpecialties.join(', '),
+      10,
+      activeDays,
+      startTime,
+      endTime,
+      JSON.stringify(editDaySchedules),
+      editFee ? parseFloat(editFee) : null
+    );
+
     await supabase.from('doctors').update({
       degrees: editDegrees,
       ptr_score: parseFloat(editPtr) || 99.0,
       specialties: editSpecialties,
       custom_schedule: editDaySchedules,
     }).eq('id', doctorId);
+
     setEditingId(null);
     await loadDoctors(unlockedPin);
   };
-
   const handleDelete = async (doctorId, name) => {
     if (!window.confirm(`Remove Dr. ${name} from your clinic?`)) return;
     await deleteDoctor(unlockedPin, doctorId);
@@ -606,11 +624,21 @@ export default function ClinicPortal() {
                         <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: '#0b332c', color: '#d7b45e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: '800' }}>
                           {getInitials(doc.name)}
                         </div>
-                        <div>
-                          <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '17px', color: '#0b332c', margin: '0 0 2px' }}>{doc.name}</h3>
-                          <p style={{ fontSize: '12px', color: '#10b981', fontWeight: '700', margin: '0 0 2px' }}>{doc.degrees || 'MBBS'}</p>
-                          <p style={{ fontSize: '11px', color: '#64748b', margin: 0 }}>{specs.join(', ')}</p>
-                        </div>
+                       <div>
+                        <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '17px', color: '#0b332c', margin: '0 0 2px' }}>{doc.name}</h3>
+                        <p style={{ fontSize: '12px', color: '#10b981', fontWeight: '700', margin: '0 0 2px' }}>{doc.degrees || 'MBBS'}</p>
+                        <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 4px' }}>{specs.join(', ')}</p>
+                        
+                        {/* Display Clinic Visit Days & Timings */}
+                        {doc.custom_schedule && (
+                          <div style={{ fontSize: '11px', color: '#0b332c', background: '#f8f6f0', padding: '4px 8px', borderRadius: '6px', display: 'inline-block', border: '1px solid #e2e8f0', fontWeight: '600' }}>
+                            🕒 {Object.keys(doc.custom_schedule)
+                              .filter(d => doc.custom_schedule[d]?.active)
+                              .map(d => `${d} (${formatTime(doc.custom_schedule[d].start)}-${formatTime(doc.custom_schedule[d].end)})`)
+                              .join(', ') || doc.working_days?.join(', ') || 'Schedule not set'}
+                          </div>
+                        )}
+                      </div>
                       </div>
 
                       <span style={{ fontSize: '11px', fontWeight: '800', padding: '4px 10px', borderRadius: '100px', background: statusInfo.soft, color: statusInfo.color }}>
