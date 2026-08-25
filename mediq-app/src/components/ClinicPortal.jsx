@@ -304,7 +304,21 @@ export default function ClinicPortal() {
     setEditPtr(String(doc.ptr_score || 99.0));
     setEditSpecialties(doc.specialties || [doc.specialty || 'General Physician']);
     setEditFee(doc.consultation_fee != null ? String(doc.consultation_fee) : '');
-    setEditDaySchedules(doc.custom_schedule || DEFAULT_SCHEDULE);
+    
+    // Merge saved custom schedule cleanly with defaults so checkboxes stay checked & times stay filled
+    const mergedSchedule = { ...DEFAULT_SCHEDULE };
+    if (doc.custom_schedule) {
+      for (const day of DAYS) {
+        if (doc.custom_schedule[day]) {
+          mergedSchedule[day] = {
+            active: Boolean(doc.custom_schedule[day].active),
+            start: doc.custom_schedule[day].start || '10:00',
+            end: doc.custom_schedule[day].end || '14:00',
+          };
+        }
+      }
+    }
+    setEditDaySchedules(mergedSchedule);
   };
 
   const handleSaveEdit = async (doctorId) => {
@@ -629,15 +643,17 @@ export default function ClinicPortal() {
                         <p style={{ fontSize: '12px', color: '#10b981', fontWeight: '700', margin: '0 0 2px' }}>{doc.degrees || 'MBBS'}</p>
                         <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 4px' }}>{specs.join(', ')}</p>
                         
-                        {/* Display Clinic Visit Days & Timings */}
-                        {doc.custom_schedule && (
-                          <div style={{ fontSize: '11px', color: '#0b332c', background: '#f8f6f0', padding: '4px 8px', borderRadius: '6px', display: 'inline-block', border: '1px solid #e2e8f0', fontWeight: '600' }}>
-                            🕒 {Object.keys(doc.custom_schedule)
+                       {/* Display Clinic Visit Days & Timings clearly */}
+                        <div style={{ marginTop: '4px', fontSize: '11px', color: '#0b332c', background: '#f8f6f0', padding: '5px 10px', borderRadius: '8px', display: 'inline-block', border: '1px solid #e2e8f0', fontWeight: '600' }}>
+                          🕒 {doc.custom_schedule ? (
+                            Object.keys(doc.custom_schedule)
                               .filter(d => doc.custom_schedule[d]?.active)
-                              .map(d => `${d} (${formatTime(doc.custom_schedule[d].start)}-${formatTime(doc.custom_schedule[d].end)})`)
-                              .join(', ') || doc.working_days?.join(', ') || 'Schedule not set'}
-                          </div>
-                        )}
+                              .map(d => `${d} · ${formatTime(doc.custom_schedule[d].start)} – ${formatTime(doc.custom_schedule[d].end)}`)
+                              .join(' | ') || 'No active days selected'
+                          ) : (
+                            doc.working_days?.join(', ') || 'Schedule not set'
+                          )}
+                        </div>
                       </div>
                       </div>
 
