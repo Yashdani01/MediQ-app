@@ -508,15 +508,36 @@ export default function App() {
               <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>→</span>
             </div>
 
-            <div onClick={() => setActiveModal('queue')} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
-                <span style={{ color: 'var(--gold)' }}><AppIcon type="queue" size={17} /></span>
+            <div 
+              onClick={() => setActiveModal('queue')} 
+              style={{ 
+                background: activeQueueToken ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(11, 51, 44, 0.4) 100%)' : 'rgba(255,255,255,0.05)', 
+                border: activeQueueToken ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(255,255,255,0.08)', 
+                padding: '12px 14px', 
+                borderRadius: '14px', 
+                cursor: 'pointer', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                boxShadow: activeQueueToken ? '0 4px 15px rgba(16, 185, 129, 0.15)' : 'none',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '30px', height: '30px', borderRadius: '10px', background: activeQueueToken ? '#10b981' : 'rgba(255,255,255,0.1)', color: activeQueueToken ? '#fff' : 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <AppIcon type="queue" size={16} />
+                </div>
                 <div>
-                  <div style={{ fontSize: '12px', fontWeight: '600', color: '#fff' }}>Live Queue Tracker</div>
-                  <div style={{ fontSize: '10.5px', color: 'rgba(255,255,255,0.5)' }}>{activeQueueToken ? `Token #${activeQueueToken.number}` : 'No active booking'}</div>
+                  <div style={{ fontSize: '12.5px', fontWeight: '700', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    Live Queue Tracker
+                    {activeQueueToken && <span style={{ fontSize: '9px', background: '#10b981', color: '#fff', padding: '1px 5px', borderRadius: '4px', textTransform: 'uppercase', fontWeight: '800' }}>Live</span>}
+                  </div>
+                  <div style={{ fontSize: '11px', color: activeQueueToken ? '#4ade80' : 'rgba(255,255,255,0.5)', fontWeight: activeQueueToken ? '600' : 'normal' }}>
+                    {activeQueueToken ? `Active Token #${activeQueueToken.number}` : 'No active booking'}
+                  </div>
                 </div>
               </div>
-              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: activeQueueToken ? '#4ade80' : 'rgba(255,255,255,0.3)' }}></span>
+              <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)' }}>→</span>
             </div>
 
             <div onClick={() => setActiveModal('sos')} style={{ background: 'rgba(195, 79, 61, 0.12)', border: '1px solid rgba(195, 79, 61, 0.25)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
