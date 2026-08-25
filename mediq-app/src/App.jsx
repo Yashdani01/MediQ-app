@@ -210,7 +210,7 @@ export default function App() {
   const [newFamilyName, setNewFamilyName] = useState('');
   const [newFamilyRelation, setNewFamilyRelation] = useState('Parent');
 
-  const [activeQueueToken] = useState(null);
+  const [activeQueueToken, setActiveQueueToken] = useState(null);
 
   // 20 Common Symptoms Multi-Lingual Directory Data
   const commonSymptoms = {
@@ -397,6 +397,105 @@ export default function App() {
 
     setProfileLoaded(true);
   };
+
+
+  /* =========================
+     LIVE QUEUE TRACKER
+  ========================= */
+  useEffect(() => {
+    if (!session?.user) {
+      setActiveQueueToken(null);
+      return;
+    }
+
+    let bookingChannel;
+
+    const loadActiveBooking = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('bookings')
+          .select(`
+            *,
+            hospitals (
+              name
+            ),
+            doctors (
+              name
+            )
+          `)
+          .eq('user_id', session.user.id)
+          .in('status', ['confirmed', 'upcoming', 'waiting', 'checked_in'])
+          .order('appointment_date', { ascending: true })
+          .order('appointment_time', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error loading active booking:', error);
+          setActiveQueueToken(null);
+          return;
+        }
+
+        if (data) {
+          setActiveQueueToken({
+            id: data.id,
+            number:
+              data.queue_number ||
+              data.token_number ||
+              data.token ||
+              'Pending',
+
+            doctorName:
+              data.doctors?.name ||
+              data.doctor_name ||
+              'Doctor',
+
+            hospitalName:
+              data.hospitals?.name ||
+              data.hospital_name ||
+              'Hospital',
+
+            status: data.status,
+            appointmentDate: data.appointment_date,
+            appointmentTime: data.appointment_time,
+          });
+        } else {
+          setActiveQueueToken(null);
+        }
+      } catch (error) {
+        console.error('Live queue error:', error);
+        setActiveQueueToken(null);
+      }
+    };
+
+    loadActiveBooking();
+
+
+    /* REALTIME SUPABASE LISTENER */
+
+    bookingChannel = supabase
+      .channel(`patient-bookings-${session.user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'bookings',
+          filter: `user_id=eq.${session.user.id}`,
+        },
+        () => {
+          loadActiveBooking();
+        }
+      )
+      .subscribe();
+
+
+    return () => {
+      if (bookingChannel) {
+        supabase.removeChannel(bookingChannel);
+      }
+    };
+  }, [session?.user?.id]);
 
 
   /* =========================
@@ -1008,40 +1107,40 @@ export default function App() {
           )}
 
         </main>
-      </div>
-
-
-      {/* MOBILE BOTTOM NAV */}
-
-      <nav className="mobile-bottom-nav">
-
-        {navigationItems.map((item) => (
-          <button
-            key={item.id}
-            className={
-              activeTab === item.id
-                ? 'active'
-                : ''
-            }
-            onClick={() =>
-              handleNavigation(item.id)
-            }
-          >
-            <span className="mobile-nav-icon">
-              <AppIcon
-                type={item.icon}
-                size={21}
-              />
-            </span>
-
-            <span>
-              {item.label}
-            </span>
-          </button>
-        ))}
-
-      </nav>
-
     </div>
+
+
+    {/* MOBILE BOTTOM NAV */}
+
+    <nav className="mobile-bottom-nav">
+
+      {navigationItems.map((item) => (
+        <button
+          key={item.id}
+          className={
+            activeTab === item.id
+              ? 'active'
+              : ''
+          }
+          onClick={() =>
+            handleNavigation(item.id)
+          }
+        >
+          <span className="mobile-nav-icon">
+            <AppIcon
+              type={item.icon}
+              size={21}
+            />
+          </span>
+
+          <span>
+            {item.label}
+          </span>
+        </button>
+      ))}
+
+    </nav>
+
+  </div>
   );
 }
