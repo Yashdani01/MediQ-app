@@ -550,20 +550,56 @@ export default function ClinicPortal() {
 
             return (
               <div key={doc.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '20px', marginBottom: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
-                {isEditing ? (
-                  <div>
-                    <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '18px', color: '#0b332c', margin: '0 0 12px' }}>Edit Doctor: {doc.name}</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' }}>
-                      <input value={editName} onChange={(e) => setEditName(e.target.value)} style={{ padding: '10px', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '13px' }} placeholder="Name" />
-                      <input value={editDegrees} onChange={(e) => setEditDegrees(e.target.value)} style={{ padding: '10px', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '13px' }} placeholder="Degrees" />
-                      <input type="number" value={editFee} onChange={(e) => setEditFee(e.target.value)} style={{ padding: '10px', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '13px' }} placeholder="Fee ₹" />
+              {isEditing ? (
+                <div style={{ background: '#fcfbf9', border: '1px solid #10b981', borderRadius: '16px', padding: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '18px', color: '#0b332c', margin: 0 }}>Edit Doctor Profile</h3>
+                    <span style={{ fontSize: '11px', background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '6px', fontWeight: '700' }}>Active Editing</span>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' }}>
+                    <div>
+                      <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Doctor Name</label>
+                      <input value={editName} onChange={(e) => setEditName(e.target.value)} style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13.5px', boxSizing: 'border-box' }} placeholder="Doctor Name" />
                     </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button onClick={() => setEditingId(null)} style={{ flex: 1, background: '#f1f5f9', border: 'none', padding: '10px', borderRadius: '10px', fontWeight: '700', cursor: 'pointer' }}>Cancel</button>
-                      <button onClick={() => handleSaveEdit(doc.id)} style={{ flex: 1, background: '#10b981', color: '#fff', border: 'none', padding: '10px', borderRadius: '10px', fontWeight: '700', cursor: 'pointer' }}>Save Changes</button>
+
+                    <div>
+                      <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Degrees & Qualifications</label>
+                      <input value={editDegrees} onChange={(e) => setEditDegrees(e.target.value)} style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13.5px', boxSizing: 'border-box' }} placeholder="Degrees" />
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                      <div>
+                        <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Consultation Fee (₹)</label>
+                        <input type="number" value={editFee} onChange={(e) => setEditFee(e.target.value)} style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13.5px', boxSizing: 'border-box' }} placeholder="Fee ₹" />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Avg Time / Patient (Mins)</label>
+                        <input type="number" min="1" value={doc.avg_minutes_per_patient || 10} onChange={(e) => {
+                          // Optional state handler if you want to update avg minutes on edit
+                        }} style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13.5px', boxSizing: 'border-box' }} placeholder="10" />
+                      </div>
+                    </div>
+
+                    {/* Specialty Selector for Editing */}
+                    <div>
+                      <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Specialties</label>
+                      <SpecialtySelector selected={editSpecialties} onToggle={(spec) => toggleSpecialty(spec, editSpecialties, setEditSpecialties)} />
+                    </div>
+
+                    {/* Schedule Editor for Editing */}
+                    <div>
+                      <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Clinic Visit Days & Timings</label>
+                      <ScheduleEditor value={editDaySchedules} onChange={setEditDaySchedules} />
                     </div>
                   </div>
-                ) : (
+
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '14px' }}>
+                    <button onClick={() => setEditingId(null)} style={{ flex: 1, background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '12px', borderRadius: '10px', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}>Cancel</button>
+                    <button onClick={() => handleSaveEdit(doc.id)} style={{ flex: 1, background: '#10b981', color: '#fff', border: 'none', padding: '12px', borderRadius: '10px', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}>Save Changes</button>
+                  </div>
+                </div>
+              ) : (
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
                       <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
