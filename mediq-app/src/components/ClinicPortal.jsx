@@ -739,7 +739,7 @@ export default function ClinicPortal() {
                                     )}
                                   </div>
                                   <div style={{ fontSize: '11.5px', color: '#475569', fontWeight: '600' }}>
-                                    {b.is_walkin ? '🚶 Walk-in' : '📱 App Booking'} • Fee: <strong style={{ color: '#0b332c' }}>₹{b.consultation_fee || 500}</strong> • <span style={{ textTransform: 'capitalize', color: isWaiting ? '#d97706' : '#15803d' }}>{b.status}</span>
+                                    {b.is_walkin ? '🚶 Walk-in' : '📱 App Booking'} • Fee: <strong style={{ color: '#0b332c' }}>₹{b.consultation_fee || (b.is_priority ? 600 : 500)}</strong> • <span style={{ textTransform: 'capitalize', color: isWaiting ? '#d97706' : '#15803d' }}>{b.status}</span>
                                   </div>
                                 </div>
                               </div>
