@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 import LiveQueueTracker from './components/LiveQueueTracker';
 import RxDecoder from './components/RxDecoder';
+import BloodHub from './components/BloodHub';
 import Login from './components/Login';
 import HospitalFlow from './components/HospitalFlow';
 import MyBookings from './components/MyBookings';
@@ -431,6 +432,7 @@ export default function App() {
     reports: t.reports,
     bookings: t.myBookings,
     rxDecoder: 'AI Rx Decoder',
+    bloodHub: 'Blood Bridge Hub',
   };
 
   return (
@@ -543,6 +545,31 @@ export default function App() {
               <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)' }}>→</span>
             </div>
 
+           <div 
+              onClick={() => handleNavigation('bloodHub')}
+              style={{ 
+                background: 'rgba(255,255,255,0.04)', 
+                border: '1px solid rgba(255,255,255,0.07)', 
+                padding: '10px 12px', 
+                borderRadius: '12px', 
+                cursor: 'pointer', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between', 
+                marginTop: '4px' 
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+                <div style={{ width: '30px', height: '30px', borderRadius: '10px', background: '#991b1b', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                  🩸
+                </div>
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: '700', color: '#fff' }}>Blood Bridge</div>
+                  <div style={{ fontSize: '10.5px', color: 'rgba(255,255,255,0.6)' }}>Emergency requests & donors</div>
+                </div>
+              </div>
+              <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>→</span>
+            </div>
             <div 
               onClick={() => handleNavigation('rxDecoder')}
               style={{ 
@@ -766,6 +793,7 @@ export default function App() {
           {activeTab === 'reports' && <Reports user={session?.user || null} lang={lang} />}
           {activeTab === 'bookings' && <MyBookings />}
           {activeTab === 'rxDecoder' && <RxDecoder user={session?.user || null} />}
+          {activeTab === 'bloodHub' && <BloodHub user={session?.user || null} />}
         </main>
       </div>
 
