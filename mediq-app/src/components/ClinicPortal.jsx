@@ -656,17 +656,19 @@ const startEdit = (doc) => {
                         <p style={{ fontSize: '12px', color: '#10b981', fontWeight: '700', margin: '0 0 3px' }}>{doc.degrees || 'MBBS'}</p>
                         <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 6px' }}>{specs.join(', ')}</p>
                         
-                       {/* Display Clinic Visit Days & Timings clearly */}
-                        <div style={{ marginTop: '4px', fontSize: '11px', color: '#0b332c', background: '#f8f6f0', padding: '5px 10px', borderRadius: '8px', display: 'inline-block', border: '1px solid #e7e1d3', fontWeight: '600' }}>
-                          🕒 {doc.custom_schedule ? (
-                            Object.keys(doc.custom_schedule)
-                              .filter(d => doc.custom_schedule[d]?.active)
-                              .map(d => `${d} · ${formatTime(doc.custom_schedule[d].start)} – ${formatTime(doc.custom_schedule[d].end)}`)
-                              .join(' | ') || 'No active days selected'
-                          ) : (
-                            doc.working_days?.join(', ') || 'Schedule not set'
-                          )}
-                        </div>
+                      {/* Display Clinic Visit Days & Timings clearly */}
+<div style={{ marginTop: '4px', fontSize: '11px', color: '#0b332c', background: '#f8f6f0', padding: '5px 10px', borderRadius: '8px', display: 'inline-block' }}>
+  {doc.custom_schedule && Object.keys(doc.custom_schedule).length > 0 && Object.keys(doc.custom_schedule).some(d => doc.custom_schedule[d]?.active) ? (
+    Object.keys(doc.custom_schedule)
+      .filter(d => doc.custom_schedule[d]?.active)
+      .map(d => `${d} - ${formatTime(doc.custom_schedule[d].start)} to ${formatTime(doc.custom_schedule[d].end)}`)
+      .join(' | ')
+  ) : doc.working_days && doc.working_days.length > 0 ? (
+    doc.working_days.join(', ')
+  ) : (
+    'Mon - Sat (10:00 AM - 02:00 PM)'
+  )}
+</div>
                       </div>
                       </div>
 
