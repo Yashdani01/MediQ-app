@@ -232,6 +232,7 @@ export default function App() {
 
     fetchActiveQueue();
   }, [session]);
+
   const commonSymptoms = {
     en: [
       { symptom: 'Severe Chest Pain & Tightness', meaning: 'Indicates potential cardiac stress, angina, or acute myocardial issues requiring immediate attention.', specialist: 'Cardiologist' },
@@ -545,31 +546,6 @@ export default function App() {
               <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)' }}>→</span>
             </div>
 
-           <div 
-              onClick={() => handleNavigation('bloodHub')}
-              style={{ 
-                background: 'rgba(255,255,255,0.04)', 
-                border: '1px solid rgba(255,255,255,0.07)', 
-                padding: '10px 12px', 
-                borderRadius: '12px', 
-                cursor: 'pointer', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'space-between', 
-                marginTop: '4px' 
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
-                <div style={{ width: '30px', height: '30px', borderRadius: '10px', background: '#991b1b', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
-                  🩸
-                </div>
-                <div>
-                  <div style={{ fontSize: '12px', fontWeight: '700', color: '#fff' }}>Blood Bridge</div>
-                  <div style={{ fontSize: '10.5px', color: 'rgba(255,255,255,0.6)' }}>Emergency requests & donors</div>
-                </div>
-              </div>
-              <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>→</span>
-            </div>
             <div 
               onClick={() => handleNavigation('rxDecoder')}
               style={{ 
@@ -591,6 +567,32 @@ export default function App() {
                 <div>
                   <div style={{ fontSize: '12px', fontWeight: '700', color: '#fff' }}>AI Rx Decoder</div>
                   <div style={{ fontSize: '10.5px', color: 'rgba(255,255,255,0.6)' }}>Translate & analyze prescriptions</div>
+                </div>
+              </div>
+              <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>→</span>
+            </div>
+
+            <div 
+              onClick={() => handleNavigation('bloodHub')}
+              style={{ 
+                background: 'rgba(255,255,255,0.04)', 
+                border: '1px solid rgba(255,255,255,0.07)', 
+                padding: '10px 12px', 
+                borderRadius: '12px', 
+                cursor: 'pointer', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between', 
+                marginTop: '4px' 
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+                <div style={{ width: '30px', height: '30px', borderRadius: '10px', background: '#991b1b', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                  🩸
+                </div>
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: '700', color: '#fff' }}>Blood Bridge</div>
+                  <div style={{ fontSize: '10.5px', color: 'rgba(255,255,255,0.6)' }}>Emergency requests & donors</div>
                 </div>
               </div>
               <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>→</span>
