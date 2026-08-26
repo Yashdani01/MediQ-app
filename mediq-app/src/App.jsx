@@ -8,6 +8,7 @@ import Reports from './components/Reports';
 import SymptomTriage from './components/SymptomTriage';
 import ClinicPortal from './components/ClinicPortal';
 import PhysioGuideModal from './components/PhysioGuideModal';
+import RxDecoder from './components/RxDecoder';
 import { getMyCurrentBooking } from './hospitalData';
 
 import './index.css';
