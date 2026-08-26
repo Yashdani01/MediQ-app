@@ -114,10 +114,12 @@ const DAY_ABBR_COUNT = [
 function isAvailableToday(doc) {
   const today = DAY_ABBR_COUNT[new Date().getDay()];
 
+  // If working_days is missing or empty, default to available every day
   const worksToday =
     !doc.working_days ||
     doc.working_days.length === 0 ||
-    doc.working_days.includes(today);
+    doc.working_days.includes(today) ||
+    doc.working_days.some(day => day && day.toLowerCase().includes(today.toLowerCase()));
 
   const notBlocked =
     doc.status !== 'completed' &&
@@ -125,7 +127,6 @@ function isAvailableToday(doc) {
 
   return worksToday && notBlocked;
 }
-
 export async function getAvailableDoctorCounts(hospitalIds) {
   if (!hospitalIds || hospitalIds.length === 0) {
     return {};
