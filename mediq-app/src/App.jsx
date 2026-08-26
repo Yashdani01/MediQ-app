@@ -432,6 +432,7 @@ export default function App() {
     bookings: t.myBookings,
     rxDecoder: 'AI Rx Decoder',
   };
+
   return (
     <div className="mediq-app">
       <header className="mobile-app-header">
@@ -541,25 +542,32 @@ export default function App() {
               </div>
               <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)' }}>→</span>
             </div>
+
             <div 
-  onClick={() => setCurrentView('rxDecoder')}
-  style={{
-    background: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px',
-    padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    cursor: 'pointer', marginBottom: '10px'
-  }}
->
-  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-    <div style={{ width: '36px', height: '36px', background: '#f0fdf4', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981' }}>
-      ✨
-    </div>
-    <div>
-      <strong style={{ fontSize: '13.5px', color: '#0b332c', display: 'block' }}>AI Rx Decoder</strong>
-      <span style={{ fontSize: '11px', color: '#64748b' }}>Translate & analyze prescriptions</span>
-    </div>
-  </div>
-  <span style={{ color: '#94a3b8' }}>→</span>
-</div>
+              onClick={() => handleNavigation('rxDecoder')}
+              style={{ 
+                background: 'rgba(255,255,255,0.04)', 
+                border: '1px solid rgba(255,255,255,0.07)', 
+                padding: '10px 12px', 
+                borderRadius: '12px', 
+                cursor: 'pointer', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between', 
+                marginTop: '4px' 
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+                <div style={{ width: '30px', height: '30px', borderRadius: '10px', background: '#d4af37', color: '#0b332c', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                  ✨
+                </div>
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: '700', color: '#fff' }}>AI Rx Decoder</div>
+                  <div style={{ fontSize: '10.5px', color: 'rgba(255,255,255,0.6)' }}>Translate & analyze prescriptions</div>
+                </div>
+              </div>
+              <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>→</span>
+            </div>
 
             <div onClick={() => setActiveModal('sos')} style={{ background: 'rgba(195, 79, 61, 0.12)', border: '1px solid rgba(195, 79, 61, 0.25)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
@@ -572,7 +580,6 @@ export default function App() {
               <span style={{ fontSize: '12px', color: '#ffd8d2' }}>→</span>
             </div>
 
-            {/* Added Help & Support to Sidebar right below Emergency & SOS */}
             <div onClick={() => setActiveModal('support')} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
                 <span style={{ color: 'var(--gold)' }}><AppIcon type="history" size={17} /></span>
