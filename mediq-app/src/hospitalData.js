@@ -1198,7 +1198,7 @@ export async function getTodaysBookings(clinicPin, doctorId) {
   const { data: hospital, error: hospError } = await supabase
     .from('hospitals')
     .select('id')
-    .eq('staff_pin', clinicPin)
+    .eq('pin', clinicPin)
     .single();
 
   if (hospError || !hospital) {
