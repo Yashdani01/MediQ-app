@@ -55,6 +55,19 @@ function formatTime(t) {
   return `${hour}:${String(m).padStart(2, '0')} ${period}`;
 }
 
+function formatBookingDateTime(ts) {
+  if (!ts) return '';
+  try {
+    return new Date(ts).toLocaleString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return '';
+  }
+}
 function getInitials(name = '') {
   return (
     name
@@ -737,6 +750,11 @@ const startEdit = (doc) => {
                                         )}
                                       </div>
                                       <div style={{ fontSize: '11px', color: '#64748b' }}>{b.is_walkin ? '🚶 Walk-in' : '📱 App Booking'} • <span style={{ textTransform: 'capitalize', fontWeight: '600', color: isWaiting ? '#d97706' : '#15803d' }}>{b.status}</span></div>
+                                      {(b.booked_at || b.created_at) && (
+                                        <div style={{ fontSize: '10.5px', color: '#94a3b8', marginTop: '2px' }}>
+                                          🕒 {formatBookingDateTime(b.booked_at || b.created_at)}
+                                        </div>
+                                      )}
                                     </div>
                                   </div>
                                   <div style={{ display: 'flex', gap: '6px' }}>
