@@ -102,13 +102,14 @@ export default function ClinicPortal() {
   const [daySchedules, setDaySchedules] = useState(DEFAULT_SCHEDULE);
   const [savingDoctor, setSavingDoctor] = useState(false);
 
-  const [editingId, setEditingId] = useState(null);
-  const [editName, setEditName] = useState('');
-  const [editDegrees, setEditDegrees] = useState('');
-  const [editPtr, setEditPtr] = useState('');
-  const [editSpecialties, setEditSpecialties] = useState([]);
-  const [editFee, setEditFee] = useState('');
-  const [editDaySchedules, setEditDaySchedules] = useState(DEFAULT_SCHEDULE);
+ const [editingId, setEditingId] = useState(null);
+const [editName, setEditName] = useState('');
+const [editDegrees, setEditDegrees] = useState('');
+const [editPtr, setEditPtr] = useState('');
+const [editSpecialties, setEditSpecialties] = useState([]);
+const [editFee, setEditFee] = useState('');
+const [editAvgMinutes, setEditAvgMinutes] = useState('10');
+const [editDaySchedules, setEditDaySchedules] = useState(DEFAULT_SCHEDULE);
 
   const [showWalkinForm, setShowWalkinForm] = useState(null);
   const [walkinName, setWalkinName] = useState('');
@@ -297,15 +298,16 @@ export default function ClinicPortal() {
     }
   };
 
-  const startEdit = (doc) => {
-    setEditingId(doc.id);
-    setEditName(doc.name);
-    setEditDegrees(doc.degrees || 'MBBS');
-    setEditPtr(String(doc.ptr_score || 99.0));
-    setEditSpecialties(doc.specialties || [doc.specialty || 'General Physician']);
-    setEditFee(doc.consultation_fee != null ? String(doc.consultation_fee) : '');
-    
-    // Merge saved custom schedule cleanly with defaults so checkboxes stay checked & times stay filled
+const startEdit = (doc) => {
+  setEditingId(doc.id);
+  setEditName(doc.name);
+  setEditDegrees(doc.degrees || 'MBBS');
+  setEditPtr(String(doc.ptr_score || 99.0));
+  setEditSpecialties(doc.specialties || [doc.specialty || 'General Physician']);
+  setEditFee(doc.consultation_fee != null ? String(doc.consultation_fee) : '');
+  setEditAvgMinutes(String(doc.avg_minutes_per_patient || 10));
+  
+  // Merge saved custom schedule cleanly with defaults so checkboxes stay checked & times stay filled
     const mergedSchedule = { ...DEFAULT_SCHEDULE };
     if (doc.custom_schedule) {
       for (const day of DAYS) {
@@ -334,7 +336,7 @@ export default function ClinicPortal() {
       doctorId,
       editName,
       editSpecialties.join(', '),
-      10,
+      parseInt(editAvgMinutes, 10) || 10,
       activeDays,
       startTime,
       endTime,
@@ -605,11 +607,9 @@ export default function ClinicPortal() {
                         <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Consultation Fee (₹)</label>
                         <input type="number" value={editFee} onChange={(e) => setEditFee(e.target.value)} style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13.5px', boxSizing: 'border-box' }} placeholder="Fee ₹" />
                       </div>
-                      <div>
+                        <div>
                         <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Avg Time / Patient (Mins)</label>
-                        <input type="number" min="1" value={doc.avg_minutes_per_patient || 10} onChange={(e) => {
-                          // Optional state handler if you want to update avg minutes on edit
-                        }} style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13.5px', boxSizing: 'border-box' }} placeholder="10" />
+                        <input type="number" min="1" value={editAvgMinutes} onChange={(e) => setEditAvgMinutes(e.target.value)} style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13.5px', boxSizing: 'border-box' }} placeholder="10" />
                       </div>
                     </div>
 
@@ -721,18 +721,24 @@ export default function ClinicPortal() {
                               const isWaiting = b.status?.toLowerCase() === 'waiting' || b.status?.toLowerCase() === 'checked_in';
                               const isUpdating = updatingPatient === b.id;
 
-                              return (
-                                <div key={b.id} style={{ background: '#f8f6f0', border: '1px solid #e7e1d3', borderRadius: '12px', padding: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                                                           return (
+                                <div key={b.id} style={{ background: b.is_priority ? '#fffbeb' : '#f8f6f0', border: b.is_priority ? '1px solid #fde047' : '1px solid #e7e1d3', borderRadius: '12px', padding: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#10b981', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '800', flexShrink: 0 }}>
+                                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: b.is_priority ? '#d97706' : '#10b981', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '800', flexShrink: 0 }}>
                                       #{b.queue_number || b.token_number || '1'}
                                     </div>
                                     <div>
-                                      <div style={{ fontSize: '13px', fontWeight: '700', color: '#0b332c' }}>{b.patient_name || 'Patient'}</div>
+                                      <div style={{ fontSize: '13px', fontWeight: '700', color: '#0b332c', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        {b.patient_name || 'Patient'}
+                                        {b.is_priority && (
+                                          <span style={{ fontSize: '9px', fontWeight: '900', background: '#f59e0b', color: '#fff', padding: '2px 6px', borderRadius: '5px', letterSpacing: '0.3px' }}>
+                                            ⚡ VIP
+                                          </span>
+                                        )}
+                                      </div>
                                       <div style={{ fontSize: '11px', color: '#64748b' }}>{b.is_walkin ? '🚶 Walk-in' : '📱 App Booking'} • <span style={{ textTransform: 'capitalize', fontWeight: '600', color: isWaiting ? '#d97706' : '#15803d' }}>{b.status}</span></div>
                                     </div>
                                   </div>
-
                                   <div style={{ display: 'flex', gap: '6px' }}>
                                     {isWaiting ? (
                                       <>
