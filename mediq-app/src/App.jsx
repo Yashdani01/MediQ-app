@@ -430,6 +430,7 @@ export default function App() {
     triage: t.triage,
     reports: t.reports,
     bookings: t.myBookings,
+    rxDecoder: 'AI Rx Decoder',
   };
   return (
     <div className="mediq-app">
@@ -757,6 +758,7 @@ export default function App() {
           {activeTab === 'triage' && <SymptomTriage onClose={() => handleNavigation('home')} onSelectSpecialty={() => handleNavigation('home')} />}
           {activeTab === 'reports' && <Reports user={session?.user || null} lang={lang} />}
           {activeTab === 'bookings' && <MyBookings />}
+          {activeTab === 'rxDecoder' && <RxDecoder user={session?.user || null} />}
         </main>
       </div>
 
