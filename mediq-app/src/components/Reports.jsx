@@ -66,8 +66,21 @@ export default function Reports({ user }) {
     fetchReports();
   }
 
-  async function handleDeleteReport(reportId) {
+  async function handleDeleteReport(reportId, fileUrl) {
     if (!window.confirm('Are you sure you want to delete this record?')) return;
+
+    if (fileUrl) {
+      try {
+        const urlObj = new URL(fileUrl);
+        const pathParts = urlObj.pathname.split('/patient-reports/');
+        if (pathParts.length > 1) {
+          const filePath = pathParts[1];
+          await supabase.storage.from('patient-reports').remove([filePath]);
+        }
+      } catch (err) {
+        console.error('Error removing file from storage:', err);
+      }
+    }
 
     const { error } = await supabase
       .from('reports')
@@ -76,7 +89,7 @@ export default function Reports({ user }) {
 
     if (error) {
       console.error('Error deleting report:', error);
-      alert('Could not delete the record.');
+      alert('Could not delete the record. Please ensure delete RLS policy is enabled on the reports table.');
       return;
     }
 
@@ -212,7 +225,7 @@ export default function Reports({ user }) {
                 )}
                 <button
                   type="button"
-                  onClick={() => handleDeleteReport(rep.id)}
+                  onClick={() => handleDeleteReport(rep.id, rep.file_url)}
                   style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', padding: '8px 10px', borderRadius: '10px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
                   title="Delete report"
                 >
