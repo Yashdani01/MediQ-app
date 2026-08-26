@@ -664,7 +664,7 @@ export default function HospitalFlow({
 
     const isPriority = bookingTier === 'priority';
 
-    if (selectedPayment === 'upi') {
+     if (selectedPayment === 'upi') {
       if (paymentExpired) {
         setBookingError('Payment time expired. Please try booking again.');
         setPendingBooking(null);
@@ -699,7 +699,28 @@ export default function HospitalFlow({
       );
 
       setSubmittingPayment(false);
-      // ... rest of UPI confirmation
+
+      if (error) {
+        setBookingError('Something went wrong while booking. Please try again.');
+        setPendingBooking(null);
+        return;
+      }
+
+      setTicketData({
+        appointment,
+        doctor: {
+          name: doc.name,
+          specialty: doc.specialty,
+          avg_minutes_per_patient: doc.avg_minutes_per_patient,
+        },
+        patientsAheadOverride: doc.liveQueue,
+        paymentMethod: 'upi',
+        upiInfo: hospitalUpi,
+      });
+
+      setPendingBooking(null);
+      setShowCelebration(true);
+      return; // <-- critical: stop here so we don't fall into the cash logic below
     }
 
     // CASH BOOKING CONFIRMATION
