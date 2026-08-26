@@ -1194,14 +1194,12 @@ export async function updateHospitalUpi(
    CLINIC BOOKINGS
 ========================================================= */
 export async function getTodaysBookings(clinicPin, doctorId) {
-  // First, verify the clinic pin to get the hospital ID
-  const { data: hospital, error: hospError } = await supabase
-    .from('hospitals')
-    .select('id')
-    .eq('pin', clinicPin)
-    .single();
+  // Resolve the hospital via the same RPC every other clinic-portal
+  // function uses (check_clinic_pin). Do NOT query hospitals.pin
+  // directly — that column isn't exposed to the client and 400s.
+  const hospitalId = await checkClinicPin(clinicPin);
 
-  if (hospError || !hospital) {
+  if (!hospitalId) {
     console.error('Invalid clinic PIN for bookings');
     return [];
   }
@@ -1221,7 +1219,7 @@ export async function getTodaysBookings(clinicPin, doctorId) {
       booked_at,
       created_at
     `)
-    .eq('hospital_id', hospital.id)
+    .eq('hospital_id', hospitalId)
     .eq('doctor_id', doctorId)
     .order('is_priority', { ascending: false }) // Priority bookings automatically shown on top
     .order('queue_number', { ascending: true });
