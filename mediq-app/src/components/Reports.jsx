@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getPatientReports, uploadPatientReport } from '../hospitalData';
+import { supabase } from '../supabaseClient';
 
 const CATEGORIES = ['Prescriptions', 'Lab Reports', 'Medical Documents'];
 
@@ -29,6 +30,19 @@ export default function Reports({ user }) {
   function handleFileSelect(e) {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // 50 MB total limit in bytes (50 * 1024 * 1024 = 52,428,800 bytes)
+    const MAX_TOTAL_LIMIT_BYTES = 50 * 1024 * 1024;
+    
+    // Estimate cumulative storage based on existing reports + new file
+    const estimatedTotalBytes = reports.length * (5 * 1024 * 1024) + file.size;
+
+    if (file.size > MAX_TOTAL_LIMIT_BYTES || estimatedTotalBytes > MAX_TOTAL_LIMIT_BYTES) {
+      alert('You exceeded the 50MB storage limit. Kindly delete unwanted or unusual files from your vault to upload a new one.');
+      e.target.value = ''; // Reset input
+      return;
+    }
+
     setPendingFile(file);
     setUploadError('');
   }
@@ -52,9 +66,26 @@ export default function Reports({ user }) {
     fetchReports();
   }
 
+  async function handleDeleteReport(reportId) {
+    if (!window.confirm('Are you sure you want to delete this record?')) return;
+
+    const { error } = await supabase
+      .from('reports')
+      .delete()
+      .eq('id', reportId);
+
+    if (error) {
+      console.error('Error deleting report:', error);
+      alert('Could not delete the record.');
+      return;
+    }
+
+    fetchReports();
+  }
+
   const prescriptionsCount = reports.filter(r => r.report_type === 'Prescriptions').length;
   const labReportsCount = reports.filter(r => r.report_type === 'Lab Reports').length;
-  const medicalDocsCount = reports.filter(r => r.report_type === 'Medical Documents').length;
+  const medicalDocsCount = reports.filter(r => r.report_type === 'Medical Documents' || r.report_type === 'Lab' || r.report_type === 'Rx' || r.report_type === 'Imaging').length;
 
   return (
     <div style={{
@@ -141,7 +172,7 @@ export default function Reports({ user }) {
         </div>
       </div>
 
-      {/* 3. CONTENT AREA OR EMPTY STATE (no duplicate upload button here anymore) */}
+      {/* 3. CONTENT AREA OR EMPTY STATE */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>Loading records...</div>
       ) : reports.length === 0 ? (
@@ -172,9 +203,22 @@ export default function Reports({ user }) {
                 <strong style={{ fontSize: '14px', color: '#0b332c', display: 'block', marginBottom: '2px' }}>{rep.name}</strong>
                 <span style={{ fontSize: '11px', color: '#64748b' }}>Added on {new Date(rep.uploaded_at).toLocaleDateString()}</span>
               </div>
-              <a href={rep.file_url} target="_blank" rel="noopener noreferrer" style={{ background: '#f8f6f0', color: '#0b332c', padding: '8px 12px', borderRadius: '10px', fontSize: '12px', fontWeight: '700', textDecoration: 'none', border: '1px solid #e2e8f0' }}>
-                View / Download ↗
-              </a>
+              
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                {rep.file_url && (
+                  <a href={rep.file_url} target="_blank" rel="noopener noreferrer" style={{ background: '#f8f6f0', color: '#0b332c', padding: '8px 12px', borderRadius: '10px', fontSize: '12px', fontWeight: '700', textDecoration: 'none', border: '1px solid #e2e8f0' }}>
+                    View ↗
+                  </a>
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleDeleteReport(rep.id)}
+                  style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', padding: '8px 10px', borderRadius: '10px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
+                  title="Delete report"
+                >
+                  🗑️
+                </button>
+              </div>
             </div>
           ))}
         </div>
