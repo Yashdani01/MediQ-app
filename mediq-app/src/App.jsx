@@ -540,6 +540,25 @@ export default function App() {
               </div>
               <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)' }}>→</span>
             </div>
+            <div 
+  onClick={() => setCurrentView('rxDecoder')}
+  style={{
+    background: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px',
+    padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    cursor: 'pointer', marginBottom: '10px'
+  }}
+>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+    <div style={{ width: '36px', height: '36px', background: '#f0fdf4', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981' }}>
+      ✨
+    </div>
+    <div>
+      <strong style={{ fontSize: '13.5px', color: '#0b332c', display: 'block' }}>AI Rx Decoder</strong>
+      <span style={{ fontSize: '11px', color: '#64748b' }}>Translate & analyze prescriptions</span>
+    </div>
+  </div>
+  <span style={{ color: '#94a3b8' }}>→</span>
+</div>
 
             <div onClick={() => setActiveModal('sos')} style={{ background: 'rgba(195, 79, 61, 0.12)', border: '1px solid rgba(195, 79, 61, 0.25)', padding: '10px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
