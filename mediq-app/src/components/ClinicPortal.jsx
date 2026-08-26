@@ -699,40 +699,50 @@ export default function ClinicPortal() {
                               const isUpdating = updatingPatient === b.id;
 
                               return (
-                                <div
-                                  key={b.id}
-                                  style={{
-                                    background: b.is_priority ? '#fffbeb' : '#f8f6f0',
-                                    border: b.is_priority ? '1.5px solid #f59e0b' : '1px solid #e2e8f0',
-                                    borderRadius: '14px',
-                                    padding: '12px',
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    boxShadow: b.is_priority ? '0 4px 12px rgba(245, 158, 11, 0.2)' : 'none'
-                                  }}
-                                >
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: b.is_priority ? '#d97706' : '#10b981', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '800' }}>
-                                      #{b.queue_number || b.token_number || '1'}
-                                    </div>
-                                    <div>
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        {/* Displays Care Circle Member Name (e.g. Wife) */}
-                                        <span style={{ fontSize: '13.5px', fontWeight: '800', color: '#0b332c' }}>{b.patient_name || 'Patient'}</span>
-
-                                        {/* High-visibility Priority Badge for Clinic Staff */}
-                                        {b.is_priority && (
-                                          <span style={{ background: '#fef3c7', color: '#92400e', fontSize: '10px', fontWeight: '900', padding: '2px 7px', borderRadius: '6px', border: '1px solid #fde047' }}>
-                                            ⚡ PRIORITY PASS
-                                          </span>
-                                        )}
-                                      </div>
-                                      <div style={{ fontSize: '11px', color: '#64748b' }}>
-                                        {b.is_walkin ? '🚶 Walk-in' : '📱 App Booking'} • Fee: ₹{b.consultation_fee || 500} • <span style={{ textTransform: 'capitalize', fontWeight: '600', color: isWaiting ? '#d97706' : '#15803d' }}>{b.status}</span>
-                                      </div>
-                                    </div>
+                             <div 
+                              key={b.id} 
+                              style={{ 
+                                background: b.is_priority 
+                                  ? 'linear-gradient(135deg, #fffbeb 0%, #fefce8 100%)' 
+                                  : '#f8f6f0', 
+                                border: b.is_priority ? '2px solid #f59e0b' : '1px solid #e2e8f0', 
+                                borderRadius: '16px', 
+                                padding: '14px', 
+                                display: 'flex', 
+                                justifyContent: 'space-between', 
+                                alignItems: 'center',
+                                boxShadow: b.is_priority ? '0 6px 20px rgba(245, 158, 11, 0.25)' : 'none',
+                                transform: b.is_priority ? 'scale(1.01)' : 'none',
+                                transition: 'all 0.2s ease'
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <div style={{ 
+                                  width: '36px', height: '36px', borderRadius: '10px', 
+                                  background: b.is_priority ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' : '#10b981', 
+                                  color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                                  fontSize: '13px', fontWeight: '900', boxShadow: b.is_priority ? '0 3px 10px rgba(217, 119, 6, 0.3)' : 'none' 
+                                }}>
+                                  #{b.queue_number || b.token_number || '1'}
+                                </div>
+                                <div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+                                    <span style={{ fontSize: '14px', fontWeight: '900', color: '#0b332c' }}>{b.patient_name || 'Patient'}</span>
+                                    {b.is_priority && (
+                                      <span style={{ 
+                                        background: '#d97706', color: '#fff', fontSize: '10px', fontWeight: '900', 
+                                        padding: '2px 8px', borderRadius: '6px', letterSpacing: '0.5px',
+                                        boxShadow: '0 2px 5px rgba(217, 119, 6, 0.2)'
+                                      }}>
+                                        ⚡ VIP PRIORITY
+                                      </span>
+                                    )}
                                   </div>
+                                  <div style={{ fontSize: '11.5px', color: '#475569', fontWeight: '600' }}>
+                                    {b.is_walkin ? '🚶 Walk-in' : '📱 App Booking'} • Fee: <strong style={{ color: '#0b332c' }}>₹{b.consultation_fee || 500}</strong> • <span style={{ textTransform: 'capitalize', color: isWaiting ? '#d97706' : '#15803d' }}>{b.status}</span>
+                                  </div>
+                                </div>
+                              </div>
 
                                   <div style={{ display: 'flex', gap: '6px' }}>
                                     {isWaiting ? (
