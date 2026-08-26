@@ -82,9 +82,12 @@ export default function ClinicPortal() {
   const [upiId, setUpiId] = useState('');
   const [upiInput, setUpiInput] = useState('');
   const [savingUpi, setSavingUpi] = useState(false);
+  const [editingUpi, setEditingUpi] = useState(false);
 
+  const [locationStr, setLocationStr] = useState('');
   const [locationInput, setLocationInput] = useState('');
   const [savingLocation, setSavingLocation] = useState(false);
+  const [editingLocation, setEditingLocation] = useState(false);
 
   const [showSettingsDrawer, setShowSettingsDrawer] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
@@ -160,6 +163,7 @@ export default function ClinicPortal() {
   const loadLocation = async (currentPin) => {
     if (!currentPin) return;
     const data = await getHospitalLocation(currentPin);
+    setLocationStr(data || '');
     setLocationInput(data || '');
   };
 
@@ -218,6 +222,7 @@ export default function ClinicPortal() {
       return;
     }
     setUpiId(upiInput.trim());
+    setEditingUpi(false);
   };
 
   const handleSaveLocation = async () => {
@@ -228,6 +233,8 @@ export default function ClinicPortal() {
       setError('Could not save location.');
       return;
     }
+    setLocationStr(locationInput.trim());
+    setEditingLocation(false);
   };
 
   const toggleSpecialty = (spec, list, setList) => {
@@ -297,23 +304,16 @@ export default function ClinicPortal() {
     setEditPtr(String(doc.ptr_score || 99.0));
     setEditSpecialties(doc.specialties || [doc.specialty || 'General Physician']);
     setEditFee(doc.consultation_fee != null ? String(doc.consultation_fee) : '');
-
+    
+    // Merge saved custom schedule cleanly with defaults so checkboxes stay checked & times stay filled
     const mergedSchedule = { ...DEFAULT_SCHEDULE };
-    let rawSchedule = doc.custom_schedule;
-    if (typeof rawSchedule === 'string') {
-      try {
-        rawSchedule = JSON.parse(rawSchedule);
-      } catch (e) {
-        rawSchedule = null;
-      }
-    }
-    if (rawSchedule) {
+    if (doc.custom_schedule) {
       for (const day of DAYS) {
-        if (rawSchedule[day]) {
+        if (doc.custom_schedule[day]) {
           mergedSchedule[day] = {
-            active: Boolean(rawSchedule[day].active),
-            start: rawSchedule[day].start || '10:00',
-            end: rawSchedule[day].end || '14:00',
+            active: Boolean(doc.custom_schedule[day].active),
+            start: doc.custom_schedule[day].start || '10:00',
+            end: doc.custom_schedule[day].end || '14:00',
           };
         }
       }
@@ -323,6 +323,8 @@ export default function ClinicPortal() {
 
   const handleSaveEdit = async (doctorId) => {
     const activeDays = Object.keys(editDaySchedules).filter((day) => editDaySchedules[day]?.active);
+    
+    // Get first active day's start/end time as primary fallback
     const firstActiveDay = activeDays[0] || 'Mon';
     const startTime = editDaySchedules[firstActiveDay]?.start || '10:00';
     const endTime = editDaySchedules[firstActiveDay]?.end || '14:00';
@@ -340,17 +342,19 @@ export default function ClinicPortal() {
       editFee ? parseFloat(editFee) : null
     );
 
-    await supabase
-      .from('doctors')
-      .update({
-        degrees: editDegrees,
-        ptr_score: parseFloat(editPtr) || 99.0,
-        specialties: editSpecialties,
-        custom_schedule: editDaySchedules,
-      })
-      .eq('id', doctorId);
+    await supabase.from('doctors').update({
+      degrees: editDegrees,
+      ptr_score: parseFloat(editPtr) || 99.0,
+      specialties: editSpecialties,
+      custom_schedule: editDaySchedules,
+    }).eq('id', doctorId);
 
     setEditingId(null);
+    await loadDoctors(unlockedPin);
+  };
+  const handleDelete = async (doctorId, name) => {
+    if (!window.confirm(`Remove Dr. ${name} from your clinic?`)) return;
+    await deleteDoctor(unlockedPin, doctorId);
     await loadDoctors(unlockedPin);
   };
 
@@ -384,6 +388,13 @@ export default function ClinicPortal() {
     setLoadingBookings(false);
   };
 
+  const handleCheckIn = async (appointmentId, doctorId) => {
+    setUpdatingPatient(appointmentId);
+    await checkInAppointment(unlockedPin, appointmentId);
+    setUpdatingPatient(null);
+    await refreshBookings(doctorId);
+  };
+
   const handleMarkSeen = async (appointmentId, doctorId) => {
     setUpdatingPatient(appointmentId);
     await markAppointmentSeen(unlockedPin, appointmentId);
@@ -403,12 +414,12 @@ export default function ClinicPortal() {
 
   if (!unlocked) {
     return (
-      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0b332c 0%, #062b25 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, fontFamily: 'sans-serif' }}>
-        <div style={{ background: '#fff', width: '100%', maxWidth: '400px', borderRadius: '24px', padding: '32px 24px', boxShadow: '0 20px 40px rgba(0,0,0,0.3)', textAlign: 'center' }}>
-          <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: '#e6f4ea', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: '28px', fontWeight: 'bold' }}>✚</div>
-          <h1 style={{ fontFamily: 'Fraunces, serif', fontSize: '22px', color: '#0b332c', margin: '0 0 6px' }}>{clinicName}</h1>
-          <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 24px' }}>Secure Staff Access Portal. Enter 4-digit PIN.</p>
-          <form onSubmit={handleUnlock} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div style={{ minHeight: '100vh', background: 'radial-gradient(circle at 20% 20%, #12463d 0%, #0b332c 45%, #062b25 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
+        <div style={{ background: '#fff', width: '100%', maxWidth: '400px', borderRadius: '24px', padding: '36px 28px', boxShadow: '0 25px 60px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.1)', textAlign: 'center' }}>
+          <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: '#e6f4ea', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px', fontSize: '28px', fontWeight: 'bold', boxShadow: 'inset 0 0 0 1px rgba(16,185,129,0.15)' }}>✚</div>
+          <h1 style={{ fontFamily: 'Fraunces, serif', fontSize: '23px', color: '#0b332c', margin: '0 0 6px', letterSpacing: '-0.01em' }}>{clinicName}</h1>
+          <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 26px', lineHeight: 1.5 }}>Secure Staff Access Portal. Enter 4-digit PIN.</p>
+          <form onSubmit={handleUnlock} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <input
               type="password"
               inputMode="numeric"
@@ -417,18 +428,17 @@ export default function ClinicPortal() {
               value={pin}
               onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
               required
-              style={{ width: '100%', padding: '14px', borderRadius: '14px', border: '1px solid #e2e8f0', textAlign: 'center', fontSize: '24px', fontWeight: 'bold', letterSpacing: '8px', boxSizing: 'border-box' }}
+              style={{ width: '100%', padding: '14px', borderRadius: '14px', border: '1.5px solid #e7e1d3', textAlign: 'center', fontSize: '26px', fontWeight: 'bold', letterSpacing: '10px', boxSizing: 'border-box', color: '#0b332c', transition: 'border-color 0.15s ease' }}
             />
-            <button type="submit" disabled={loading || !pin} style={{ width: '100%', background: '#10b981', color: '#fff', border: 'none', padding: '14px', borderRadius: '14px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', opacity: loading || !pin ? 0.6 : 1 }}>
+            <button type="submit" disabled={loading || !pin} style={{ width: '100%', background: '#10b981', color: '#fff', border: 'none', padding: '14px', borderRadius: '14px', fontSize: '14px', fontWeight: '700', cursor: loading || !pin ? 'not-allowed' : 'pointer', opacity: loading || !pin ? 0.55 : 1, boxShadow: '0 8px 20px rgba(16,185,129,0.28)', transition: 'opacity 0.15s ease' }}>
               {loading ? 'Verifying...' : 'Access Portal →'}
             </button>
           </form>
-          {error && <p style={{ color: '#ef4444', fontSize: '12px', marginTop: '12px', background: '#fef2f2', padding: '8px', borderRadius: '8px', fontWeight: '600' }}>{error}</p>}
+          {error && <p style={{ color: '#ef4444', fontSize: '12px', marginTop: '14px', background: '#fef2f2', padding: '10px', borderRadius: '10px', fontWeight: '600' }}>{error}</p>}
         </div>
       </div>
     );
   }
-
   const allBookings = Object.values(bookingsByDoctor).flat();
   const totalBookings = allBookings.length;
   const waitingBookings = allBookings.filter((b) => b.status === 'waiting' || b.status === 'checked_in').length;
@@ -436,55 +446,58 @@ export default function ClinicPortal() {
   const todayDateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8f6f0', color: '#0b332c', fontFamily: 'sans-serif', paddingBottom: '60px' }}>
+    <div style={{ minHeight: '100vh', background: '#f8f6f0', color: '#0b332c', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", paddingBottom: '60px' }}>
       <div style={{ maxWidth: '680px', margin: '0 auto', padding: '20px 16px', boxSizing: 'border-box' }}>
-
-        <div style={{ background: '#fff', borderRadius: '20px', padding: '20px', marginBottom: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 15px rgba(0,0,0,0.02)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        
+        {/* TOP HEADER */}
+        <div style={{ background: '#fff', borderRadius: '20px', padding: '20px', marginBottom: '16px', border: '1px solid #e7e1d3', boxShadow: '0 2px 10px rgba(11,51,44,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           <div>
-            <div style={{ fontSize: '10.5px', fontWeight: '800', color: '#10b981', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '2px' }}>Clinic Staff Portal</div>
-            <h1 style={{ fontFamily: 'Fraunces, serif', fontSize: '22px', color: '#0b332c', margin: '0 0 4px' }}>{clinicName}</h1>
+            <div style={{ fontSize: '10.5px', fontWeight: '800', color: '#10b981', textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: '3px' }}>Clinic Staff Portal</div>
+            <h1 style={{ fontFamily: 'Fraunces, serif', fontSize: '22px', color: '#0b332c', margin: '0 0 4px', letterSpacing: '-0.01em' }}>{clinicName}</h1>
             <p style={{ fontSize: '11.5px', color: '#64748b', margin: 0 }}>📅 {todayDateStr}</p>
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
-            <button onClick={() => loadDoctors(unlockedPin)} disabled={refreshing} style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', width: '38px', height: '38px', borderRadius: '12px', cursor: 'pointer', fontSize: '16px', color: '#0b332c' }}>↻</button>
-            <button onClick={() => setShowSettingsDrawer(!showSettingsDrawer)} style={{ background: '#e6f4ea', border: '1px solid #bbf7d0', padding: '8px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: '700', color: '#0b332c', cursor: 'pointer' }}>⚙ Settings</button>
+            <button onClick={() => loadDoctors(unlockedPin)} disabled={refreshing} style={{ background: '#f1f5f9', border: '1px solid #e7e1d3', width: '38px', height: '38px', borderRadius: '12px', cursor: refreshing ? 'default' : 'pointer', fontSize: '16px', color: '#0b332c', transition: 'transform 0.2s ease', transform: refreshing ? 'rotate(180deg)' : 'none' }}>↻</button>
+            <button onClick={() => setShowSettingsDrawer(!showSettingsDrawer)} style={{ background: showSettingsDrawer ? '#0b332c' : '#e6f4ea', border: showSettingsDrawer ? '1px solid #0b332c' : '1px solid #bbf7d0', padding: '8px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: '700', color: showSettingsDrawer ? '#fff' : '#0b332c', cursor: 'pointer', transition: 'all 0.15s ease' }}>⚙ Settings</button>
             <button onClick={handleLogout} style={{ background: '#fef2f2', border: '1px solid #fca5a5', padding: '8px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: '700', color: '#dc2626', cursor: 'pointer' }}>Logout</button>
           </div>
         </div>
 
+        {/* STATS AT A GLANCE */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '16px' }}>
           {[
             { label: 'Total Tokens', value: totalBookings, bg: '#fff', color: '#0b332c' },
             { label: 'Waiting Queue', value: waitingBookings, bg: '#fffbeb', color: '#d97706' },
             { label: 'Completed', value: completedBookings, bg: '#f0fdf4', color: '#15803d' },
           ].map((st, idx) => (
-            <div key={idx} style={{ background: st.bg, border: '1px solid #e2e8f0', borderRadius: '16px', padding: '14px', textAlign: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-              <div style={{ fontSize: '10.5px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px' }}>{st.label}</div>
-              <div style={{ fontSize: '24px', fontWeight: '900', color: st.color, fontFamily: 'Fraunces, serif' }}>{st.value}</div>
+            <div key={idx} style={{ background: st.bg, border: '1px solid #e7e1d3', borderRadius: '16px', padding: '16px 14px', textAlign: 'center', boxShadow: '0 2px 8px rgba(11,51,44,0.04)' }}>
+              <div style={{ fontSize: '10.5px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '6px' }}>{st.label}</div>
+              <div style={{ fontSize: '26px', fontWeight: '900', color: st.color, fontFamily: 'Fraunces, serif', lineHeight: 1 }}>{st.value}</div>
             </div>
           ))}
         </div>
 
+        {/* SETTINGS DRAWER */}
         {showSettingsDrawer && (
-          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '20px', marginBottom: '16px', boxShadow: '0 4px 15px rgba(0,0,0,0.04)' }}>
-            <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '18px', color: '#0b332c', margin: '0 0 12px' }}>Clinic Settings & UPI QR</h3>
-
-            <div style={{ marginBottom: '14px' }}>
-              <label style={{ fontSize: '12px', fontWeight: '700', color: '#0b332c', display: 'block', marginBottom: '6px' }}>Google Maps Location Link:</label>
+          <div style={{ background: '#fff', border: '1px solid #e7e1d3', borderRadius: '20px', padding: '22px', marginBottom: '16px', boxShadow: '0 4px 16px rgba(11,51,44,0.05)' }}>
+            <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '18px', color: '#0b332c', margin: '0 0 16px' }}>Clinic Settings &amp; UPI QR</h3>
+            
+            <div style={{ marginBottom: '18px' }}>
+              <label style={{ fontSize: '12px', fontWeight: '700', color: '#0b332c', display: 'block', marginBottom: '7px' }}>Google Maps Location Link:</label>
               <div style={{ display: 'flex', gap: '8px' }}>
-                <input placeholder="Paste Google Maps URL" value={locationInput} onChange={(e) => setLocationInput(e.target.value)} style={{ flex: 1, padding: '10px 12px', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '13px' }} />
-                <button onClick={handleSaveLocation} disabled={savingLocation} style={{ background: '#0b332c', color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '10px', fontWeight: '700', fontSize: '12px', cursor: 'pointer' }}>{savingLocation ? 'Saving...' : 'Save'}</button>
+                <input placeholder="Paste Google Maps URL" value={locationInput} onChange={(e) => setLocationInput(e.target.value)} style={{ flex: 1, padding: '11px 12px', borderRadius: '10px', border: '1px solid #e7e1d3', fontSize: '13px', minWidth: 0 }} />
+                <button onClick={handleSaveLocation} disabled={savingLocation} style={{ background: '#0b332c', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '10px', fontWeight: '700', fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap' }}>{savingLocation ? 'Saving...' : 'Save'}</button>
               </div>
             </div>
 
             <div>
-              <label style={{ fontSize: '12px', fontWeight: '700', color: '#0b332c', display: 'block', marginBottom: '6px' }}>Clinic UPI ID (for Online Payments):</label>
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                <input placeholder="e.g. clinic@paytm" value={upiInput} onChange={(e) => setUpiInput(e.target.value)} style={{ flex: 1, padding: '10px 12px', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '13px' }} />
-                <button onClick={handleSaveUpi} disabled={savingUpi} style={{ background: '#0b332c', color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '10px', fontWeight: '700', fontSize: '12px', cursor: 'pointer' }}>{savingUpi ? 'Saving...' : 'Save'}</button>
+              <label style={{ fontSize: '12px', fontWeight: '700', color: '#0b332c', display: 'block', marginBottom: '7px' }}>Clinic UPI ID (for Online Payments):</label>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                <input placeholder="e.g. clinic@paytm" value={upiInput} onChange={(e) => setUpiInput(e.target.value)} style={{ flex: 1, padding: '11px 12px', borderRadius: '10px', border: '1px solid #e7e1d3', fontSize: '13px', minWidth: 0 }} />
+                <button onClick={handleSaveUpi} disabled={savingUpi} style={{ background: '#0b332c', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '10px', fontWeight: '700', fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap' }}>{savingUpi ? 'Saving...' : 'Save'}</button>
               </div>
               {upiId && (
-                <button onClick={() => setShowQrModal(true)} style={{ background: '#fef3c7', border: '1px solid #fde047', color: '#92400e', padding: '8px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>
+                <button onClick={() => setShowQrModal(true)} style={{ background: '#fef3c7', border: '1px solid #fde047', color: '#92400e', padding: '9px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>
                   📱 View Payment QR Code
                 </button>
               )}
@@ -492,52 +505,70 @@ export default function ClinicPortal() {
           </div>
         )}
 
-        {error && <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', color: '#dc2626', padding: '12px', borderRadius: '12px', fontSize: '13px', fontWeight: '600', marginBottom: '16px' }}>{error}</div>}
+        {error && <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', color: '#dc2626', padding: '12px 14px', borderRadius: '12px', fontSize: '13px', fontWeight: '600', marginBottom: '16px' }}>{error}</div>}
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: '18px', color: '#0b332c', margin: 0 }}>Doctor Roster ({doctors.length})</h2>
-          <button onClick={() => setShowAddForm(!showAddForm)} style={{ background: '#10b981', color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '12px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 12px rgba(16,185,129,0.2)' }}>
+        {/* DOCTOR ROSTER HEADER */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+          <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: '18px', color: '#0b332c', margin: 0, letterSpacing: '-0.01em' }}>Doctor Roster ({doctors.length})</h2>
+          <button onClick={() => setShowAddForm(!showAddForm)} style={{ background: showAddForm ? '#f1f5f9' : '#10b981', color: showAddForm ? '#0b332c' : '#fff', border: showAddForm ? '1px solid #e7e1d3' : 'none', padding: '10px 16px', borderRadius: '12px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', boxShadow: showAddForm ? 'none' : '0 4px 14px rgba(16,185,129,0.25)', transition: 'all 0.15s ease' }}>
             {showAddForm ? 'Close Form' : '+ Add Doctor'}
           </button>
         </div>
 
+        {/* ADD DOCTOR FORM */}
         {showAddForm && (
-          <form onSubmit={handleAddDoctor} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '20px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '18px', color: '#0b332c', margin: '0 0 4px' }}>Add New Doctor</h3>
-
+          <form onSubmit={handleAddDoctor} style={{ background: '#fff', border: '1px solid #e7e1d3', borderRadius: '20px', padding: '22px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '14px', boxShadow: '0 4px 16px rgba(11,51,44,0.05)' }}>
+            <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '18px', color: '#0b332c', margin: '0 0 2px' }}>Add New Doctor</h3>
+            
             <Field label="Doctor Name *">
-              <input placeholder="Dr. Gautam Banerjee" value={newName} onChange={(e) => setNewName(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '13.5px', boxSizing: 'border-box' }} required />
+              <input placeholder="Dr. Gautam Banerjee" value={newName} onChange={(e) => setNewName(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e7e1d3', fontSize: '13.5px', boxSizing: 'border-box' }} required />
             </Field>
 
             <Field label="Degrees & Qualifications *">
-              <input placeholder="MBBS, MD (General)" value={newDegrees} onChange={(e) => setNewDegrees(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '13.5px', boxSizing: 'border-box' }} required />
+              <input placeholder="MBBS, MD (General)" value={newDegrees} onChange={(e) => setNewDegrees(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e7e1d3', fontSize: '13.5px', boxSizing: 'border-box' }} required />
             </Field>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               <Field label="Consultation Fee (₹)">
-                <input type="number" placeholder="500" value={newFee} onChange={(e) => setNewFee(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '13.5px', boxSizing: 'border-box' }} />
+                <input type="number" placeholder="500" value={newFee} onChange={(e) => setNewFee(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e7e1d3', fontSize: '13.5px', boxSizing: 'border-box' }} />
               </Field>
+              
+              {/* CRITICAL: Average Time per Patient used for Live Queue Wait Time Calculation */}
               <Field label="Avg Time / Patient (Mins) *">
-                <input type="number" min="1" value={newAvgMinutes} onChange={(e) => setNewAvgMinutes(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #10b981', background: '#f0fdf4', fontSize: '13.5px', fontWeight: 'bold', boxSizing: 'border-box' }} required />
+                <input 
+                  type="number" 
+                  min="1" 
+                  value={newAvgMinutes} 
+                  onChange={(e) => setNewAvgMinutes(e.target.value)} 
+                  style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1.5px solid #10b981', background: '#f0fdf4', fontSize: '13.5px', fontWeight: 'bold', boxSizing: 'border-box' }} 
+                  required 
+                />
               </Field>
             </div>
 
             <SpecialtySelector selected={newSpecialties} onToggle={(spec) => toggleSpecialty(spec, newSpecialties, setNewSpecialties)} />
-
-            <div style={{ background: '#f8f6f0', padding: '12px', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
-              <label style={{ fontSize: '12px', fontWeight: '800', color: '#0b332c', display: 'block', marginBottom: '4px' }}>📅 Doctor Clinic Visit Days & Timings *</label>
+            
+            {/* CRITICAL: Day-wise Clinic Visit Schedule */}
+            <div style={{ background: '#f8f6f0', padding: '14px', borderRadius: '14px', border: '1px solid #e7e1d3' }}>
+              <label style={{ fontSize: '12px', fontWeight: '800', color: '#0b332c', display: 'block', marginBottom: '4px' }}>
+                📅 Doctor Clinic Visit Days & Timings *
+              </label>
+              <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 10px' }}>
+                Check the days this doctor visits your clinic and set their shift hours.
+              </p>
               <ScheduleEditor value={daySchedules} onChange={setDaySchedules} />
             </div>
 
-            <button type="submit" disabled={savingDoctor} style={{ width: '100%', background: '#0b332c', color: '#fff', border: 'none', padding: '14px', borderRadius: '12px', fontWeight: '700', fontSize: '14px', cursor: 'pointer' }}>
+            <button type="submit" disabled={savingDoctor} style={{ width: '100%', background: '#0b332c', color: '#fff', border: 'none', padding: '14px', borderRadius: '12px', fontWeight: '700', fontSize: '14px', cursor: savingDoctor ? 'default' : 'pointer', opacity: savingDoctor ? 0.7 : 1, transition: 'opacity 0.15s ease' }}>
               {savingDoctor ? 'Saving...' : 'Save Doctor Profile'}
             </button>
           </form>
         )}
 
+        {/* DOCTOR LIST CARDS */}
         {doctors.length === 0 ? (
-          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '40px 20px', textAlign: 'center' }}>
-            <div style={{ fontSize: '32px', marginBottom: '8px' }}>👨‍⚕️</div>
+          <div style={{ background: '#fff', border: '1px dashed #d8d0bd', borderRadius: '20px', padding: '48px 20px', textAlign: 'center' }}>
+            <div style={{ fontSize: '34px', marginBottom: '10px' }}>👨‍⚕️</div>
             <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '18px', color: '#0b332c', margin: '0 0 4px' }}>No Doctors Added</h3>
             <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>Click "+ Add Doctor" above to set up your clinic roster.</p>
           </div>
@@ -549,108 +580,97 @@ export default function ClinicPortal() {
             const specs = doc.specialties || [doc.specialty || 'General Physician'];
             const statusInfo = STATUS_OPTIONS.find((s) => s.value === doc.status) || STATUS_OPTIONS[0];
 
-            let scheduleDisplay = 'Schedule not set';
-            let parsedSchedule = doc.custom_schedule;
-            if (typeof parsedSchedule === 'string') {
-              try {
-                parsedSchedule = JSON.parse(parsedSchedule);
-              } catch (e) {
-                parsedSchedule = null;
-              }
-            }
-
-            if (parsedSchedule && typeof parsedSchedule === 'object') {
-              const activeDaysList = Object.keys(parsedSchedule).filter((d) => parsedSchedule[d]?.active);
-              if (activeDaysList.length > 0) {
-                scheduleDisplay = activeDaysList
-                  .map((d) => `${d} · ${formatTime(parsedSchedule[d].start || '10:00')} – ${formatTime(parsedSchedule[d].end || '14:00')}`)
-                  .join(' | ');
-              }
-            }
-
-            if (scheduleDisplay === 'Schedule not set' && doc.working_days && doc.working_days.length > 0) {
-              const timesStr = doc.start_time && doc.end_time ? ` (${formatTime(doc.start_time)} – ${formatTime(doc.end_time)})` : '';
-              scheduleDisplay = doc.working_days.join(', ') + timesStr;
-            }
-
             return (
-              <div key={doc.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '20px', marginBottom: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
-                {isEditing ? (
-                  <div style={{ background: '#fcfbf9', border: '1px solid #10b981', borderRadius: '16px', padding: '16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                      <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '18px', color: '#0b332c', margin: 0 }}>Edit Doctor Profile</h3>
-                      <span style={{ fontSize: '11px', background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '6px', fontWeight: '700' }}>Active Editing</span>
+              <div key={doc.id} style={{ background: '#fff', border: '1px solid #e7e1d3', borderRadius: '20px', padding: '20px', marginBottom: '16px', boxShadow: '0 3px 12px rgba(11,51,44,0.04)' }}>
+              {isEditing ? (
+                <div style={{ background: '#fcfbf9', border: '1.5px solid #10b981', borderRadius: '16px', padding: '18px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                    <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '18px', color: '#0b332c', margin: 0 }}>Edit Doctor Profile</h3>
+                    <span style={{ fontSize: '11px', background: '#dcfce7', color: '#15803d', padding: '3px 9px', borderRadius: '100px', fontWeight: '700' }}>Active Editing</span>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' }}>
+                    <div>
+                      <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Doctor Name</label>
+                      <input value={editName} onChange={(e) => setEditName(e.target.value)} style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13.5px', boxSizing: 'border-box' }} placeholder="Doctor Name" />
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' }}>
-                      <div>
-                        <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Doctor Name</label>
-                        <input value={editName} onChange={(e) => setEditName(e.target.value)} style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13.5px', boxSizing: 'border-box' }} placeholder="Doctor Name" />
-                      </div>
+                    <div>
+                      <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Degrees & Qualifications</label>
+                      <input value={editDegrees} onChange={(e) => setEditDegrees(e.target.value)} style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13.5px', boxSizing: 'border-box' }} placeholder="Degrees" />
+                    </div>
 
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                       <div>
-                        <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Degrees & Qualifications</label>
-                        <input value={editDegrees} onChange={(e) => setEditDegrees(e.target.value)} style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13.5px', boxSizing: 'border-box' }} placeholder="Degrees" />
+                        <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Consultation Fee (₹)</label>
+                        <input type="number" value={editFee} onChange={(e) => setEditFee(e.target.value)} style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13.5px', boxSizing: 'border-box' }} placeholder="Fee ₹" />
                       </div>
-
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                        <div>
-                          <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Consultation Fee (₹)</label>
-                          <input type="number" value={editFee} onChange={(e) => setEditFee(e.target.value)} style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13.5px', boxSizing: 'border-box' }} placeholder="Fee ₹" />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Avg Time / Patient (Mins)</label>
-                          <input type="number" min="1" value={doc.avg_minutes_per_patient || 10} readOnly style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#f8f9fa', fontSize: '13.5px', boxSizing: 'border-box' }} />
-                        </div>
-                      </div>
-
                       <div>
-                        <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Specialties</label>
-                        <SpecialtySelector selected={editSpecialties} onToggle={(spec) => toggleSpecialty(spec, editSpecialties, setEditSpecialties)} />
-                      </div>
-
-                      <div>
-                        <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Clinic Visit Days & Timings</label>
-                        <ScheduleEditor value={editDaySchedules} onChange={setEditDaySchedules} />
+                        <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Avg Time / Patient (Mins)</label>
+                        <input type="number" min="1" value={doc.avg_minutes_per_patient || 10} onChange={(e) => {
+                          // Optional state handler if you want to update avg minutes on edit
+                        }} style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13.5px', boxSizing: 'border-box' }} placeholder="10" />
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '8px', marginTop: '14px' }}>
-                      <button onClick={() => setEditingId(null)} style={{ flex: 1, background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '12px', borderRadius: '10px', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}>Cancel</button>
-                      <button onClick={() => handleSaveEdit(doc.id)} style={{ flex: 1, background: '#10b981', color: '#fff', border: 'none', padding: '12px', borderRadius: '10px', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}>Save Changes</button>
+                    {/* Specialty Selector for Editing */}
+                    <div>
+                      <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Specialties</label>
+                      <SpecialtySelector selected={editSpecialties} onToggle={(spec) => toggleSpecialty(spec, editSpecialties, setEditSpecialties)} />
+                    </div>
+
+                    {/* Schedule Editor for Editing */}
+                    <div>
+                      <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', display: 'block', marginBottom: '4px' }}>Clinic Visit Days & Timings</label>
+                      <ScheduleEditor value={editDaySchedules} onChange={setEditDaySchedules} />
                     </div>
                   </div>
-                ) : (
+
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
+                    <button onClick={() => setEditingId(null)} style={{ flex: 1, background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '12px', borderRadius: '10px', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}>Cancel</button>
+                    <button onClick={() => handleSaveEdit(doc.id)} style={{ flex: 1, background: '#10b981', color: '#fff', border: 'none', padding: '12px', borderRadius: '10px', fontWeight: '700', fontSize: '13px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(16,185,129,0.25)' }}>Save Changes</button>
+                  </div>
+                </div>
+              ) : (
                   <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
-                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                        <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: '#0b332c', color: '#d7b45e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: '800' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', gap: '10px', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                        <div style={{ width: '50px', height: '50px', borderRadius: '14px', background: '#0b332c', color: '#d7b45e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: '800', flexShrink: 0, boxShadow: '0 3px 8px rgba(11,51,44,0.25)' }}>
                           {getInitials(doc.name)}
                         </div>
-                        <div>
-                          <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '17px', color: '#0b332c', margin: '0 0 2px' }}>{doc.name}</h3>
-                          <p style={{ fontSize: '12px', color: '#10b981', fontWeight: '700', margin: '0 0 2px' }}>{doc.degrees || 'MBBS'}</p>
-                          <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 4px' }}>{specs.join(', ')}</p>
-
-                          <div style={{ fontSize: '11px', color: '#0b332c', background: '#f8f6f0', padding: '4px 10px', borderRadius: '8px', display: 'inline-block', border: '1px solid #e2e8f0', fontWeight: '600' }}>
-                            🕒 {scheduleDisplay}
-                          </div>
+                       <div>
+                        <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '17px', color: '#0b332c', margin: '0 0 3px' }}>{doc.name}</h3>
+                        <p style={{ fontSize: '12px', color: '#10b981', fontWeight: '700', margin: '0 0 3px' }}>{doc.degrees || 'MBBS'}</p>
+                        <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 6px' }}>{specs.join(', ')}</p>
+                        
+                       {/* Display Clinic Visit Days & Timings clearly */}
+                        <div style={{ marginTop: '4px', fontSize: '11px', color: '#0b332c', background: '#f8f6f0', padding: '5px 10px', borderRadius: '8px', display: 'inline-block', border: '1px solid #e7e1d3', fontWeight: '600' }}>
+                          🕒 {doc.custom_schedule ? (
+                            Object.keys(doc.custom_schedule)
+                              .filter(d => doc.custom_schedule[d]?.active)
+                              .map(d => `${d} · ${formatTime(doc.custom_schedule[d].start)} – ${formatTime(doc.custom_schedule[d].end)}`)
+                              .join(' | ') || 'No active days selected'
+                          ) : (
+                            doc.working_days?.join(', ') || 'Schedule not set'
+                          )}
                         </div>
                       </div>
+                      </div>
 
-                      <span style={{ fontSize: '11px', fontWeight: '800', padding: '4px 10px', borderRadius: '100px', background: statusInfo.soft, color: statusInfo.color }}>
+                      <span style={{ fontSize: '11px', fontWeight: '800', padding: '5px 12px', borderRadius: '100px', background: statusInfo.soft, color: statusInfo.color, whiteSpace: 'nowrap' }}>
                         {statusInfo.label}
                       </span>
                     </div>
 
-                    <div style={{ background: '#f8f6f0', padding: '12px', borderRadius: '14px', marginBottom: '14px', border: '1px solid #e2e8f0' }}>
-                      <span style={{ fontSize: '10.5px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Change Queue Status:</span>
+                    {/* STATUS SELECTOR CHIPS */}
+                    <div style={{ background: '#f8f6f0', padding: '13px', borderRadius: '14px', marginBottom: '14px', border: '1px solid #e7e1d3' }}>
+                      <span style={{ fontSize: '10.5px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.4px', display: 'block', marginBottom: '8px' }}>Change Queue Status:</span>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                         {STATUS_OPTIONS.map((opt) => (
                           <button
                             key={opt.value}
                             onClick={() => handleStatusChange(doc.id, opt.value)}
-                            style={{ padding: '6px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', cursor: 'pointer', border: doc.status === opt.value ? `1.5px solid ${opt.color}` : '1px solid #cbd5e1', background: doc.status === opt.value ? opt.soft : '#fff', color: doc.status === opt.value ? opt.color : '#64748b' }}
+                            style={{ padding: '7px 11px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', cursor: 'pointer', border: doc.status === opt.value ? `1.5px solid ${opt.color}` : '1px solid #cbd5e1', background: doc.status === opt.value ? opt.soft : '#fff', color: doc.status === opt.value ? opt.color : '#64748b', transition: 'all 0.15s ease' }}
                           >
                             {opt.label}
                           </button>
@@ -658,40 +678,43 @@ export default function ClinicPortal() {
                       </div>
                     </div>
 
+                    {/* ACTION BUTTONS */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '14px' }}>
-                      <button onClick={() => toggleTodaysPatients(doc.id)} style={{ background: '#0b332c', color: '#fff', border: 'none', padding: '10px', borderRadius: '10px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>
+                      <button onClick={() => toggleTodaysPatients(doc.id)} style={{ background: '#0b332c', color: '#fff', border: 'none', padding: '11px', borderRadius: '10px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>
                         {expandedDoctor === doc.id ? 'Hide Queue' : `Queue (${waitingCount})`}
                       </button>
-                      <button onClick={() => setShowWalkinForm(showWalkinForm === doc.id ? null : doc.id)} style={{ background: '#f59e0b', color: '#fff', border: 'none', padding: '10px', borderRadius: '10px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>
+                      <button onClick={() => setShowWalkinForm(showWalkinForm === doc.id ? null : doc.id)} style={{ background: '#f59e0b', color: '#fff', border: 'none', padding: '11px', borderRadius: '10px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>
                         + Walk-in
                       </button>
-                      <button onClick={() => startEdit(doc)} style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', color: '#0b332c', padding: '10px', borderRadius: '10px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>
+                      <button onClick={() => startEdit(doc)} style={{ background: '#f1f5f9', border: '1px solid #e7e1d3', color: '#0b332c', padding: '11px', borderRadius: '10px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>
                         Edit / Remove
                       </button>
                     </div>
 
+                    {/* WALK-IN FORM */}
                     {showWalkinForm === doc.id && (
-                      <div style={{ background: '#fef3c7', border: '1px solid #fde047', borderRadius: '14px', padding: '14px', marginBottom: '14px' }}>
-                        <h4 style={{ margin: '0 0 8px', fontSize: '13px', color: '#92400e', fontWeight: '800' }}>Add Offline Walk-in Patient</h4>
+                      <div style={{ background: '#fef3c7', border: '1px solid #fde047', borderRadius: '14px', padding: '16px', marginBottom: '14px' }}>
+                        <h4 style={{ margin: '0 0 10px', fontSize: '13px', color: '#92400e', fontWeight: '800' }}>Add Offline Walk-in Patient</h4>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          <input placeholder="Patient Name *" value={walkinName} onChange={(e) => setWalkinName(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13px' }} />
-                          <input placeholder="Phone Number (Optional)" value={walkinPhone} onChange={(e) => setWalkinPhone(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13px' }} />
+                          <input placeholder="Patient Name *" value={walkinName} onChange={(e) => setWalkinName(e.target.value)} style={{ padding: '10px 12px', borderRadius: '8px', border: '1px solid #e7e1d3', fontSize: '13px', boxSizing: 'border-box' }} />
+                          <input placeholder="Phone Number (Optional)" value={walkinPhone} onChange={(e) => setWalkinPhone(e.target.value)} style={{ padding: '10px 12px', borderRadius: '8px', border: '1px solid #e7e1d3', fontSize: '13px', boxSizing: 'border-box' }} />
                           <button onClick={() => handleWalkinSubmit(doc.id)} style={{ background: '#d97706', color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: '700', fontSize: '12.5px', cursor: 'pointer' }}>Generate Walk-in Token</button>
                         </div>
                       </div>
                     )}
 
+                    {/* TODAY'S QUEUE EXPANDED LIST */}
                     {expandedDoctor === doc.id && (
-                      <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '14px', marginTop: '14px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                      <div style={{ borderTop: '1px solid #e7e1d3', paddingTop: '16px', marginTop: '4px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                           <h4 style={{ margin: 0, fontSize: '13px', color: '#0b332c', fontWeight: '800' }}>Today's Patient Queue ({docBookings.length})</h4>
-                          <button onClick={() => refreshBookings(doc.id)} style={{ background: 'transparent', border: 'none', color: '#10b981', fontSize: '11.5px', fontWeight: '700', cursor: 'pointer' }}>Refresh List</button>
+                          <button onClick={() => refreshBookings(doc.id)} style={{ background: 'transparent', border: 'none', color: '#10b981', fontSize: '11.5px', fontWeight: '700', cursor: 'pointer', padding: 0 }}>Refresh List</button>
                         </div>
 
                         {loadingBookings ? (
-                          <p style={{ textAlign: 'center', fontSize: '12px', color: '#64748b' }}>Loading queue...</p>
+                          <p style={{ textAlign: 'center', fontSize: '12px', color: '#64748b', padding: '12px' }}>Loading queue...</p>
                         ) : docBookings.length === 0 ? (
-                          <p style={{ textAlign: 'center', fontSize: '12px', color: '#64748b', padding: '12px', background: '#f8f6f0', borderRadius: '10px' }}>No patients booked for this doctor today.</p>
+                          <p style={{ textAlign: 'center', fontSize: '12px', color: '#64748b', padding: '16px', background: '#f8f6f0', borderRadius: '10px', margin: 0 }}>No patients booked for this doctor today.</p>
                         ) : (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             {docBookings.map((b) => {
@@ -699,58 +722,24 @@ export default function ClinicPortal() {
                               const isUpdating = updatingPatient === b.id;
 
                               return (
-                             <div 
-                              key={b.id} 
-                              style={{ 
-                                background: b.is_priority 
-                                  ? 'linear-gradient(135deg, #fffbeb 0%, #fefce8 100%)' 
-                                  : '#f8f6f0', 
-                                border: b.is_priority ? '2px solid #f59e0b' : '1px solid #e2e8f0', 
-                                borderRadius: '16px', 
-                                padding: '14px', 
-                                display: 'flex', 
-                                justifyContent: 'space-between', 
-                                alignItems: 'center',
-                                boxShadow: b.is_priority ? '0 6px 20px rgba(245, 158, 11, 0.25)' : 'none',
-                                transform: b.is_priority ? 'scale(1.01)' : 'none',
-                                transition: 'all 0.2s ease'
-                              }}
-                            >
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <div style={{ 
-                                  width: '36px', height: '36px', borderRadius: '10px', 
-                                  background: b.is_priority ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' : '#10b981', 
-                                  color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                                  fontSize: '13px', fontWeight: '900', boxShadow: b.is_priority ? '0 3px 10px rgba(217, 119, 6, 0.3)' : 'none' 
-                                }}>
-                                  #{b.queue_number || b.token_number || '1'}
-                                </div>
-                                <div>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                                    <span style={{ fontSize: '14px', fontWeight: '900', color: '#0b332c' }}>{b.patient_name || 'Patient'}</span>
-                                    {b.is_priority && (
-                                      <span style={{ 
-                                        background: '#d97706', color: '#fff', fontSize: '10px', fontWeight: '900', 
-                                        padding: '2px 8px', borderRadius: '6px', letterSpacing: '0.5px',
-                                        boxShadow: '0 2px 5px rgba(217, 119, 6, 0.2)'
-                                      }}>
-                                        ⚡ VIP PRIORITY
-                                      </span>
-                                    )}
+                                <div key={b.id} style={{ background: '#f8f6f0', border: '1px solid #e7e1d3', borderRadius: '12px', padding: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#10b981', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '800', flexShrink: 0 }}>
+                                      #{b.queue_number || b.token_number || '1'}
+                                    </div>
+                                    <div>
+                                      <div style={{ fontSize: '13px', fontWeight: '700', color: '#0b332c' }}>{b.patient_name || 'Patient'}</div>
+                                      <div style={{ fontSize: '11px', color: '#64748b' }}>{b.is_walkin ? '🚶 Walk-in' : '📱 App Booking'} • <span style={{ textTransform: 'capitalize', fontWeight: '600', color: isWaiting ? '#d97706' : '#15803d' }}>{b.status}</span></div>
+                                    </div>
                                   </div>
-                                  <div style={{ fontSize: '11.5px', color: '#475569', fontWeight: '600' }}>
-                                    {b.is_walkin ? '🚶 Walk-in' : '📱 App Booking'} • Fee: <strong style={{ color: '#0b332c' }}>₹{b.consultation_fee || (b.is_priority ? 600 : 500)}</strong> • <span style={{ textTransform: 'capitalize', color: isWaiting ? '#d97706' : '#15803d' }}>{b.status}</span>
-                                  </div>
-                                </div>
-                              </div>
 
                                   <div style={{ display: 'flex', gap: '6px' }}>
                                     {isWaiting ? (
                                       <>
-                                        <button onClick={() => handleMarkSeen(b.id, doc.id)} disabled={isUpdating} style={{ background: '#10b981', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}>
+                                        <button onClick={() => handleMarkSeen(b.id, doc.id)} disabled={isUpdating} style={{ background: '#10b981', color: '#fff', border: 'none', padding: '7px 11px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', cursor: isUpdating ? 'default' : 'pointer', opacity: isUpdating ? 0.6 : 1 }}>
                                           Mark Seen
                                         </button>
-                                        <button onClick={() => handleNoShowCancel(b.id, doc.id)} disabled={isUpdating} style={{ background: '#fee2e2', color: '#dc2626', border: 'none', padding: '6px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}>
+                                        <button onClick={() => handleNoShowCancel(b.id, doc.id)} disabled={isUpdating} style={{ background: '#fee2e2', color: '#dc2626', border: 'none', padding: '7px 11px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', cursor: isUpdating ? 'default' : 'pointer', opacity: isUpdating ? 0.6 : 1 }}>
                                           Cancel
                                         </button>
                                       </>
@@ -773,18 +762,19 @@ export default function ClinicPortal() {
         )}
       </div>
 
+      {/* QR MODAL */}
       {showQrModal && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(6, 43, 37, 0.65)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-          <div style={{ background: '#fff', width: '100%', maxWidth: '340px', borderRadius: '24px', padding: '24px', textAlign: 'center', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
-            <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '18px', color: '#0b332c', margin: '0 0 12px' }}>Clinic Payment QR</h3>
-            <div style={{ background: '#f8f6f0', padding: '16px', borderRadius: '16px', display: 'inline-block', marginBottom: '12px', border: '1px solid #e2e8f0' }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(6, 43, 37, 0.7)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div style={{ background: '#fff', width: '100%', maxWidth: '340px', borderRadius: '24px', padding: '26px', textAlign: 'center', boxShadow: '0 25px 50px rgba(0,0,0,0.3)' }}>
+            <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '18px', color: '#0b332c', margin: '0 0 14px' }}>Clinic Payment QR</h3>
+            <div style={{ background: '#f8f6f0', padding: '18px', borderRadius: '16px', display: 'inline-block', marginBottom: '14px', border: '1px solid #e7e1d3' }}>
               <img
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`upi://pay?pa=${upiId}&pn=${encodeURIComponent(clinicName)}&cu=INR`)}`}
                 alt="UPI QR Code"
                 style={{ width: '180px', height: '180px', display: 'block' }}
               />
             </div>
-            <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 16px' }}>UPI ID: <strong>{upiId}</strong></p>
+            <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 18px' }}>UPI ID: <strong style={{ color: '#0b332c' }}>{upiId}</strong></p>
             <button onClick={() => setShowQrModal(false)} style={{ width: '100%', background: '#0b332c', color: '#fff', border: 'none', padding: '12px', borderRadius: '12px', fontWeight: '700', cursor: 'pointer' }}>Close</button>
           </div>
         </div>
@@ -792,11 +782,10 @@ export default function ClinicPortal() {
     </div>
   );
 }
-
 function Field({ label, children }) {
   return (
     <div>
-      <label style={{ display: 'block', marginBottom: '5px', color: '#0b332c', fontSize: '12px', fontWeight: '700' }}>{label}</label>
+      <label style={{ display: 'block', marginBottom: '6px', color: '#0b332c', fontSize: '12px', fontWeight: '700' }}>{label}</label>
       {children}
     </div>
   );
@@ -805,7 +794,7 @@ function Field({ label, children }) {
 function SpecialtySelector({ selected, onToggle }) {
   return (
     <div>
-      <label style={{ display: 'block', marginBottom: '6px', color: '#0b332c', fontSize: '12px', fontWeight: '700' }}>Specialties (Multiple Allowed):</label>
+      <label style={{ display: 'block', marginBottom: '7px', color: '#0b332c', fontSize: '12px', fontWeight: '700' }}>Specialties (Multiple Allowed):</label>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
         {SPECIALTIES.map((spec) => {
           const active = selected.includes(spec);
@@ -814,7 +803,7 @@ function SpecialtySelector({ selected, onToggle }) {
               key={spec}
               type="button"
               onClick={() => onToggle(spec)}
-              style={{ padding: '6px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', cursor: 'pointer', border: active ? '1.5px solid #10b981' : '1px solid #cbd5e1', background: active ? '#dcfce7' : '#fff', color: active ? '#15803d' : '#64748b' }}
+              style={{ padding: '7px 11px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', cursor: 'pointer', border: active ? '1.5px solid #10b981' : '1px solid #cbd5e1', background: active ? '#dcfce7' : '#fff', color: active ? '#15803d' : '#64748b', transition: 'all 0.15s ease' }}
             >
               {spec}
             </button>
@@ -837,18 +826,18 @@ function ScheduleEditor({ value, onChange }) {
   };
 
   return (
-    <div style={{ background: '#f8f6f0', border: '1px solid #e2e8f0', padding: '14px', borderRadius: '14px' }}>
+    <div style={{ background: '#f8f6f0', border: '1px solid #e7e1d3', padding: '14px', borderRadius: '14px' }}>
       <p style={{ margin: '0 0 10px', color: '#0b332c', fontSize: '12px', fontWeight: '800' }}>🕒 Day-wise Consultation Timings</p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
         {DAYS.map((day) => {
           const slot = value[day] || { active: false, start: '10:00', end: '14:00' };
           return (
-            <div key={day} style={{ display: 'grid', gridTemplateColumns: '40px 24px 1fr 16px 1fr', gap: '6px', alignItems: 'center', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '6px 8px' }}>
+            <div key={day} style={{ display: 'grid', gridTemplateColumns: '40px 24px 1fr 16px 1fr', gap: '7px', alignItems: 'center', background: '#fff', border: '1px solid #e7e1d3', borderRadius: '10px', padding: '7px 9px', transition: 'opacity 0.15s ease', opacity: slot.active ? 1 : 0.65 }}>
               <span style={{ fontSize: '11px', fontWeight: '700', color: slot.active ? '#0b332c' : '#94a3b8' }}>{day}</span>
-              <input type="checkbox" checked={Boolean(slot.active)} onChange={(e) => updateDay(day, { active: e.target.checked })} />
-              <input type="time" value={slot.start || '10:00'} onChange={(e) => updateDay(day, { start: e.target.value })} style={{ width: '100%', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '4px', fontSize: '11px' }} />
+              <input type="checkbox" checked={slot.active} onChange={(e) => updateDay(day, { active: e.target.checked })} />
+              <input type="time" value={slot.start} onChange={(e) => updateDay(day, { start: e.target.value })} style={{ width: '100%', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '5px', fontSize: '11px', boxSizing: 'border-box' }} />
               <span style={{ fontSize: '10px', color: '#94a3b8', textAlign: 'center' }}>to</span>
-              <input type="time" value={slot.end || '14:00'} onChange={(e) => updateDay(day, { end: e.target.value })} style={{ width: '100%', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '4px', fontSize: '11px' }} />
+              <input type="time" value={slot.end} onChange={(e) => updateDay(day, { end: e.target.value })} style={{ width: '100%', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '5px', fontSize: '11px', boxSizing: 'border-box' }} />
             </div>
           );
         })}
