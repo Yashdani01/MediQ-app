@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 import LiveQueueTracker from './components/LiveQueueTracker';
+import RxDecoder from './components/RxDecoder';
 import Login from './components/Login';
 import HospitalFlow from './components/HospitalFlow';
 import MyBookings from './components/MyBookings';
@@ -8,7 +9,6 @@ import Reports from './components/Reports';
 import SymptomTriage from './components/SymptomTriage';
 import ClinicPortal from './components/ClinicPortal';
 import PhysioGuideModal from './components/PhysioGuideModal';
-import RxDecoder from './components/RxDecoder';
 import { getMyCurrentBooking } from './hospitalData';
 
 import './index.css';
