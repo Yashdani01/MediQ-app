@@ -223,19 +223,36 @@ export default function MyBookings() {
               const mapsUrl = booking.hospital?.google_maps_url;
               const isWaiting = booking.status?.toLowerCase() === 'waiting' || booking.status?.toLowerCase() === 'checked_in';
 
-              return (
+             return (
                 <div
                   className="booking-card"
                   key={booking.id}
                   style={{
-                    background: booking.is_priority ? '#fffbeb' : '#fff',
+                    background: booking.is_priority 
+                      ? 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)' 
+                      : '#fff',
                     border: booking.is_priority ? '1.5px solid #f59e0b' : '1px solid #e2e8f0',
                     borderRadius: '20px',
                     padding: '20px',
-                    boxShadow: booking.is_priority ? '0 4px 15px rgba(245, 158, 11, 0.15)' : '0 4px 12px rgba(0,0,0,0.02)'
+                    boxShadow: booking.is_priority 
+                      ? '0 8px 24px rgba(245, 158, 11, 0.2)' 
+                      : '0 4px 12px rgba(0,0,0,0.02)',
+                    position: 'relative',
+                    overflow: 'hidden'
                   }}
                 >
-                 <div className="booking-card-top" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                  {booking.is_priority && (
+                    <div style={{
+                      position: 'absolute', top: 0, right: 0, background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                      color: '#fff', fontSize: '9.5px', fontWeight: '900', padding: '4px 12px',
+                      borderBottomLeftRadius: '12px', letterSpacing: '0.5px', textTransform: 'uppercase',
+                      boxShadow: '0 2px 6px rgba(217, 119, 6, 0.2)'
+                    }}>
+                      ⚡ VIP Priority Pass
+                    </div>
+                  )}
+
+                  <div className="booking-card-top" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px', marginTop: booking.is_priority ? '8px' : '0' }}>
                     <div className="doctor-info" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                       <div className="doctor-avatar" style={{ width: '45px', height: '45px', background: '#e6f4ea', color: '#0b332c', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: '700' }}>
                         {doctorName.charAt(0).toUpperCase()}
@@ -251,25 +268,17 @@ export default function MyBookings() {
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
-                      {/* PRIORITY PASS BADGE ON PATIENT BOOKING */}
-                      {booking.is_priority && (
-                        <span style={{ background: '#fef3c7', color: '#92400e', fontSize: '10px', fontWeight: '900', padding: '3px 8px', borderRadius: '6px', border: '1px solid #fde047' }}>
-                          ⚡ Priority Pass
-                        </span>
-                      )}
-                      <span
-                        className={`booking-status ${getStatusClass(booking.status)}`}
-                        style={{
-                          fontSize: '11px', fontWeight: '700', padding: '4px 10px', borderRadius: '100px',
-                          background: isWaiting ? '#fef9c3' : booking.status === 'cancelled' ? '#fee2e2' : '#dcfce7',
-                          color: isWaiting ? '#854d0e' : booking.status === 'cancelled' ? '#991b1b' : '#15803d',
-                          textTransform: 'capitalize'
-                        }}
-                      >
-                        {booking.status || 'Waiting'}
-                      </span>
-                    </div>
+                    <span
+                      className={`booking-status ${getStatusClass(booking.status)}`}
+                      style={{
+                        fontSize: '11px', fontWeight: '700', padding: '4px 10px', borderRadius: '100px',
+                        background: isWaiting ? '#fef9c3' : booking.status === 'cancelled' ? '#fee2e2' : '#dcfce7',
+                        color: isWaiting ? '#854d0e' : booking.status === 'cancelled' ? '#991b1b' : '#15803d',
+                        textTransform: 'capitalize'
+                      }}
+                    >
+                      {booking.status || 'Waiting'}
+                    </span>
                   </div>
 
                   {/* 👤 PATIENT / CARE CIRCLE NAME BADGE */}
