@@ -4,7 +4,7 @@ import { supabase } from '../supabaseClient';
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
 export default function BloodHub({ user }) {
-  const [activeTab, setActiveTab] = useState('requests'); // 'requests' or 'donors' or 'register'
+  const [activeTab, setActiveTab] = useState('requests'); // 'requests' or 'donors' or 'new'
   const [requests, setRequests] = useState([]);
   const [donors, setDonors] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -189,13 +189,18 @@ export default function BloodHub({ user }) {
           <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '16px', color: '#0b332c', margin: '0 0 12px' }}>
             Live Emergency Blood Broadcasts
           </h3>
-          {loading ? (
+          
+          {loading && (
             <div style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>Loading requests...</div>
-           : requests.length === 0 ? (
+          )}
+
+          {!loading && requests.length === 0 && (
             <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '30px', textAlign: 'center' }}>
               <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>No active emergency requests right now. All clear!</p>
             </div>
-          ) : (
+          )}
+
+          {!loading && requests.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {requests.map((req) => (
                 <div key={req.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
@@ -248,16 +253,20 @@ export default function BloodHub({ user }) {
             </button>
           </div>
 
-          {loading ? (
+          {loading && (
             <div style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>Loading donors...</div>
-          ) : donors.length === 0 ? (
+          )}
+
+          {!loading && donors.length === 0 && (
             <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '30px', textAlign: 'center' }}>
               <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 10px' }}>No active donors found in your registry yet.</p>
               <button onClick={() => setActiveTab('registerDonor')} style={{ background: '#0b332c', color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '10px', fontWeight: '700', fontSize: '12px', cursor: 'pointer' }}>
                 Become the First Donor
               </button>
             </div>
-          ) : (
+          )}
+
+          {!loading && donors.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {donors.map((d) => (
                 <div key={d.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
