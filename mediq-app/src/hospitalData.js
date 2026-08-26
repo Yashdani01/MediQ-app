@@ -1193,34 +1193,46 @@ export async function updateHospitalUpi(
 /* =========================================================
    CLINIC BOOKINGS
 ========================================================= */
+export async function getTodaysBookings(clinicPin, doctorId) {
+  // First, verify the clinic pin to get the hospital ID
+  const { data: hospital, error: hospError } = await supabase
+    .from('hospitals')
+    .select('id')
+    .eq('staff_pin', clinicPin)
+    .single();
 
-export async function getTodaysBookings(
-  pin,
-  doctorId
-) {
-  const {
-    data,
-    error,
-  } = await supabase.rpc(
-    'get_todays_bookings',
-    {
-      input_pin: pin,
-      input_doctor_id: doctorId,
-    }
-  );
-
-  if (error) {
-    console.error(
-      'Error fetching bookings:',
-      error
-    );
-
+  if (hospError || !hospital) {
+    console.error('Invalid clinic PIN for bookings');
     return [];
   }
 
-  return data || [];
-}
+  // Fetch all active/waiting/completed appointments for this doctor today
+  const { data: bookings, error } = await supabase
+    .from('appointments')
+    .select(`
+      id,
+      queue_number,
+      token_number,
+      status,
+      payment_method,
+      patient_name,
+      is_priority,
+      consultation_fee,
+      booked_at,
+      created_at
+    `)
+    .eq('hospital_id', hospital.id)
+    .eq('doctor_id', doctorId)
+    .order('is_priority', { ascending: false }) // Priority bookings automatically shown on top
+    .order('queue_number', { ascending: true });
 
+  if (error) {
+    console.error('Error fetching clinic bookings:', error);
+    return [];
+  }
+
+  return bookings || [];
+}
 
 export async function markAppointmentSeen(
   pin,
