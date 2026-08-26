@@ -169,7 +169,7 @@ export default function RxDecoder({ user }) {
         </div>
       </div>
 
-      {/* SELECTION BOX */}
+     {/* SELECTION BOX */}
       <div style={{
         background: '#fff',
         border: '1px solid #e2e8f0',
@@ -182,13 +182,17 @@ export default function RxDecoder({ user }) {
           {t.selectPrompt}
         </label>
 
-        {loadingReports ? (
+        {loadingReports && (
           <div style={{ fontSize: '13px', color: '#64748b', padding: '12px 0' }}>Loading your vault records...</div>
-        ) : reports.length === 0 ? (
+        )}
+
+        {!loadingReports && reports.length === 0 && (
           <div style={{ padding: '16px', background: '#f8f6f0', borderRadius: '14px', textAlign: 'center' }}>
             <p style={{ fontSize: '13px', color: '#c34f3d', margin: '0 0 10px', fontWeight: '600' }}>{t.noPrescriptions}</p>
           </div>
-        ) : (
+        )}
+
+        {!loadingReports && reports.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <select
               value={selectedReportId}
