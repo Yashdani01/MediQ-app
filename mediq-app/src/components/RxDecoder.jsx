@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getPatientReports } from '../hospitalData';
 
-// Multi-language dictionary for the UI and simulated AI analysis
 const TRANSLATIONS = {
   en: {
     title: 'AI Rx Decoder',
@@ -41,7 +40,6 @@ const TRANSLATIONS = {
   }
 };
 
-// Mock intelligent decoding responses based on selection
 const MOCK_DECODED_DATA = {
   en: {
     medicines: [
@@ -85,8 +83,7 @@ export default function RxDecoder({ user }) {
       }
       setLoadingReports(true);
       const data = await getPatientReports(user.id);
-      // Filter strictly for prescriptions or allow all medical docs
-      const rxList = (data || []).filter(r => r.report_type === 'Prescriptions' || r.report_type === 'Medical Documents');
+      const rxList = (data || []).filter(r => r.report_type === 'Prescriptions' || r.report_type === 'Medical Documents' || r.report_type === 'Rx');
       setReports(rxList);
       if (rxList.length > 0) {
         setSelectedReportId(rxList[0].id);
@@ -187,7 +184,7 @@ export default function RxDecoder({ user }) {
 
         {loadingReports ? (
           <div style={{ fontSize: '13px', color: '#64748b', padding: '12px 0' }}>Loading your vault records...</div>
-        ​​​​} : reports.length === 0 ? (
+        ) : reports.length === 0 ? (
           <div style={{ padding: '16px', background: '#f8f6f0', borderRadius: '14px', textAlign: 'center' }}>
             <p style={{ fontSize: '13px', color: '#c34f3d', margin: '0 0 10px', fontWeight: '600' }}>{t.noPrescriptions}</p>
           </div>
