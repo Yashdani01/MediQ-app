@@ -1,174 +1,533 @@
-import React, { useState, useEffect, useRef } from 'react';
-import './MediQOne.css';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import "./MediQOne.css";
 
-export default function MediQOne({ userName = "Sk Golam", activeBooking = null, onActionTrigger }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [showBubble, setShowBubble] = useState(false);
-  const [activeTab, setActiveTab] = useState('assistant'); // 'assistant' | 'quick'
-  const [inputQuery, setInputQuery] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const [chatLog, setChatLog] = useState([
-    { sender: 'ai', text: `Namaste, ${userName}. I'm MediQ One. How can I assist your health journey today?`, time: 'Just now' }
-  ]);
-  const scrollRef = useRef(null);
+/**
+ * MediQ One
+ * Healthcare AI copilot UI.
+ *
+ * The component intentionally does NOT contain an LLM/API key.
+ * Connect your production AI backend with:
+ *
+ * <MediQOne
+ *   userName="Rahul"
+ *   activeBooking={{ doctor: "Dr. Sen", specialty: "Cardiology", time: "10:30 AM" }}
+ *   onSendMessage={async (message, context) => ({ text: "...", urgent: false })}
+ *   onActionTrigger={(action) => ...}
+ * />
+ *
+ * Voice uses the browser Web Speech API when available. For Capacitor,
+ * replace/bridge startListening and speakText with your native voice layer.
+ */
 
-  // Subtle initial notification trigger
+const ACTIONS = [
+  { id: "doctors", icon: "⌁", label: "Find a doctor", hint: "Specialist or general care" },
+  { id: "hospitals", icon: "＋", label: "Nearby hospitals", hint: "Emergency & hospitals" },
+  { id: "dentist", icon: "◌", label: "Dental care", hint: "Dentists & appointments" },
+  { id: "queue", icon: "#", label: "My queue", hint: "Active token & wait time" },
+];
+
+const TRIAGE_RULES = [
+  {
+    words: ["chest pain", "chest pressure", "heart pain", "buk betha", "বুকে ব্যথা", "छाती में दर्द"],
+    urgent: true,
+    text: "Chest pain can have serious causes. If it is severe, new, worsening, or accompanied by trouble breathing, fainting, sweating, or pain spreading to the arm, jaw, or back, seek emergency medical care now.",
+  },
+  {
+    words: ["difficulty breathing", "can't breathe", "shortness of breath", "শ্বাসকষ্ট", "सांस लेने में दिक्कत"],
+    urgent: true,
+    text: "Significant difficulty breathing can be an emergency. Please seek urgent medical attention, especially if symptoms are sudden, severe, or worsening.",
+  },
+  {
+    words: ["dentist", "tooth pain", "toothache", "দাঁতের ব্যথা", "দাঁত", "दांत में दर्द", "डेंटिस्ट"],
+    urgent: false,
+    text: "I can help you find dental care. For severe swelling, facial swelling, uncontrolled bleeding, or difficulty breathing/swallowing, seek urgent medical care.",
+  },
+  {
+    words: ["fever", "জ্বর", "बुखार"],
+    urgent: false,
+    text: "I can help you think through next steps for a fever. Tell me the person's age, temperature, how long it has lasted, and any major symptoms.",
+  },
+];
+
+function detectIntent(message = "") {
+  const value = message.toLowerCase().trim();
+  for (const rule of TRIAGE_RULES) {
+    if (rule.words.some((word) => value.includes(word))) return rule;
+  }
+  return null;
+}
+
+function detectLanguage(message = "") {
+  if (/[\u0980-\u09FF]/.test(message)) return "bn";
+  if (/[\u0900-\u097F]/.test(message)) return "hi";
+  return "en";
+}
+
+function makeId() {
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function defaultGreeting(userName) {
+  return {
+    id: makeId(),
+    role: "assistant",
+    text: userName
+      ? `Hi ${userName}. I'm MediQ One. I can help you navigate care, understand symptoms at a high level, find the right service, and keep track of your MediQ journey.`
+      : "Hi. I'm MediQ One. I can help you navigate care, understand symptoms at a high level, find the right service, and keep track of your MediQ journey.",
+    time: new Date(),
+  };
+}
+
+export default function MediQOne({
+  userName = "",
+  activeBooking = null,
+  onActionTrigger,
+  onSendMessage,
+  onVoiceStateChange,
+  initialOpen = false,
+  accentLabel = "MediQ One",
+}) {
+  const [open, setOpen] = useState(initialOpen);
+  const [tab, setTab] = useState("assistant");
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState(() => [defaultGreeting(userName)]);
+  const [typing, setTyping] = useState(false);
+  const [voiceState, setVoiceState] = useState("idle");
+  const [language, setLanguage] = useState("en");
+  const [isSupportedVoice, setIsSupportedVoice] = useState(false);
+
+  const listRef = useRef(null);
+  const recognitionRef = useRef(null);
+  const endRef = useRef(null);
+
+  const updateVoiceState = useCallback(
+    (next) => {
+      setVoiceState(next);
+      onVoiceStateChange?.(next);
+    },
+    [onVoiceStateChange]
+  );
+
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowBubble(true);
-      const hide = setTimeout(() => setShowBubble(false), 6000);
-      return () => clearTimeout(hide);
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, []);
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    setIsSupportedVoice(Boolean(SpeechRecognition));
 
-  // Smooth auto-scroll for chat
-  useEffect(() => {
-    if (isOpen) {
-      scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [chatLog, isOpen]);
+    if (!SpeechRecognition) return undefined;
 
-  const handleSend = (e) => {
-    e.preventDefault();
-    if (!inputQuery.trim()) return;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+    recognition.lang = "en-IN";
 
-    const userText = inputQuery;
-    setInputQuery('');
-    setChatLog(prev => [...prev, { sender: 'user', text: userText, time: 'Just now' }]);
-    setIsTyping(true);
-
-    // Simulate intelligent professional response
-    setTimeout(() => {
-      let aiResponse = "I've processed your request securely through your profile database matrix.";
-      const lower = userText.toLowerCase();
-
-      if (lower.includes('chest') || lower.includes('pain') || lower.includes('buk') || lower.includes('heart')) {
-        aiResponse = "⚠️ Clinical Notice: Chest discomfort requires attention. I recommend consulting a General Physician or Cardiologist immediately. Would you like me to find nearby specialists?";
-      } else if (lower.includes('dentist') || lower.includes('teeth') || lower.includes('daant')) {
-        aiResponse = "🦷 Found 2 Dental Surgeons available near your location today. Standard consultation fee is ₹400. Shall I secure a priority queue token?";
-      } else if (lower.includes('token') || lower.includes('queue')) {
-        aiResponse = activeBooking ? `Your active token is #${activeBooking.number} for ${activeBooking.doctorName}.` : "You have no active queues right now. Would you like to browse doctors?";
+    recognition.onstart = () => updateVoiceState("listening");
+    recognition.onerror = () => updateVoiceState("idle");
+    recognition.onend = () => {
+      setVoiceState((current) => (current === "listening" ? "idle" : current));
+    };
+    recognition.onresult = (event) => {
+      let transcript = "";
+      for (let i = event.resultIndex; i < event.results.length; i += 1) {
+        transcript += event.results[i][0].transcript;
       }
+      setInput(transcript);
+      const detected = detectLanguage(transcript);
+      setLanguage(detected);
+    };
 
-      setChatLog(prev => [...prev, { sender: 'ai', text: aiResponse, time: 'Just now' }]);
-      setIsTyping(false);
-    }, 900);
+    recognitionRef.current = recognition;
+    return () => recognition.abort();
+  }, [updateVoiceState]);
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [messages, typing]);
+
+  const bookingLabel = useMemo(() => {
+    if (!activeBooking) return null;
+    return [
+      activeBooking.doctor,
+      activeBooking.specialty,
+      activeBooking.time,
+    ].filter(Boolean).join(" · ");
+  }, [activeBooking]);
+
+  const startListening = useCallback(() => {
+    if (!recognitionRef.current) return;
+    if (voiceState === "listening") {
+      recognitionRef.current.stop();
+      updateVoiceState("idle");
+      return;
+    }
+
+    const langMap = { en: "en-IN", bn: "bn-IN", hi: "hi-IN" };
+    recognitionRef.current.lang = langMap[language] || "en-IN";
+    try {
+      recognitionRef.current.start();
+    } catch {
+      // SpeechRecognition can throw if start is called while already active.
+    }
+  }, [language, updateVoiceState, voiceState]);
+
+  const speakText = useCallback(
+    (text) => {
+      if (!("speechSynthesis" in window)) return;
+      window.speechSynthesis.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = { en: "en-IN", bn: "bn-IN", hi: "hi-IN" }[language] || "en-IN";
+      utterance.rate = 0.96;
+      utterance.pitch = 1;
+
+      utterance.onstart = () => updateVoiceState("speaking");
+      utterance.onend = () => updateVoiceState("idle");
+      utterance.onerror = () => updateVoiceState("idle");
+
+      window.speechSynthesis.speak(utterance);
+    },
+    [language, updateVoiceState]
+  );
+
+  const addAssistantMessage = useCallback(
+    (text, urgent = false, speak = false) => {
+      setMessages((current) => [
+        ...current,
+        {
+          id: makeId(),
+          role: "assistant",
+          text,
+          urgent,
+          time: new Date(),
+        },
+      ]);
+      if (speak) speakText(text);
+    },
+    [speakText]
+  );
+
+  const submitMessage = useCallback(
+    async (rawMessage) => {
+      const message = rawMessage.trim();
+      if (!message || typing) return;
+
+      const detectedLanguage = detectLanguage(message);
+      setLanguage(detectedLanguage);
+
+      setMessages((current) => [
+        ...current,
+        { id: makeId(), role: "user", text: message, time: new Date() },
+      ]);
+      setInput("");
+      setTyping(true);
+      updateVoiceState("thinking");
+
+      const route = detectIntent(message);
+
+      try {
+        if (onSendMessage) {
+          const response = await onSendMessage(message, {
+            language: detectedLanguage,
+            activeBooking,
+            intent: route?.words?.[0] || "general",
+          });
+
+          const responseText =
+            typeof response === "string" ? response : response?.text;
+
+          if (responseText) {
+            addAssistantMessage(responseText, Boolean(response?.urgent), true);
+          } else {
+            addAssistantMessage(
+              "I couldn't get a response from the care service right now. Please try again.",
+              false,
+              true
+            );
+          }
+        } else if (route) {
+          // Safe local fallback for demos. Production apps should connect onSendMessage.
+          addAssistantMessage(route.text, route.urgent, true);
+        } else {
+          addAssistantMessage(
+            "I can help with care navigation, symptoms at a high level, finding doctors or hospitals, dental care, and your MediQ queue. For a medical concern, tell me what you're experiencing and how long it has been happening.",
+            false,
+            true
+          );
+        }
+      } catch {
+        addAssistantMessage(
+          "I'm having trouble reaching the assistant service. Please try again in a moment.",
+          false,
+          true
+        );
+      } finally {
+        setTyping(false);
+        updateVoiceState("idle");
+      }
+    },
+    [
+      activeBooking,
+      addAssistantMessage,
+      onSendMessage,
+      typing,
+      updateVoiceState,
+    ]
+  );
+
+  const triggerAction = useCallback(
+    (actionId) => {
+      onActionTrigger?.(actionId);
+      setOpen(true);
+      setTab("assistant");
+
+      const labels = {
+        doctors: "I'd like to find a doctor.",
+        hospitals: "Show me nearby hospitals.",
+        dentist: "I need dental care.",
+        queue: "Show my active queue.",
+      };
+
+      if (labels[actionId]) submitMessage(labels[actionId]);
+    },
+    [onActionTrigger, submitMessage]
+  );
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      submitMessage(input);
+    }
   };
 
   return (
-    <div className="mediq-one-wrapper">
-      {/* Sleek Floating Prompt Bubble */}
-      {showBubble && !isOpen && (
-        <div className="mediq-bubble-card" onClick={() => setIsOpen(true)}>
-          <button className="bubble-x" onClick={(e) => { e.stopPropagation(); setShowBubble(false); }}>×</button>
-          <div className="bubble-indicator"></div>
-          <p>Need an appointment or live queue status? Tap MediQ One.</p>
-        </div>
+    <div className={`mediq-one ${open ? "is-open" : ""}`}>
+      {open && (
+        <button
+          className="mediq-backdrop"
+          aria-label="Close MediQ One"
+          onClick={() => setOpen(false)}
+        />
       )}
 
-      {/* Elite Floating Orb Trigger */}
-      <button className="mediq-orb-trigger" onClick={() => { setIsOpen(true); setShowBubble(false); }}>
-        <div className="orb-pulse-ring"></div>
-        <div className="orb-core">
-          <span className="orb-sparkle">✦</span>
-        </div>
-        <span className="orb-badge-label">MediQ One</span>
-      </button>
-
-      {/* Professional Master Overlay */}
-      {isOpen && (
-        <div className="mediq-backdrop" onClick={() => setIsOpen(false)}>
-          <div className="mediq-drawer-container" onClick={(e) => e.stopPropagation()}>
-            
-            {/* Header */}
-            <div className="mediq-header">
-              <div className="mediq-brand-info">
-                <div className="brand-icon-box">✦</div>
-                <div>
-                  <h3>MediQ One</h3>
-                  <span className="secure-tag">Secure Health Intelligence</span>
-                </div>
-              </div>
-              <button className="mediq-close-btn" onClick={() => setIsOpen(false)}>✕</button>
+      <section className="mediq-panel" aria-hidden={!open}>
+        <header className="mediq-header">
+          <div className="mediq-brand">
+            <div className="mediq-status-orb" aria-hidden="true">
+              <span />
             </div>
-
-            {/* Navigation Switcher */}
-            <div className="mediq-tabs-row">
-              <button className={`tab-pill ${activeTab === 'assistant' ? 'active' : ''}`} onClick={() => setActiveTab('assistant')}>AI Assistant</button>
-              <button className={`tab-pill ${activeTab === 'quick' ? 'active' : ''}`} onClick={() => setActiveTab('quick')}>Quick Actions</button>
+            <div>
+              <div className="mediq-eyebrow">{accentLabel}</div>
+              <div className="mediq-title">Healthcare copilot</div>
             </div>
-
-            {/* TAB 1: AI ASSISTANT CHAT */}
-            {activeTab === 'assistant' && (
-              <div className="mediq-pane chat-pane">
-                <div className="chat-history-area">
-                  {chatLog.map((msg, idx) => (
-                    <div key={idx} className={`chat-bubble ${msg.sender}`}>
-                      <p>{msg.text}</p>
-                      <span className="msg-time">{msg.time}</span>
-                    </div>
-                  ))}
-                  {isTyping && (
-                    <div className="chat-bubble ai typing-indicator">
-                      <span></span><span></span><span></span>
-                    </div>
-                  )}
-                  <div ref={scrollRef} />
-                </div>
-
-                <form className="chat-input-row" onSubmit={handleSend}>
-                  <input 
-                    type="text" 
-                    placeholder="Ask anything or state symptoms..." 
-                    value={inputQuery}
-                    onChange={(e) => setInputQuery(e.target.value)}
-                  />
-                  <button type="submit" className="send-icon-btn">↑</button>
-                </form>
-              </div>
-            )}
-
-            {/* TAB 2: QUICK ACTIONS HUB */}
-            {activeTab === 'quick' && (
-              <div className="mediq-pane quick-pane">
-                <div className="pane-section-title">Common Health Workflows</div>
-                <div className="quick-grid">
-                  <button className="quick-card" onClick={() => { onActionTrigger('find_doctor'); setIsOpen(false); }}>
-                    <span className="qc-icon">🩺</span>
-                    <div>
-                      <strong>Find Doctor</strong>
-                      <small>Browse specialists</small>
-                    </div>
-                  </button>
-                  <button className="quick-card" onClick={() => { onActionTrigger('find_hospital'); setIsOpen(false); }}>
-                    <span className="qc-icon">🏥</span>
-                    <div>
-                      <strong>Nearby Hospital</strong>
-                      <small>GPS & map routing</small>
-                    </div>
-                  </button>
-                  <button className="quick-card" onClick={() => { onActionTrigger('find_dentist'); setIsOpen(false); }}>
-                    <span className="qc-icon">🦷</span>
-                    <div>
-                      <strong>Dental Care</strong>
-                      <small>Instant booking</small>
-                    </div>
-                  </button>
-                  <button className="quick-card" onClick={() => { onActionTrigger('my_token'); setIsOpen(false); }}>
-                    <span className="qc-icon">🎫</span>
-                    <div>
-                      <strong>Live Queue</strong>
-                      <small>Check active tokens</small>
-                    </div>
-                  </button>
-                </div>
-              </div>
-            )}
-
           </div>
+
+          <div className="mediq-header-actions">
+            <span className="mediq-live">
+              <i /> Ready
+            </span>
+            <button
+              className="mediq-icon-button"
+              onClick={() => setOpen(false)}
+              aria-label="Close"
+            >
+              ×
+            </button>
+          </div>
+        </header>
+
+        <div className="mediq-tabs" role="tablist">
+          <button
+            className={tab === "assistant" ? "active" : ""}
+            onClick={() => setTab("assistant")}
+            role="tab"
+            aria-selected={tab === "assistant"}
+          >
+            AI Assistant
+          </button>
+          <button
+            className={tab === "actions" ? "active" : ""}
+            onClick={() => setTab("actions")}
+            role="tab"
+            aria-selected={tab === "actions"}
+          >
+            Quick Actions
+          </button>
         </div>
-      )}
+
+        {tab === "assistant" ? (
+          <>
+            <div className="mediq-context-row">
+              <span className="mediq-context-chip">Private care context</span>
+              {bookingLabel && (
+                <span className="mediq-context-chip booking">
+                  <b>Next</b> {bookingLabel}
+                </span>
+              )}
+            </div>
+
+            <div className="mediq-chat" ref={listRef}>
+              {messages.map((message) => (
+                <div
+                  className={`mediq-message ${message.role} ${
+                    message.urgent ? "urgent" : ""
+                  }`}
+                  key={message.id}
+                >
+                  {message.role === "assistant" && (
+                    <div className="mediq-avatar">M</div>
+                  )}
+                  <div className="mediq-bubble-wrap">
+                    {message.urgent && (
+                      <div className="mediq-alert-label">Urgent guidance</div>
+                    )}
+                    <div className="mediq-bubble">{message.text}</div>
+                    <time>
+                      {message.time.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </time>
+                  </div>
+                </div>
+              ))}
+
+              {typing && (
+                <div className="mediq-message assistant">
+                  <div className="mediq-avatar">M</div>
+                  <div className="mediq-bubble-wrap">
+                    <div className="mediq-bubble mediq-typing">
+                      <i />
+                      <i />
+                      <i />
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div ref={endRef} />
+            </div>
+
+            <div className="mediq-composer">
+              <textarea
+                value={input}
+                onChange={(event) => {
+                  setInput(event.target.value);
+                  setLanguage(detectLanguage(event.target.value));
+                }}
+                onKeyDown={handleKeyDown}
+                placeholder="Tell me what you need…"
+                rows={1}
+                aria-label="Message MediQ One"
+              />
+
+              <button
+                className={`mediq-voice ${voiceState !== "idle" ? "active" : ""}`}
+                onClick={startListening}
+                disabled={!isSupportedVoice}
+                aria-label={
+                  isSupportedVoice
+                    ? voiceState === "listening"
+                      ? "Stop listening"
+                      : "Start voice input"
+                    : "Voice input unavailable"
+                }
+                title={
+                  isSupportedVoice
+                    ? "Voice input"
+                    : "Use your native Capacitor voice bridge on Android"
+                }
+              >
+                {voiceState === "listening" ? "■" : "◉"}
+              </button>
+
+              <button
+                className="mediq-send"
+                onClick={() => submitMessage(input)}
+                disabled={!input.trim() || typing}
+                aria-label="Send message"
+              >
+                ↑
+              </button>
+            </div>
+
+            <div className="mediq-composer-meta">
+              <span>
+                {voiceState === "listening"
+                  ? "Listening…"
+                  : voiceState === "thinking"
+                  ? "Thinking…"
+                  : voiceState === "speaking"
+                  ? "Speaking…"
+                  : "AI guidance is not a diagnosis"}
+              </span>
+              <span className="mediq-language">{language.toUpperCase()}</span>
+            </div>
+          </>
+        ) : (
+          <div className="mediq-actions-view">
+            <div className="mediq-actions-intro">
+              <span>What do you need?</span>
+              <p>Jump straight to the care task instead of explaining everything.</p>
+            </div>
+
+            <div className="mediq-action-grid">
+              {ACTIONS.map((action) => (
+                <button
+                  className="mediq-action-card"
+                  key={action.id}
+                  onClick={() => triggerAction(action.id)}
+                >
+                  <span className="mediq-action-icon">{action.icon}</span>
+                  <span>
+                    <strong>{action.label}</strong>
+                    <small>{action.hint}</small>
+                  </span>
+                  <b>↗</b>
+                </button>
+              ))}
+            </div>
+
+            {activeBooking && (
+              <button
+                className="mediq-booking-card"
+                onClick={() => triggerAction("queue")}
+              >
+                <div>
+                  <span className="mediq-card-kicker">ACTIVE CARE JOURNEY</span>
+                  <strong>{activeBooking.doctor || "Your appointment"}</strong>
+                  <small>
+                    {[activeBooking.specialty, activeBooking.time]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </small>
+                </div>
+                <span className="mediq-card-arrow">→</span>
+              </button>
+            )}
+
+            <div className="mediq-safety-note">
+              <span>✦</span>
+              MediQ One helps you navigate healthcare. Emergency symptoms should
+              be assessed by an appropriate medical professional or emergency service.
+            </div>
+          </div>
+        )}
+      </section>
+
+      <button
+        className="mediq-trigger"
+        onClick={() => setOpen((current) => !current)}
+        aria-label={open ? "Close MediQ One" : "Open MediQ One"}
+        aria-expanded={open}
+      >
+        <span className="mediq-pulse" />
+        <span className="mediq-trigger-core">
+          <span className="mediq-trigger-mark">M</span>
+        </span>
+        <span className="mediq-trigger-label">
+          <b>MediQ One</b>
+          <small>AI care assistant</small>
+        </span>
+      </button>
     </div>
   );
 }
