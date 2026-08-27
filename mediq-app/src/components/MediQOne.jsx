@@ -4,250 +4,168 @@ import './MediQOne.css';
 export default function MediQOne({ userName = "Sk Golam", activeBooking = null, onActionTrigger }) {
   const [isOpen, setIsOpen] = useState(false);
   const [showBubble, setShowBubble] = useState(false);
-  const [isVoiceActive, setIsVoiceActive] = useState(false);
-  const [voiceStep, setVoiceStep] = useState('listening');
-  const [activeTab, setActiveTab] = useState('hub');
-  const [inputText, setInputText] = useState('');
-  const [messages, setMessages] = useState([
-    { sender: 'ai', text: `Namaste ${userName}. I am MediQ One, your autonomous neural healthcare co-op companion. How may I assist your wellbeing today?`, time: 'Just now' }
+  const [activeTab, setActiveTab] = useState('assistant'); // 'assistant' | 'quick'
+  const [inputQuery, setInputQuery] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [chatLog, setChatLog] = useState([
+    { sender: 'ai', text: `Namaste, ${userName}. I'm MediQ One. How can I assist your health journey today?`, time: 'Just now' }
   ]);
-  const [simulatedState, setSimulatedState] = useState('idle');
-  const chatBottomRef = useRef(null);
+  const scrollRef = useRef(null);
 
+  // Subtle initial notification trigger
   useEffect(() => {
-    const bubbleTimer = setTimeout(() => {
+    const timer = setTimeout(() => {
       setShowBubble(true);
-      const hideTimer = setTimeout(() => setShowBubble(false), 8000);
-      return () => clearTimeout(hideTimer);
+      const hide = setTimeout(() => setShowBubble(false), 6000);
+      return () => clearTimeout(hide);
     }, 2000);
-    return () => clearTimeout(bubbleTimer);
+    return () => clearTimeout(timer);
   }, []);
 
+  // Smooth auto-scroll for chat
   useEffect(() => {
-    if (isOpen && activeTab === 'chat') {
-      chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (isOpen) {
+      scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages, isOpen, activeTab]);
+  }, [chatLog, isOpen]);
 
-  const triggerVoiceNeuralStream = () => {
-    setIsVoiceActive(true);
-    setVoiceStep('listening');
-    
-    setTimeout(() => {
-      setVoiceStep('processing');
-      setTimeout(() => {
-        setIsVoiceActive(false);
-        setActiveTab('chat');
-        const userMsg = { sender: 'user', text: "🎙️ [Voice Input]: 'Buk betha korche, doctor kothay pabo?'", time: 'Just now' };
-        setMessages(prev => [...prev, userMsg]);
-        
-        setTimeout(() => {
-          const aiReply = { sender: 'ai', text: "⚠️ Neural Diagnostic Notice: Chest discomfort detected. Immediate consultation advised. I have located Dr. S. Mukherjee (Cardiologist) available nearby with a live queue of 3 patients. Shall I reserve your priority token?", time: 'Just now' };
-          setMessages(prev => [...prev, aiReply]);
-          setSimulatedState('confirming_slot');
-        }, 800);
-      }, 1500);
-    }, 4500);
-  };
-
-  const handleTextSubmit = (e) => {
+  const handleSend = (e) => {
     e.preventDefault();
-    if (!inputText.trim()) return;
-    const text = inputText;
-    setInputText('');
-    setMessages(prev => [...prev, { sender: 'user', text, time: 'Just now' }]);
+    if (!inputQuery.trim()) return;
 
+    const userText = inputQuery;
+    setInputQuery('');
+    setChatLog(prev => [...prev, { sender: 'user', text: userText, time: 'Just now' }]);
+    setIsTyping(true);
+
+    // Simulate intelligent professional response
     setTimeout(() => {
-      let reply = "Processed securely through your local profile matrix. Your health parameters remain fully encrypted.";
-      const lower = text.toLowerCase();
-      if (lower.includes('dentist') || lower.includes('teeth')) {
-        reply = "Dr. Arnab Roy (Dental Specialist) has slots open at 4:30 PM today. Would you like me to book your slot?";
-        setSimulatedState('confirming_slot');
+      let aiResponse = "I've processed your request securely through your profile database matrix.";
+      const lower = userText.toLowerCase();
+
+      if (lower.includes('chest') || lower.includes('pain') || lower.includes('buk') || lower.includes('heart')) {
+        aiResponse = "⚠️ Clinical Notice: Chest discomfort requires attention. I recommend consulting a General Physician or Cardiologist immediately. Would you like me to find nearby specialists?";
+      } else if (lower.includes('dentist') || lower.includes('teeth') || lower.includes('daant')) {
+        aiResponse = "🦷 Found 2 Dental Surgeons available near your location today. Standard consultation fee is ₹400. Shall I secure a priority queue token?";
       } else if (lower.includes('token') || lower.includes('queue')) {
-        reply = activeBooking ? "Your active token is #07. Estimated wait time: 14 minutes." : "You currently have no active tokens today. Would you like to find a doctor?";
+        aiResponse = activeBooking ? `Your active token is #${activeBooking.number} for ${activeBooking.doctorName}.` : "You have no active queues right now. Would you like to browse doctors?";
       }
-      setMessages(prev => [...prev, { sender: 'ai', text: reply, time: 'Just now' }]);
-    }, 700);
+
+      setChatLog(prev => [...prev, { sender: 'ai', text: aiResponse, time: 'Just now' }]);
+      setIsTyping(false);
+    }, 900);
   };
 
   return (
-    <div className="mediq-supreme-wrapper">
+    <div className="mediq-one-wrapper">
+      {/* Sleek Floating Prompt Bubble */}
       {showBubble && !isOpen && (
-        <div className="supreme-speech-capsule" onClick={() => setIsOpen(true)}>
-          <button className="capsule-dismiss" onClick={(e) => { e.stopPropagation(); setShowBubble(false); }}>×</button>
-          <div className="capsule-pulse-line"></div>
-          <p className="capsule-text">🤖 Namaste! Need instant appointment booking or live token tracking?</p>
-          <span className="capsule-sub">Tap to activate MediQ One</span>
+        <div className="mediq-bubble-card" onClick={() => setIsOpen(true)}>
+          <button className="bubble-x" onClick={(e) => { e.stopPropagation(); setShowBubble(false); }}>×</button>
+          <div className="bubble-indicator"></div>
+          <p>Need an appointment or live queue status? Tap MediQ One.</p>
         </div>
       )}
 
-      <button className="supreme-orb-trigger" onClick={() => { setIsOpen(true); setShowBubble(false); }}>
-        <div className="orb-halo halo-1"></div>
-        <div className="orb-halo halo-2"></div>
-        <div className="orb-liquid-core">
-          <span className="core-icon">✨</span>
+      {/* Elite Floating Orb Trigger */}
+      <button className="mediq-orb-trigger" onClick={() => { setIsOpen(true); setShowBubble(false); }}>
+        <div className="orb-pulse-ring"></div>
+        <div className="orb-core">
+          <span className="orb-sparkle">✦</span>
         </div>
-        <div className="orb-status-badge">AI</div>
+        <span className="orb-badge-label">MediQ One</span>
       </button>
 
+      {/* Professional Master Overlay */}
       {isOpen && (
-        <div className="supreme-backdrop" onClick={() => setIsOpen(false)}>
-          <div className="supreme-command-deck" onClick={(e) => e.stopPropagation()}>
-            <div className="deck-header">
-              <div className="deck-brand">
-                <div className="brand-logo-glow">✨</div>
+        <div className="mediq-backdrop" onClick={() => setIsOpen(false)}>
+          <div className="mediq-drawer-container" onClick={(e) => e.stopPropagation()}>
+            
+            {/* Header */}
+            <div className="mediq-header">
+              <div className="mediq-brand-info">
+                <div className="brand-icon-box">✦</div>
                 <div>
-                  <h2>MediQ One</h2>
-                  <p>Neural Healthcare & Emergency Dispatch Matrix</p>
+                  <h3>MediQ One</h3>
+                  <span className="secure-tag">Secure Health Intelligence</span>
                 </div>
               </div>
-              <div className="deck-actions">
-                <button className="deck-action-btn" onClick={triggerVoiceNeuralStream} title="Voice Aura">🎙️</button>
-                <button className="deck-action-btn close-btn" onClick={() => setIsOpen(false)}>✕</button>
-              </div>
+              <button className="mediq-close-btn" onClick={() => setIsOpen(false)}>✕</button>
             </div>
 
-            <div className="deck-nav-tabs">
-              <button className={`nav-tab ${activeTab === 'hub' ? 'active' : ''}`} onClick={() => setActiveTab('hub')}>Command Hub</button>
-              <button className={`nav-tab ${activeTab === 'chat' ? 'active' : ''}`} onClick={() => setActiveTab('chat')}>Neural Stream</button>
-              <button className={`nav-tab ${activeTab === 'health-card' ? 'active' : ''}`} onClick={() => setActiveTab('health-card')}>Emergency Card</button>
+            {/* Navigation Switcher */}
+            <div className="mediq-tabs-row">
+              <button className={`tab-pill ${activeTab === 'assistant' ? 'active' : ''}`} onClick={() => setActiveTab('assistant')}>AI Assistant</button>
+              <button className={`tab-pill ${activeTab === 'quick' ? 'active' : ''}`} onClick={() => setActiveTab('quick')}>Quick Actions</button>
             </div>
 
-            {activeTab === 'hub' && (
-              <div className="tab-pane hub-pane">
-                <div className="hologram-user-card">
-                  <div className="user-info">
-                    <span className="user-subtitle">Secured Session Profile</span>
-                    <h3>{userName} 🛡️</h3>
-                  </div>
-                  <div className="system-health-badge">
-                    <span className="green-pulsar"></span> System Verified
-                  </div>
-                </div>
-
-                <div className="hub-section-label">Intelligent Quick Dispatch</div>
-                <div className="hub-grid-actions">
-                  {!activeBooking ? (
-                    <>
-                      <button className="hub-action-card" onClick={() => onActionTrigger('find_doctor')}>
-                        <span className="card-emoji">🩺</span>
-                        <div>
-                          <strong>Find Doctor</strong>
-                          <small>Specialist & General</small>
-                        </div>
-                      </button>
-                      <button className="hub-action-card" onClick={() => onActionTrigger('find_hospital')}>
-                        <span className="card-emoji">📍</span>
-                        <div>
-                          <strong>Nearby Clinic</strong>
-                          <small>GPS Route Mapping</small>
-                        </div>
-                      </button>
-                      <button className="hub-action-card highlight" onClick={triggerVoiceNeuralStream}>
-                        <span className="card-emoji">🎙️</span>
-                        <div>
-                          <strong>Voice Triage</strong>
-                          <small>Speak naturally</small>
-                        </div>
-                      </button>
-                      <button className="hub-action-card" onClick={() => onActionTrigger('find_dentist')}>
-                        <span className="card-emoji">🦷</span>
-                        <div>
-                          <strong>Dental Care</strong>
-                          <small>Instant booking</small>
-                        </div>
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button className="hub-action-card" onClick={() => onActionTrigger('my_token')}>
-                        <span className="card-emoji">🎫</span>
-                        <div>
-                          <strong>Active Token</strong>
-                          <small>Queue status #07</small>
-                        </div>
-                      </button>
-                      <button className="hub-action-card danger" onClick={() => onActionTrigger('cancel_booking')}>
-                        <span className="card-emoji">❌</span>
-                        <div>
-                          <strong>Cancel Visit</strong>
-                          <small>Safe state router</small>
-                        </div>
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'chat' && (
-              <div className="tab-pane chat-pane">
-                <div className="chat-stream-box">
-                  {messages.map((m, idx) => (
-                    <div key={idx} className={`stream-bubble-item ${m.sender}`}>
-                      <div className="bubble-text-content">{m.text}</div>
-                      <span className="bubble-time-tag">{m.time}</span>
+            {/* TAB 1: AI ASSISTANT CHAT */}
+            {activeTab === 'assistant' && (
+              <div className="mediq-pane chat-pane">
+                <div className="chat-history-area">
+                  {chatLog.map((msg, idx) => (
+                    <div key={idx} className={`chat-bubble ${msg.sender}`}>
+                      <p>{msg.text}</p>
+                      <span className="msg-time">{msg.time}</span>
                     </div>
                   ))}
-
-                  {simulatedState === 'confirming_slot' && (
-                    <div className="interactive-confirm-card">
-                      <p>🔒 Secure token reservation with Dr. Mukherjee?</p>
-                      <div className="confirm-btn-row">
-                        <button className="btn-confirm" onClick={() => { alert("Slot secured successfully!"); setSimulatedState('idle'); }}>Confirm (₹500)</button>
-                        <button className="btn-dismiss" onClick={() => setSimulatedState('idle')}>Decline</button>
-                      </div>
+                  {isTyping && (
+                    <div className="chat-bubble ai typing-indicator">
+                      <span></span><span></span><span></span>
                     </div>
                   )}
-                  <div ref={chatBottomRef} />
+                  <div ref={scrollRef} />
                 </div>
 
-                <form className="chat-input-bar-supreme" onSubmit={handleTextSubmit}>
+                <form className="chat-input-row" onSubmit={handleSend}>
                   <input 
                     type="text" 
-                    placeholder="Ask MediQ One or type symptoms..." 
-                    value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
+                    placeholder="Ask anything or state symptoms..." 
+                    value={inputQuery}
+                    onChange={(e) => setInputQuery(e.target.value)}
                   />
-                  <button type="submit" className="send-action-btn">➤</button>
+                  <button type="submit" className="send-icon-btn">↑</button>
                 </form>
               </div>
             )}
 
-            {activeTab === 'health-card' && (
-              <div className="tab-pane passport-pane">
-                <div className="emergency-passport-card">
-                  <div className="passport-header">
-                    <span>MEDIQ SECURE PASSPORT</span>
-                    <span className="offline-ready-tag">⚡ Offline Ready</span>
-                  </div>
-                  <div className="passport-body">
-                    <div className="p-row"><strong>Full Name:</strong> {userName}</div>
-                    <div className="p-row"><strong>Blood Group:</strong> O+ (Verified)</div>
-                    <div className="p-row"><strong>Emergency Contact:</strong> +91 98765 43210</div>
-                    <div className="p-row"><strong>Active Allergies:</strong> None Recorded</div>
-                  </div>
-                  <button className="flash-param-btn" onClick={() => alert("Showing high-contrast emergency code for paramedics...")}>
-                    Show Paramedic Quick-Flash Code
+            {/* TAB 2: QUICK ACTIONS HUB */}
+            {activeTab === 'quick' && (
+              <div className="mediq-pane quick-pane">
+                <div className="pane-section-title">Common Health Workflows</div>
+                <div className="quick-grid">
+                  <button className="quick-card" onClick={() => { onActionTrigger('find_doctor'); setIsOpen(false); }}>
+                    <span className="qc-icon">🩺</span>
+                    <div>
+                      <strong>Find Doctor</strong>
+                      <small>Browse specialists</small>
+                    </div>
+                  </button>
+                  <button className="quick-card" onClick={() => { onActionTrigger('find_hospital'); setIsOpen(false); }}>
+                    <span className="qc-icon">🏥</span>
+                    <div>
+                      <strong>Nearby Hospital</strong>
+                      <small>GPS & map routing</small>
+                    </div>
+                  </button>
+                  <button className="quick-card" onClick={() => { onActionTrigger('find_dentist'); setIsOpen(false); }}>
+                    <span className="qc-icon">🦷</span>
+                    <div>
+                      <strong>Dental Care</strong>
+                      <small>Instant booking</small>
+                    </div>
+                  </button>
+                  <button className="quick-card" onClick={() => { onActionTrigger('my_token'); setIsOpen(false); }}>
+                    <span className="qc-icon">🎫</span>
+                    <div>
+                      <strong>Live Queue</strong>
+                      <small>Check active tokens</small>
+                    </div>
                   </button>
                 </div>
               </div>
             )}
 
-            {isVoiceActive && (
-              <div className="voice-aura-cinematic-overlay">
-                <div className="cinematic-wave-orbits">
-                  <div className="orbit-ring-v o1"></div>
-                  <div className="orbit-ring-v o2"></div>
-                  <div className="orbit-ring-v o3"></div>
-                </div>
-                <div className="voice-live-status">
-                  {voiceStep === 'listening' && "Listening to regional dialect (Bengali/Hindi/English)..."}
-                  {voiceStep === 'processing' && "Analyzing clinical intent through neural matrix..."}
-                </div>
-                <button className="terminate-voice-btn" onClick={() => setIsVoiceActive(false)}>Abort Voice Session</button>
-              </div>
-            )}
           </div>
         </div>
       )}
