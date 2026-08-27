@@ -8,7 +8,6 @@ import HospitalFlow from './components/HospitalFlow';
 import MyBookings from './components/MyBookings';
 import Reports from './components/Reports';
 import SymptomTriage from './components/SymptomTriage';
-import MediQOne from './components/MediQOne';
 import ClinicPortal from './components/ClinicPortal';
 import PhysioGuideModal from './components/PhysioGuideModal';
 import { getMyCurrentBooking } from './hospitalData';
@@ -194,7 +193,6 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
 
-  // Persistent Care Circle State using localStorage so names never disappear on refresh
   const [familyMembers, setFamilyMembers] = useState(() => {
     const saved = localStorage.getItem('mediq_family_members');
     return saved ? JSON.parse(saved) : [
@@ -209,7 +207,6 @@ export default function App() {
   const [newFamilyName, setNewFamilyName] = useState('');
   const [newFamilyRelation, setNewFamilyRelation] = useState('Spouse');
 
-  // Live Queue Tracker State connected to actual database bookings
   const [activeQueueToken, setActiveQueueToken] = useState(null);
 
   useEffect(() => {
@@ -808,21 +805,6 @@ export default function App() {
           </button>
         ))}
       </nav>
-
-      <MediQOne
-        userName={displayName}
-        activeBooking={activeQueueToken}
-        onActionTrigger={(actionType, payload) => {
-          console.log("Action triggered from MediQ One:", actionType, payload);
-
-          // Handle navigation or app states here based on what the user clicked
-          if (actionType === 'find_doctor') {
-            handleNavigation('home');
-          } else if (actionType === 'cancel_booking') {
-            // e.g., trigger your cancellation function safely
-          }
-        }}
-      />
     </div>
   );
 }
