@@ -1,0 +1,5 @@
+{
+  "appId": "com.mediq.patientportal",
+  "appName": "MediQ",
+  "webDir": "dist"
+}

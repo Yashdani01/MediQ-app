@@ -8,6 +8,7 @@ import HospitalFlow from './components/HospitalFlow';
 import MyBookings from './components/MyBookings';
 import Reports from './components/Reports';
 import SymptomTriage from './components/SymptomTriage';
+import MediQOne from './components/MediQOne';
 import ClinicPortal from './components/ClinicPortal';
 import PhysioGuideModal from './components/PhysioGuideModal';
 import { getMyCurrentBooking } from './hospitalData';
@@ -807,6 +808,21 @@ export default function App() {
           </button>
         ))}
       </nav>
+
+      <MediQOne
+        userName={displayName}
+        activeBooking={activeQueueToken}
+        onActionTrigger={(actionType, payload) => {
+          console.log("Action triggered from MediQ One:", actionType, payload);
+
+          // Handle navigation or app states here based on what the user clicked
+          if (actionType === 'find_doctor') {
+            handleNavigation('home');
+          } else if (actionType === 'cancel_booking') {
+            // e.g., trigger your cancellation function safely
+          }
+        }}
+      />
     </div>
   );
 }
