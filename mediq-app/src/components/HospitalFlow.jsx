@@ -235,7 +235,7 @@ export default function HospitalFlow({
     useState(null);
 
   const [timeLeft, setTimeLeft] =
-    useState(150); // Upgraded from 90s to 150s
+    useState(150);
 
   const [paymentExpired, setPaymentExpired] =
     useState(false);
@@ -267,7 +267,6 @@ export default function HospitalFlow({
   const [showCelebration, setShowCelebration] =
     useState(false);
 
-  // Booking tier state: standard vs priority (VIP Pass)
   const [bookingTier, setBookingTier] = useState('standard');
 
   const getDynamicGreeting = () => {
@@ -694,8 +693,8 @@ export default function HospitalFlow({
         txnId.trim(),
         url,
         contactPhone.trim(),
-        selectedFamilyMember, // <-- Pass Care Circle member name
-        isPriority            // <-- Pass priority flag
+        selectedFamilyMember,
+        isPriority
       );
 
       setSubmittingPayment(false);
@@ -720,10 +719,9 @@ export default function HospitalFlow({
 
       setPendingBooking(null);
       setShowCelebration(true);
-      return; // <-- critical: stop here so we don't fall into the cash logic below
+      return;
     }
 
-    // CASH BOOKING CONFIRMATION
     setSubmittingPayment(true);
 
     const { data: appointment, error } = await bookAppointment(
@@ -734,12 +732,11 @@ export default function HospitalFlow({
       null,
       null,
       contactPhone.trim(),
-      selectedFamilyMember, // <-- Pass Care Circle member name
-      isPriority            // <-- Pass priority flag
+      selectedFamilyMember,
+      isPriority
     );
 
     setSubmittingPayment(false);
-    // ... rest of cash confirmation
 
     if (error) {
       setBookingError(
@@ -1245,7 +1242,7 @@ export default function HospitalFlow({
                                         <p className="hospital-location">
                                           <span>
                                             📍
-                                          </span>
+                                          </span>{' '}
                                           {hosp.location}
                                         </p>
                                       )}
