@@ -1,468 +1,533 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
-import { getMyBookings, cancelAppointment } from '../hospitalData';
-import './MyBookings.css';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import "./MediQOne.css";
 
-export default function MyBookings() {
-  const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [cancellingId, setCancellingId] = useState(null);
-  const [activeTab, setActiveTab] = useState('upcoming'); // 'upcoming' | 'completed' | 'cancelled'
-  const [showSupportModal, setShowSupportModal] = useState(false); // Interactive Support Popup State
+/**
+ * MediQ One
+ * Healthcare AI copilot UI.
+ *
+ * The component intentionally does NOT contain an LLM/API key.
+ * Connect your production AI backend with:
+ *
+ * <MediQOne
+ *   userName="Rahul"
+ *   activeBooking={{ doctor: "Dr. Sen", specialty: "Cardiology", time: "10:30 AM" }}
+ *   onSendMessage={async (message, context) => ({ text: "...", urgent: false })}
+ *   onActionTrigger={(action) => ...}
+ * />
+ *
+ * Voice uses the browser Web Speech API when available. For Capacitor,
+ * replace/bridge startListening and speakText with your native voice layer.
+ */
+
+const ACTIONS = [
+  { id: "doctors", icon: "⌁", label: "Find a doctor", hint: "Specialist or general care" },
+  { id: "hospitals", icon: "＋", label: "Nearby hospitals", hint: "Emergency & hospitals" },
+  { id: "dentist", icon: "◌", label: "Dental care", hint: "Dentists & appointments" },
+  { id: "queue", icon: "#", label: "My queue", hint: "Active token & wait time" },
+];
+
+const TRIAGE_RULES = [
+  {
+    words: ["chest pain", "chest pressure", "heart pain", "buk betha", "বুকে ব্যথা", "छाती में दर्द"],
+    urgent: true,
+    text: "Chest pain can have serious causes. If it is severe, new, worsening, or accompanied by trouble breathing, fainting, sweating, or pain spreading to the arm, jaw, or back, seek emergency medical care now.",
+  },
+  {
+    words: ["difficulty breathing", "can't breathe", "shortness of breath", "শ্বাসকষ্ট", "सांस लेने में दिक्कत"],
+    urgent: true,
+    text: "Significant difficulty breathing can be an emergency. Please seek urgent medical attention, especially if symptoms are sudden, severe, or worsening.",
+  },
+  {
+    words: ["dentist", "tooth pain", "toothache", "দাঁতের ব্যথা", "দাঁত", "दांत में दर्द", "डेंटिस्ट"],
+    urgent: false,
+    text: "I can help you find dental care. For severe swelling, facial swelling, uncontrolled bleeding, or difficulty breathing/swallowing, seek urgent medical care.",
+  },
+  {
+    words: ["fever", "জ্বর", "बुखार"],
+    urgent: false,
+    text: "I can help you think through next steps for a fever. Tell me the person's age, temperature, how long it has lasted, and any major symptoms.",
+  },
+];
+
+function detectIntent(message = "") {
+  const value = message.toLowerCase().trim();
+  for (const rule of TRIAGE_RULES) {
+    if (rule.words.some((word) => value.includes(word))) return rule;
+  }
+  return null;
+}
+
+function detectLanguage(message = "") {
+  if (/[\u0980-\u09FF]/.test(message)) return "bn";
+  if (/[\u0900-\u097F]/.test(message)) return "hi";
+  return "en";
+}
+
+function makeId() {
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function defaultGreeting(userName) {
+  return {
+    id: makeId(),
+    role: "assistant",
+    text: userName
+      ? `Hi ${userName}. I'm MediQ One. I can help you navigate care, understand symptoms at a high level, find the right service, and keep track of your MediQ journey.`
+      : "Hi. I'm MediQ One. I can help you navigate care, understand symptoms at a high level, find the right service, and keep track of your MediQ journey.",
+    time: new Date(),
+  };
+}
+
+export default function MediQOne({
+  userName = "",
+  activeBooking = null,
+  onActionTrigger,
+  onSendMessage,
+  onVoiceStateChange,
+  initialOpen = false,
+  accentLabel = "MediQ One",
+}) {
+  const [open, setOpen] = useState(initialOpen);
+  const [tab, setTab] = useState("assistant");
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState(() => [defaultGreeting(userName)]);
+  const [typing, setTyping] = useState(false);
+  const [voiceState, setVoiceState] = useState("idle");
+  const [language, setLanguage] = useState("en");
+  const [isSupportedVoice, setIsSupportedVoice] = useState(false);
+
+  const listRef = useRef(null);
+  const recognitionRef = useRef(null);
+  const endRef = useRef(null);
+
+  const updateVoiceState = useCallback(
+    (next) => {
+      setVoiceState(next);
+      onVoiceStateChange?.(next);
+    },
+    [onVoiceStateChange]
+  );
 
   useEffect(() => {
-    loadBookings();
-  }, []);
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    setIsSupportedVoice(Boolean(SpeechRecognition));
 
-  async function loadBookings() {
-    setLoading(true);
+    if (!SpeechRecognition) return undefined;
 
-    try {
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser();
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+    recognition.lang = "en-IN";
 
-      if (error || !user) {
-        setBookings([]);
-        return;
+    recognition.onstart = () => updateVoiceState("listening");
+    recognition.onerror = () => updateVoiceState("idle");
+    recognition.onend = () => {
+      setVoiceState((current) => (current === "listening" ? "idle" : current));
+    };
+    recognition.onresult = (event) => {
+      let transcript = "";
+      for (let i = event.resultIndex; i < event.results.length; i += 1) {
+        transcript += event.results[i][0].transcript;
       }
+      setInput(transcript);
+      const detected = detectLanguage(transcript);
+      setLanguage(detected);
+    };
 
-      const data = await getMyBookings(user.id);
+    recognitionRef.current = recognition;
+    return () => recognition.abort();
+  }, [updateVoiceState]);
 
-      setBookings(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error('Error loading bookings:', error);
-      setBookings([]);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [messages, typing]);
+
+  const bookingLabel = useMemo(() => {
+    if (!activeBooking) return null;
+    return [
+      activeBooking.doctor,
+      activeBooking.specialty,
+      activeBooking.time,
+    ].filter(Boolean).join(" · ");
+  }, [activeBooking]);
+
+  const startListening = useCallback(() => {
+    if (!recognitionRef.current) return;
+    if (voiceState === "listening") {
+      recognitionRef.current.stop();
+      updateVoiceState("idle");
+      return;
     }
-  }
 
-  async function handleCancel(appointmentId) {
-    const confirmed = window.confirm(
-      'Are you sure you want to cancel this appointment?'
-    );
-
-    if (!confirmed) return;
-
-    setCancellingId(appointmentId);
-
+    const langMap = { en: "en-IN", bn: "bn-IN", hi: "hi-IN" };
+    recognitionRef.current.lang = langMap[language] || "en-IN";
     try {
-      const result = await cancelAppointment(appointmentId);
-
-      if (result?.error) {
-        console.error(result.error);
-        alert('Could not cancel the appointment. Please try again.');
-        return;
-      }
-
-      alert('Appointment cancelled successfully.');
-
-      await loadBookings();
-    } catch (error) {
-      console.error('Error cancelling appointment:', error);
-      alert('Something went wrong. Please try again.');
-    } finally {
-      setCancellingId(null);
-    }
-  }
-
-  function formatDate(dateString) {
-    if (!dateString) return 'N/A';
-
-    try {
-      return new Date(dateString).toLocaleString('en-IN', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
+      recognitionRef.current.start();
     } catch {
-      return dateString;
+      // SpeechRecognition can throw if start is called while already active.
     }
-  }
+  }, [language, updateVoiceState, voiceState]);
 
-  function getStatusClass(status) {
-    switch (status?.toLowerCase()) {
-      case 'waiting':
-      case 'checked_in':
-        return 'status-waiting';
+  const speakText = useCallback(
+    (text) => {
+      if (!("speechSynthesis" in window)) return;
+      window.speechSynthesis.cancel();
 
-      case 'seen':
-      case 'completed':
-        return 'status-completed';
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = { en: "en-IN", bn: "bn-IN", hi: "hi-IN" }[language] || "en-IN";
+      utterance.rate = 0.96;
+      utterance.pitch = 1;
 
-      case 'cancelled':
-        return 'status-cancelled';
+      utterance.onstart = () => updateVoiceState("speaking");
+      utterance.onend = () => updateVoiceState("idle");
+      utterance.onerror = () => updateVoiceState("idle");
 
-      default:
-        return 'status-default';
+      window.speechSynthesis.speak(utterance);
+    },
+    [language, updateVoiceState]
+  );
+
+  const addAssistantMessage = useCallback(
+    (text, urgent = false, speak = false) => {
+      setMessages((current) => [
+        ...current,
+        {
+          id: makeId(),
+          role: "assistant",
+          text,
+          urgent,
+          time: new Date(),
+        },
+      ]);
+      if (speak) speakText(text);
+    },
+    [speakText]
+  );
+
+  const submitMessage = useCallback(
+    async (rawMessage) => {
+      const message = rawMessage.trim();
+      if (!message || typing) return;
+
+      const detectedLanguage = detectLanguage(message);
+      setLanguage(detectedLanguage);
+
+      setMessages((current) => [
+        ...current,
+        { id: makeId(), role: "user", text: message, time: new Date() },
+      ]);
+      setInput("");
+      setTyping(true);
+      updateVoiceState("thinking");
+
+      const route = detectIntent(message);
+
+      try {
+        if (onSendMessage) {
+          const response = await onSendMessage(message, {
+            language: detectedLanguage,
+            activeBooking,
+            intent: route?.words?.[0] || "general",
+          });
+
+          const responseText =
+            typeof response === "string" ? response : response?.text;
+
+          if (responseText) {
+            addAssistantMessage(responseText, Boolean(response?.urgent), true);
+          } else {
+            addAssistantMessage(
+              "I couldn't get a response from the care service right now. Please try again.",
+              false,
+              true
+            );
+          }
+        } else if (route) {
+          // Safe local fallback for demos. Production apps should connect onSendMessage.
+          addAssistantMessage(route.text, route.urgent, true);
+        } else {
+          addAssistantMessage(
+            "I can help with care navigation, symptoms at a high level, finding doctors or hospitals, dental care, and your MediQ queue. For a medical concern, tell me what you're experiencing and how long it has been happening.",
+            false,
+            true
+          );
+        }
+      } catch {
+        addAssistantMessage(
+          "I'm having trouble reaching the assistant service. Please try again in a moment.",
+          false,
+          true
+        );
+      } finally {
+        setTyping(false);
+        updateVoiceState("idle");
+      }
+    },
+    [
+      activeBooking,
+      addAssistantMessage,
+      onSendMessage,
+      typing,
+      updateVoiceState,
+    ]
+  );
+
+  const triggerAction = useCallback(
+    (actionId) => {
+      onActionTrigger?.(actionId);
+      setOpen(true);
+      setTab("assistant");
+
+      const labels = {
+        doctors: "I'd like to find a doctor.",
+        hospitals: "Show me nearby hospitals.",
+        dentist: "I need dental care.",
+        queue: "Show my active queue.",
+      };
+
+      if (labels[actionId]) submitMessage(labels[actionId]);
+    },
+    [onActionTrigger, submitMessage]
+  );
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      submitMessage(input);
     }
-  }
-
-  // Filter bookings based on selected tab
-  const filteredBookings = bookings.filter((b) => {
-    const st = b.status?.toLowerCase();
-    if (activeTab === 'upcoming') {
-      return st === 'waiting' || st === 'checked_in' || !st;
-    }
-    if (activeTab === 'completed') {
-      return st === 'completed' || st === 'seen';
-    }
-    if (activeTab === 'cancelled') {
-      return st === 'cancelled';
-    }
-    return true;
-  });
-
-  if (loading) {
-    return (
-      <div className="my-bookings-page">
-        <div className="bookings-loading">
-          <div className="bookings-spinner" />
-          <p>Loading your bookings...</p>
-        </div>
-      </div>
-    );
-  }
+  };
 
   return (
-    <div className="my-bookings-page" style={{ padding: '20px 16px 90px', maxWidth: '650px', margin: '0 auto', boxSizing: 'border-box' }}>
-      <div className="my-bookings-container">
-        
-        {/* 🌟 EXACT MATCH TOP HEADER BANNER */}
-        <div style={{
-          background: 'linear-gradient(135deg, #e6f4ea 0%, #daf2e1 100%)',
-          border: '1px solid rgba(16, 185, 129, 0.2)',
-          borderRadius: '20px',
-          padding: '22px 24px',
-          marginBottom: '20px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          boxShadow: '0 4px 15px rgba(16, 185, 129, 0.06)'
-        }}>
-          <div>
-            <p className="bookings-eyebrow" style={{ fontSize: '10.5px', textTransform: 'uppercase', letterSpacing: '1px', color: '#134e44', fontWeight: '700', margin: '0 0 4px' }}>
-              MEDIQ PATIENT PORTAL
-            </p>
-            <h1 style={{ fontFamily: 'Fraunces, serif', fontSize: '22px', color: '#0b332c', margin: '0 0 6px' }}>
-              My Bookings
-            </h1>
-            <p className="bookings-subtitle" style={{ fontSize: '12px', color: '#475569', margin: 0 }}>
-              View and manage your doctor appointments.
-            </p>
-          </div>
+    <div className={`mediq-one ${open ? "is-open" : ""}`}>
+      {open && (
+        <button
+          className="mediq-backdrop"
+          aria-label="Close MediQ One"
+          onClick={() => setOpen(false)}
+        />
+      )}
 
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px' }}>
-            <div style={{
-              width: '75px', height: '55px', background: 'rgba(255,255,255,0.7)',
-              borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.04)', border: '1px solid rgba(16,185,129,0.15)'
-            }}>
-              <span style={{ fontSize: '22px' }}>📅⏱️</span>
+      <section className="mediq-panel" aria-hidden={!open}>
+        <header className="mediq-header">
+          <div className="mediq-brand">
+            <div className="mediq-status-orb" aria-hidden="true">
+              <span />
             </div>
-            
-            <button
-              type="button"
-              className="refresh-bookings-btn"
-              onClick={loadBookings}
-              style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#0b332c', padding: '6px 12px', borderRadius: '10px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
-            >
-              <span>↻</span> Refresh
-            </button>
-          </div>
-        </div>
-
-        {/* 📋 FILTER TABS (Upcoming, Completed, Cancelled) */}
-        <div style={{ display: 'flex', background: '#fff', padding: '6px', borderRadius: '14px', border: '1px solid #e2e8f0', marginBottom: '20px', gap: '6px' }}>
-          {[
-            { id: 'upcoming', label: 'Upcoming', icon: '📅' },
-            { id: 'completed', label: 'Completed', icon: '✅' },
-            { id: 'cancelled', label: 'Cancelled', icon: '❌' }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              style={{
-                flex: 1, padding: '10px', borderRadius: '10px', border: 'none',
-                background: activeTab === tab.id ? '#0b332c' : 'transparent',
-                color: activeTab === tab.id ? '#fff' : '#475569',
-                fontSize: '13px', fontWeight: '600', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              <span>{tab.icon}</span> {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {filteredBookings.length === 0 ? (
-          <div className="bookings-empty" style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '40px 20px', textAlign: 'center' }}>
-            <div className="bookings-empty-icon" style={{ fontSize: '36px', marginBottom: '10px' }}>
-              📅
-            </div>
-            <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: '18px', color: '#0b332c', margin: '0 0 6px' }}>
-              No {activeTab} bookings found
-            </h2>
-            <p style={{ fontSize: '13px', color: '#64748b', maxWidth: '300px', margin: '0 auto' }}>
-              You don't have any {activeTab} appointments right now. Book an appointment from the Home page.
-            </p>
-          </div>
-        ) : (
-          <div className="bookings-list" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {filteredBookings.map((booking) => {
-              const doctorName = booking.doctor?.name || 'Doctor';
-              const specialty = booking.doctor?.specialty || 'General Consultation';
-              const hospitalName = booking.hospital?.name || 'Hospital';
-              const location = booking.hospital?.location || '';
-              const city = booking.hospital?.city || '';
-              const mapsUrl = booking.hospital?.google_maps_url;
-              const isWaiting = booking.status?.toLowerCase() === 'waiting' || booking.status?.toLowerCase() === 'checked_in';
-
-             return (
-                <div
-                  className="booking-card"
-                  key={booking.id}
-                  style={{
-                    background: booking.is_priority 
-                      ? 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)' 
-                      : '#fff',
-                    border: booking.is_priority ? '1.5px solid #f59e0b' : '1px solid #e2e8f0',
-                    borderRadius: '20px',
-                    padding: '20px',
-                    boxShadow: booking.is_priority 
-                      ? '0 8px 24px rgba(245, 158, 11, 0.2)' 
-                      : '0 4px 12px rgba(0,0,0,0.02)',
-                    position: 'relative',
-                    overflow: 'hidden'
-                  }}
-                >
-                  {booking.is_priority && (
-                    <div style={{
-                      position: 'absolute', top: 0, right: 0, background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                      color: '#fff', fontSize: '9.5px', fontWeight: '900', padding: '4px 12px',
-                      borderBottomLeftRadius: '12px', letterSpacing: '0.5px', textTransform: 'uppercase',
-                      boxShadow: '0 2px 6px rgba(217, 119, 6, 0.2)'
-                    }}>
-                      ⚡ VIP Priority Pass
-                    </div>
-                  )}
-
-                  <div className="booking-card-top" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px', marginTop: booking.is_priority ? '8px' : '0' }}>
-                    <div className="doctor-info" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                      <div className="doctor-avatar" style={{ width: '45px', height: '45px', background: '#e6f4ea', color: '#0b332c', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: '700' }}>
-                        {doctorName.charAt(0).toUpperCase()}
-                      </div>
-
-                      <div>
-                        <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: '16px', color: '#0b332c', margin: '0 0 2px' }}>
-                          {doctorName}
-                        </h2>
-                        <p className="doctor-specialty" style={{ fontSize: '12px', color: '#10b981', fontWeight: '600', margin: 0 }}>
-                          {specialty}
-                        </p>
-                      </div>
-                    </div>
-
-                    <span
-                      className={`booking-status ${getStatusClass(booking.status)}`}
-                      style={{
-                        fontSize: '11px', fontWeight: '700', padding: '4px 10px', borderRadius: '100px',
-                        background: isWaiting ? '#fef9c3' : booking.status === 'cancelled' ? '#fee2e2' : '#dcfce7',
-                        color: isWaiting ? '#854d0e' : booking.status === 'cancelled' ? '#991b1b' : '#15803d',
-                        textTransform: 'capitalize'
-                      }}
-                    >
-                      {booking.status || 'Waiting'}
-                    </span>
-                  </div>
-
-                  {/* 👤 PATIENT / CARE CIRCLE NAME BADGE */}
-                  <div style={{ marginBottom: '12px' }}>
-                    <span style={{ background: '#e6f4ea', color: '#0b332c', padding: '4px 10px', borderRadius: '8px', fontSize: '11.5px', fontWeight: '700', border: '1px solid #bbf7d0', display: 'inline-block' }}>
-                      👤 Patient: <strong>{booking.patient_name || 'Self (Primary)'}</strong>
-                    </span>
-                  </div>
-
-                  <div className="booking-details" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', background: '#f8f6f0', padding: '14px', borderRadius: '14px', marginBottom: '16px' }}>
-                    <div className="booking-detail" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                      <span className="detail-icon">🏥</span>
-                      <div>
-                        <span className="detail-label" style={{ display: 'block', fontSize: '10.5px', color: '#64748b', textTransform: 'uppercase' }}>Hospital</span>
-                        <strong style={{ fontSize: '12.5px', color: '#0b332c' }}>{hospitalName}</strong>
-                      </div>
-                    </div>
-
-                    <div className="booking-detail" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                      <span className="detail-icon">🎫</span>
-                      <div>
-                        <span className="detail-label" style={{ display: 'block', fontSize: '10.5px', color: '#64748b', textTransform: 'uppercase' }}>Queue Number</span>
-                        <strong className="queue-number" style={{ fontSize: '13px', color: '#10b981' }}>#{booking.queue_number ?? 'N/A'}</strong>
-                      </div>
-                    </div>
-
-                    <div className="booking-detail" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                      <span className="detail-icon">💳</span>
-                      <div>
-                        <span className="detail-label" style={{ display: 'block', fontSize: '10.5px', color: '#64748b', textTransform: 'uppercase' }}>Payment</span>
-                        <strong style={{ fontSize: '12.5px', color: '#0b332c' }}>{booking.payment_method || 'Cash'}</strong>
-                      </div>
-                    </div>
-
-                    <div className="booking-detail" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                      <span className="detail-icon">₹</span>
-                      <div>
-                        <span className="detail-label" style={{ display: 'block', fontSize: '10.5px', color: '#64748b', textTransform: 'uppercase' }}>Fee Paid</span>
-                        <strong style={{ fontSize: '12.5px', color: '#0b332c' }}>₹{booking.consultation_fee || booking.doctor?.consultation_fee || 500}</strong>
-                      </div>
-                    </div>
-                  </div>
-
-                  {booking.booked_at && (
-                    <div style={{ fontSize: '11.5px', color: '#64748b', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span>🕒</span> Booked On: <strong>{formatDate(booking.booked_at)}</strong>
-                    </div>
-                  )}
-
-                  <div className="booking-actions" style={{ display: 'flex', gap: '10px' }}>
-                    {mapsUrl && (
-                      <a
-                        href={mapsUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="directions-btn"
-                        style={{ flex: 1, background: '#f1f5f9', color: '#0b332c', textAlign: 'center', padding: '10px', borderRadius: '12px', fontSize: '12.5px', fontWeight: '700', textDecoration: 'none' }}
-                      >
-                        📍 Directions
-                      </a>
-                    )}
-
-                    {isWaiting && (
-                      <button
-                        type="button"
-                        className="cancel-booking-btn"
-                        onClick={() => handleCancel(booking.id)}
-                        disabled={cancellingId === booking.id}
-                        style={{ flex: 1, background: '#fef2f2', border: '1px solid #fca5a5', color: '#dc2626', padding: '10px', borderRadius: '12px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer' }}
-                      >
-                        {cancellingId === booking.id ? 'Cancelling...' : 'Cancel Appointment'}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* 🎧 NEED HELP / SUPPORT FOOTER CARD */}
-        <div style={{
-          background: '#e6f4ea', border: '1px solid rgba(16, 185, 129, 0.25)',
-          borderRadius: '16px', padding: '16px 20px', marginTop: '24px',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ fontSize: '24px' }}>🛡️</span>
             <div>
-              <h4 style={{ fontFamily: 'Fraunces, serif', fontSize: '14.5px', color: '#0b332c', margin: '0 0 2px' }}>
-                Need help?
-              </h4>
-              <p style={{ fontSize: '11.5px', color: '#475569', margin: 0 }}>
-                Contact our support if you need any assistance.
-              </p>
+              <div className="mediq-eyebrow">{accentLabel}</div>
+              <div className="mediq-title">Healthcare copilot</div>
             </div>
           </div>
+
+          <div className="mediq-header-actions">
+            <span className="mediq-live">
+              <i /> Ready
+            </span>
+            <button
+              className="mediq-icon-button"
+              onClick={() => setOpen(false)}
+              aria-label="Close"
+            >
+              ×
+            </button>
+          </div>
+        </header>
+
+        <div className="mediq-tabs" role="tablist">
           <button
-            onClick={() => setShowSupportModal(true)}
-            style={{ background: '#fff', border: '1px solid #10b981', color: '#0b332c', padding: '8px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+            className={tab === "assistant" ? "active" : ""}
+            onClick={() => setTab("assistant")}
+            role="tab"
+            aria-selected={tab === "assistant"}
           >
-            <span>🎧</span> Support
+            AI Assistant
+          </button>
+          <button
+            className={tab === "actions" ? "active" : ""}
+            onClick={() => setTab("actions")}
+            role="tab"
+            aria-selected={tab === "actions"}
+          >
+            Quick Actions
           </button>
         </div>
 
-      </div>
-
-      {/* 💬 INTERACTIVE SUPPORT OPTIONS MODAL */}
-      {showSupportModal && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(6, 43, 37, 0.6)',
-          backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'
-        }}>
-          <div style={{
-            background: '#fff', width: '100%', maxWidth: '380px', borderRadius: '24px',
-            padding: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', position: 'relative'
-          }}>
-            {/* Close Button */}
-            <button
-              onClick={() => setShowSupportModal(false)}
-              style={{ position: 'absolute', top: '18px', right: '18px', background: '#f1f5f9', border: 'none', width: '30px', height: '30px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#0b332c', fontWeight: 'bold' }}
-            >
-              ✕
-            </button>
-
-            <h3 style={{ margin: '0 0 6px', fontFamily: 'Fraunces, serif', fontSize: '19px', color: '#0b332c' }}>
-              MediQ Helpdesk
-            </h3>
-            <p style={{ margin: '0 0 20px', fontSize: '12.5px', color: '#64748b' }}>
-              Choose your preferred channel to connect with our support team:
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
-              {/* WhatsApp Option */}
-              <a
-                href="https://wa.me/918585058779?text=Hello%20MediQ%20Support,%20I%20need%20assistance%20with%20my%20booking."
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '12px', background: '#f0fdf4',
-                  border: '1px solid #bbf7d0', padding: '14px 16px', borderRadius: '14px',
-                  textDecoration: 'none', color: '#166534', fontWeight: '700', fontSize: '13.5px',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.02)'
-                }}
-              >
-                <span style={{ fontSize: '20px' }}>🟢</span>
-                <div style={{ flex: 1 }}>
-                  <div>WhatsApp Chat</div>
-                  <div style={{ fontSize: '11px', color: '#15803d', fontWeight: 'normal' }}>+91 85850 58779</div>
-                </div>
-                <span>→</span>
-              </a>
-
-              {/* Email Option */}
-              <a
-                href="mailto:helpdesk.mediq@gmail.com?subject=Support%20Request%20-%20MediQ%20Patient%20Portal"
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '12px', background: '#f8f6f0',
-                  border: '1px solid #e2e8f0', padding: '14px 16px', borderRadius: '14px',
-                  textDecoration: 'none', color: '#0b332c', fontWeight: '700', fontSize: '13.5px',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.02)'
-                }}
-              >
-                <span style={{ fontSize: '20px' }}>✉️</span>
-                <div style={{ flex: 1 }}>
-                  <div>Email Support</div>
-                  <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 'normal' }}>helpdesk.mediq@gmail.com</div>
-                </div>
-                <span>→</span>
-              </a>
+        {tab === "assistant" ? (
+          <>
+            <div className="mediq-context-row">
+              <span className="mediq-context-chip">Private care context</span>
+              {bookingLabel && (
+                <span className="mediq-context-chip booking">
+                  <b>Next</b> {bookingLabel}
+                </span>
+              )}
             </div>
 
-            <button
-              onClick={() => setShowSupportModal(false)}
-              style={{
-                width: '100%', background: '#0b332c', color: '#fff', border: 'none',
-                padding: '12px', borderRadius: '12px', fontSize: '13px', fontWeight: '700', cursor: 'pointer'
-              }}
-            >
-              Close
-            </button>
+            <div className="mediq-chat" ref={listRef}>
+              {messages.map((message) => (
+                <div
+                  className={`mediq-message ${message.role} ${
+                    message.urgent ? "urgent" : ""
+                  }`}
+                  key={message.id}
+                >
+                  {message.role === "assistant" && (
+                    <div className="mediq-avatar">M</div>
+                  )}
+                  <div className="mediq-bubble-wrap">
+                    {message.urgent && (
+                      <div className="mediq-alert-label">Urgent guidance</div>
+                    )}
+                    <div className="mediq-bubble">{message.text}</div>
+                    <time>
+                      {message.time.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </time>
+                  </div>
+                </div>
+              ))}
+
+              {typing && (
+                <div className="mediq-message assistant">
+                  <div className="mediq-avatar">M</div>
+                  <div className="mediq-bubble-wrap">
+                    <div className="mediq-bubble mediq-typing">
+                      <i />
+                      <i />
+                      <i />
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div ref={endRef} />
+            </div>
+
+            <div className="mediq-composer">
+              <textarea
+                value={input}
+                onChange={(event) => {
+                  setInput(event.target.value);
+                  setLanguage(detectLanguage(event.target.value));
+                }}
+                onKeyDown={handleKeyDown}
+                placeholder="Tell me what you need…"
+                rows={1}
+                aria-label="Message MediQ One"
+              />
+
+              <button
+                className={`mediq-voice ${voiceState !== "idle" ? "active" : ""}`}
+                onClick={startListening}
+                disabled={!isSupportedVoice}
+                aria-label={
+                  isSupportedVoice
+                    ? voiceState === "listening"
+                      ? "Stop listening"
+                      : "Start voice input"
+                    : "Voice input unavailable"
+                }
+                title={
+                  isSupportedVoice
+                    ? "Voice input"
+                    : "Use your native Capacitor voice bridge on Android"
+                }
+              >
+                {voiceState === "listening" ? "■" : "◉"}
+              </button>
+
+              <button
+                className="mediq-send"
+                onClick={() => submitMessage(input)}
+                disabled={!input.trim() || typing}
+                aria-label="Send message"
+              >
+                ↑
+              </button>
+            </div>
+
+            <div className="mediq-composer-meta">
+              <span>
+                {voiceState === "listening"
+                  ? "Listening…"
+                  : voiceState === "thinking"
+                  ? "Thinking…"
+                  : voiceState === "speaking"
+                  ? "Speaking…"
+                  : "AI guidance is not a diagnosis"}
+              </span>
+              <span className="mediq-language">{language.toUpperCase()}</span>
+            </div>
+          </>
+        ) : (
+          <div className="mediq-actions-view">
+            <div className="mediq-actions-intro">
+              <span>What do you need?</span>
+              <p>Jump straight to the care task instead of explaining everything.</p>
+            </div>
+
+            <div className="mediq-action-grid">
+              {ACTIONS.map((action) => (
+                <button
+                  className="mediq-action-card"
+                  key={action.id}
+                  onClick={() => triggerAction(action.id)}
+                >
+                  <span className="mediq-action-icon">{action.icon}</span>
+                  <span>
+                    <strong>{action.label}</strong>
+                    <small>{action.hint}</small>
+                  </span>
+                  <b>↗</b>
+                </button>
+              ))}
+            </div>
+
+            {activeBooking && (
+              <button
+                className="mediq-booking-card"
+                onClick={() => triggerAction("queue")}
+              >
+                <div>
+                  <span className="mediq-card-kicker">ACTIVE CARE JOURNEY</span>
+                  <strong>{activeBooking.doctor || "Your appointment"}</strong>
+                  <small>
+                    {[activeBooking.specialty, activeBooking.time]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </small>
+                </div>
+                <span className="mediq-card-arrow">→</span>
+              </button>
+            )}
+
+            <div className="mediq-safety-note">
+              <span>✦</span>
+              MediQ One helps you navigate healthcare. Emergency symptoms should
+              be assessed by an appropriate medical professional or emergency service.
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </section>
+
+      <button
+        className="mediq-trigger"
+        onClick={() => setOpen((current) => !current)}
+        aria-label={open ? "Close MediQ One" : "Open MediQ One"}
+        aria-expanded={open}
+      >
+        <span className="mediq-pulse" />
+        <span className="mediq-trigger-core">
+          <span className="mediq-trigger-mark">M</span>
+        </span>
+        <span className="mediq-trigger-label">
+          <b>MediQ One</b>
+          <small>AI care assistant</small>
+        </span>
+      </button>
     </div>
   );
 }
