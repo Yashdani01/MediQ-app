@@ -1577,3 +1577,41 @@ export default {
 
   MEDIQ_ONE_TOOLS,
 };
+// ============================================================
+// Compatibility helpers for MediQOne.jsx
+// ============================================================
+
+export function getSessionId() {
+  const session = createMediQOneSession();
+  return session.id;
+}
+
+export async function sendMediQQuery({
+  message,
+  userMessage,
+  language = "en",
+  activeBooking = null,
+  history = [],
+}) {
+  const session = createMediQOneSession();
+
+  const text =
+    message ||
+    userMessage ||
+    "";
+
+  const result = await getMediQOneReply({
+    message: text,
+    language,
+    activeBooking,
+    history,
+    session,
+  });
+
+  return {
+    reply: result.reply || "",
+    action: result.action || null,
+    session: result.session || session,
+    metadata: result.metadata || null,
+  };
+}
