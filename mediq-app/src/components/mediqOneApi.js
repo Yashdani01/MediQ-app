@@ -4,7 +4,7 @@ let currentSessionId = localStorage.getItem('mediq_ai_session_id') || null;
 
 export function getSessionId() {
   if (!currentSessionId) {
-    currentSessionId = 'mq_session_' + Math.random().toString(36.substring(2, 11));
+    currentSessionId = 'mq_session_' + Math.random().toString(36).substring(2, 11);
     localStorage.setItem('mediq_ai_session_id', currentSessionId);
   }
   return currentSessionId;
@@ -18,7 +18,6 @@ export async function sendMediQQuery({ message, patientContext, activeBooking })
   const sessionId = getSessionId();
 
   try {
-    // Replace with your actual backend AI endpoint URL when ready
     const response = await fetch('https://api.med-iq.in/ai/chat', {
       method: 'POST',
       headers: {
@@ -37,10 +36,9 @@ export async function sendMediQQuery({ message, patientContext, activeBooking })
     }
 
     const data = await response.json();
-    return data; // Expected format: { reply: "...", actionType: "...", payload: {...} }
+    return data;
 
   } catch (err) {
-    // Intelligent frontend fallback handling for seamless standalone testing
     console.warn("Backend AI bridge offline. Using local intelligent clinical fallback.");
     return simulateLocalAIResponse(message, activeBooking);
   }
