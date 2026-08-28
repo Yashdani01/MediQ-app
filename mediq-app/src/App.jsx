@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 import LiveQueueTracker from './components/LiveQueueTracker';
 import RxDecoder from './components/RxDecoder';
+import MediQOne from './components/MediQOne';
 import BloodHub from './components/BloodHub';
 import Login from './components/Login';
 import HospitalFlow from './components/HospitalFlow';
 import MyBookings from './components/MyBookings';
 import Reports from './components/Reports';
 import SymptomTriage from './components/SymptomTriage';
-import MediQOne from './components/MediQOne';
 import ClinicPortal from './components/ClinicPortal';
 import PhysioGuideModal from './components/PhysioGuideModal';
 import { getMyCurrentBooking } from './hospitalData';
@@ -806,19 +806,17 @@ export default function App() {
           </button>
         ))}
       </nav>
-
-      {/* MediQ One AI Assistant Component */}
-      <MediQOne
-        userName={displayName}
-        activeBooking={activeQueueToken}
-        onActionTrigger={(actionType, payload) => {
-          if (actionType === 'find_doctor') {
-            handleNavigation('home');
-          } else if (actionType === 'view_queue') {
-            setActiveModal('queue');
-          }
-        }}
-      />
+           <MediQOne
+  userName={displayName}
+  activeBooking={activeQueueToken}
+  onActionTrigger={(type, payload) => {
+    if (type === 'find_doctor') {
+      handleNavigation('home');
+    } else if (type === 'view_queue') {
+      setActiveModal('queue');
+    }
+  }}
+/>
     </div>
   );
 }
