@@ -193,6 +193,7 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
 
+  // Persistent Care Circle State using localStorage so names never disappear on refresh
   const [familyMembers, setFamilyMembers] = useState(() => {
     const saved = localStorage.getItem('mediq_family_members');
     return saved ? JSON.parse(saved) : [
@@ -207,6 +208,7 @@ export default function App() {
   const [newFamilyName, setNewFamilyName] = useState('');
   const [newFamilyRelation, setNewFamilyRelation] = useState('Spouse');
 
+  // Live Queue Tracker State connected to actual database bookings
   const [activeQueueToken, setActiveQueueToken] = useState(null);
 
   useEffect(() => {
@@ -805,6 +807,7 @@ export default function App() {
           </button>
         ))}
       </nav>
+      
     </div>
   );
 }
