@@ -708,3 +708,324 @@
     transition-duration: .01ms !important;
   }
 }
+
+/* =========================================================
+   HOSPITAL FLOW & HOME PAGE STYLES
+========================================================= */
+
+.flow-page {
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  background-color: #fcfbf7;
+  min-height: 100vh;
+}
+
+.flow-content {
+  padding: 16px 16px 90px;
+  width: 100%;
+  max-width: 650px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* Section Titles */
+.flow-section-title {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: #0b332c;
+  margin: 0 0 12px;
+}
+
+.flow-empty {
+  text-align: center;
+  color: #64748b;
+  font-size: 13.5px;
+  padding: 24px;
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+}
+
+/* Specialty Chips Horizontal Scroll */
+.specialty-chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: none; /* Firefox */
+}
+
+.specialty-chips::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+.specialty-chip {
+  background: #fff;
+  color: #0b332c;
+  border: 1px solid #cbd5e1;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.specialty-chip.active,
+.specialty-chip:hover {
+  background: #0b332c;
+  color: #fff;
+  border-color: #0b332c;
+}
+
+/* Hospital & Clinic Cards */
+.hospital-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hospital-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.hospital-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
+  border-color: #cbd5e1;
+}
+
+.hospital-card-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.hospital-icon {
+  width: 44px;
+  height: 44px;
+  background: #e6f4ea;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #10b981;
+  flex-shrink: 0;
+}
+
+.hospital-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.hospital-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.hospital-title-row h4 {
+  margin: 0 0 3px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0b332c;
+  line-height: 1.3;
+}
+
+.hospital-location {
+  margin: 0;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.hospital-arrow {
+  color: #94a3b8;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.hospital-meta-row {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.doctor-available-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #dcfce7;
+  color: #166534;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.availability-dot {
+  width: 6px;
+  height: 6px;
+  background: #10b981;
+  border-radius: 50%;
+}
+
+.no-doctor-badge {
+  background: #f1f5f9;
+  color: #475569;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Doctor Cards */
+.doctor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.doctor-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.doctor-card.muted {
+  opacity: 0.75;
+  background: #fafaf9;
+}
+
+.doctor-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.doctor-avatar {
+  width: 44px;
+  height: 44px;
+  background: #e6f4ea;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.doctor-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.doctor-details-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.doctor-name {
+  margin: 0 0 2px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0b332c;
+}
+
+.doctor-specialty {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.doctor-card-divider {
+  height: 1px;
+  background: #f1f5f9;
+  margin: 12px 0;
+}
+
+.doc-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+
+.doc-stats-label {
+  margin: 0 0 2px;
+  color: #64748b;
+  font-size: 11px;
+}
+
+.doc-stats-value {
+  margin: 0;
+  font-weight: 700;
+  color: #0b332c;
+}
+
+.doc-stats-value.green {
+  color: #10b981;
+}
+
+.doc-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 10px;
+}
+
+.doc-fee-label {
+  margin: 0 0 1px;
+  font-size: 10px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.doc-fee-value {
+  margin: 0;
+  font-weight: 700;
+  font-size: 14px;
+  color: #0b332c;
+}
+
+.book-btn {
+  background: #10b981;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.book-btn:hover {
+  background: #059669;
+}
+
+.book-btn-disabled {
+  background: #e2e8f0;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
