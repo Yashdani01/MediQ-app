@@ -806,14 +806,32 @@ export default function App() {
           </button>
         ))}
       </nav>
-           <MediQOne
+          <MediQOne
   userName={displayName}
-  activeBooking={activeQueueToken}
+  activeBooking={activeBooking}
   onActionTrigger={(type, payload) => {
+    if (type === 'view_queue') {
+      setActiveTab('queue');
+    }
+
+    if (type === 'view_appointment') {
+      setActiveTab('bookings');
+    }
+
+    if (type === 'view_bookings') {
+      setActiveTab('bookings');
+    }
+
     if (type === 'find_doctor') {
-      handleNavigation('home');
-    } else if (type === 'view_queue') {
-      setActiveModal('queue');
+      setActiveTab('home');
+    }
+
+    if (type === 'find_hospital') {
+      setActiveTab('home');
+    }
+
+    if (type === 'urgent_care') {
+      setActiveTab('home');
     }
   }}
 />

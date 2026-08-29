@@ -1,10 +1,16 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+
 import './MediQOne.css';
 
 import {
   createMediQOneSession,
   detectMediQOneLanguage,
-  detectMediQOneIntent,
   getMediQOneReply,
   speakMediQOne,
   stopMediQOneSpeech,
@@ -12,93 +18,96 @@ import {
   stopMediQOneListening,
 } from './mediqOneApi';
 
-const QUICK_ACTIONS = [
+const STARTER_PROMPTS = [
   {
-    id: 'find_doctor',
-    label: 'Find a doctor',
-    sub: 'Specialist or general care',
+    id: 'symptoms',
     icon: '✦',
+    title: 'Describe symptoms',
+    subtitle: 'Tell me what you are experiencing',
+    prompt: 'I want help understanding my symptoms.',
   },
   {
-    id: 'find_hospital',
-    label: 'Nearby hospital',
-    sub: 'Hospitals and urgent care',
+    id: 'care',
     icon: '⌖',
+    title: 'Find the right care',
+    subtitle: 'Doctor, specialist, or hospital',
+    prompt: 'Help me find the right type of doctor.',
   },
   {
-    id: 'find_dentist',
-    label: 'Dental care',
-    sub: 'Dentist and dental appointments',
-    icon: '◌',
+    id: 'appointment',
+    icon: '◷',
+    title: 'My appointment',
+    subtitle: 'Check booking and appointment details',
+    prompt: 'Tell me about my appointment.',
   },
   {
-    id: 'view_queue',
-    label: 'My queue',
-    sub: 'Token and waiting time',
+    id: 'queue',
     icon: '#',
+    title: 'Check my queue',
+    subtitle: 'Live token and waiting information',
+    prompt: 'Check my queue status.',
   },
 ];
 
 const LABELS = {
   en: {
-    greeting: 'How can I help?',
-    subGreeting: 'Care, appointments, queues, or finding the right place to go.',
-    placeholder: 'Ask MediQ One…',
+    greeting: 'How can I support your care?',
+    subGreeting:
+      'Describe what is happening, or ask me to help you find the right next step.',
+    placeholder: 'Describe symptoms or ask a healthcare question...',
     listening: 'Listening',
     thinking: 'Thinking',
     speaking: 'Speaking',
     stop: 'Stop',
     close: 'Close MediQ One',
-    quick: 'Quick access',
-    healthcare: 'Healthcare copilot',
-    available: 'Available now',
-    appointment: 'Active care',
-    noAppointment: 'No active appointment',
+    available: 'Healthcare copilot ready',
     send: 'Send',
     voice: 'Voice assistant',
     latest: 'Latest',
     disclaimer:
-      'MediQ One provides healthcare guidance and navigation, not a diagnosis.',
+      'MediQ One provides healthcare guidance and navigation. It does not replace professional medical diagnosis or emergency services.',
+    listen: 'Listen',
+    stopListening: 'Stop',
   },
 
   bn: {
-    greeting: 'কীভাবে সাহায্য করতে পারি?',
-    subGreeting: 'চিকিৎসা, অ্যাপয়েন্টমেন্ট, কিউ বা সঠিক সেবা খুঁজতে বলুন।',
-    placeholder: 'MediQ One-কে জিজ্ঞেস করুন…',
+    greeting: 'কীভাবে আপনার যত্নে সাহায্য করতে পারি?',
+    subGreeting:
+      'আপনার সমস্যা বলুন অথবা সঠিক চিকিৎসার পরবর্তী ধাপ খুঁজতে সাহায্য নিন।',
+    placeholder: 'আপনার উপসর্গ বা স্বাস্থ্য প্রশ্ন লিখুন...',
     listening: 'শুনছি',
     thinking: 'ভাবছি',
     speaking: 'বলছি',
     stop: 'থামুন',
     close: 'MediQ One বন্ধ করুন',
-    quick: 'দ্রুত সহায়তা',
-    healthcare: 'স্বাস্থ্যসেবা সহকারী',
-    available: 'এখন সক্রিয়',
-    appointment: 'চলমান চিকিৎসা',
-    noAppointment: 'কোনো সক্রিয় অ্যাপয়েন্টমেন্ট নেই',
+    available: 'স্বাস্থ্য সহকারী প্রস্তুত',
     send: 'পাঠান',
     voice: 'ভয়েস সহকারী',
     latest: 'সর্বশেষ',
-    disclaimer: 'MediQ One স্বাস্থ্য নির্দেশনা ও নেভিগেশন দেয়, রোগ নির্ণয় নয়।',
+    disclaimer:
+      'MediQ One স্বাস্থ্য নির্দেশনা ও নেভিগেশন দেয়। এটি চিকিৎসকের রোগ নির্ণয়ের বিকল্প নয়।',
+    listen: 'শুনুন',
+    stopListening: 'থামুন',
   },
 
   hi: {
-    greeting: 'मैं कैसे मदद कर सकता हूँ?',
-    subGreeting: 'इलाज, अपॉइंटमेंट, क्यू या सही देखभाल खोजने के लिए पूछें।',
-    placeholder: 'MediQ One से पूछें…',
+    greeting: 'मैं आपकी देखभाल में कैसे मदद कर सकता हूँ?',
+    subGreeting:
+      'बताएं कि क्या समस्या है, या सही स्वास्थ्य सेवा का अगला कदम खोजने में मदद लें।',
+    placeholder: 'लक्षण बताएं या स्वास्थ्य संबंधी प्रश्न पूछें...',
     listening: 'सुन रहा हूँ',
     thinking: 'सोच रहा हूँ',
     speaking: 'बोल रहा हूँ',
     stop: 'रोकें',
     close: 'MediQ One बंद करें',
-    quick: 'त्वरित सहायता',
-    healthcare: 'हेल्थकेयर सहायक',
-    available: 'अभी उपलब्ध',
-    appointment: 'चल रही देखभाल',
-    noAppointment: 'कोई सक्रिय अपॉइंटमेंट नहीं',
+    available: 'हेल्थकेयर कोपायलट तैयार है',
     send: 'भेजें',
-    voice: 'वॉइस सहायक',
+    voice: 'वॉइस असिस्टेंट',
     latest: 'नवीनतम',
-    disclaimer: 'MediQ One स्वास्थ्य मार्गदर्शन देता है, निदान नहीं।',
+    disclaimer:
+      'MediQ One स्वास्थ्य मार्गदर्शन और नेविगेशन देता है। यह पेशेवर चिकित्सा निदान का विकल्प नहीं है।',
+    listen: 'सुनें',
+    stopListening: 'रोकें',
   },
 };
 
@@ -226,12 +235,10 @@ export default function MediQOne({
   const [messages, setMessages] = useState([]);
   const [status, setStatus] = useState('idle');
   const [language, setLanguage] = useState('en');
-  const [showActions, setShowActions] = useState(false);
   const [speakingMessageId, setSpeakingMessageId] = useState(null);
   const [hasScrolledUp, setHasScrolledUp] = useState(false);
 
   const listRef = useRef(null);
-  const inputRef = useRef(null);
   const sessionRef = useRef(null);
 
   const booking = useMemo(
@@ -251,8 +258,8 @@ export default function MediQOne({
     if (!open || messages.length > 0) return;
 
     const greeting = userName
-      ? `Good evening, ${userName}.`
-      : 'Good evening.';
+      ? `Hello ${userName}. I'm MediQ One, your healthcare copilot.`
+      : `Hello. I'm MediQ One, your healthcare copilot.`;
 
     setMessages([
       {
@@ -284,20 +291,6 @@ export default function MediQOne({
     };
   }, []);
 
-  useEffect(() => {
-    const handleKeyboard = (event) => {
-      if (event.key === 'Escape' && open) {
-        closeAssistant();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyboard);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyboard);
-    };
-  });
-
   const updateStatus = useCallback(
     (nextStatus) => {
       setStatus(nextStatus);
@@ -312,7 +305,6 @@ export default function MediQOne({
 
     setSpeakingMessageId(null);
     setStatus('idle');
-    setShowActions(false);
     setOpen(false);
   }, []);
 
@@ -329,6 +321,13 @@ export default function MediQOne({
     async (text, messageId) => {
       if (!text) return;
 
+      if (speakingMessageId === messageId) {
+        stopMediQOneSpeech();
+        setSpeakingMessageId(null);
+        updateStatus('idle');
+        return;
+      }
+
       stopMediQOneSpeech();
 
       setSpeakingMessageId(messageId);
@@ -343,7 +342,7 @@ export default function MediQOne({
         updateStatus('idle');
       }
     },
-    [language, updateStatus]
+    [language, speakingMessageId, updateStatus]
   );
 
   const sendMessage = useCallback(
@@ -354,7 +353,8 @@ export default function MediQOne({
         return;
       }
 
-      const detectedLanguage = detectMediQOneLanguage(messageText);
+      const detectedLanguage =
+        detectMediQOneLanguage(messageText);
 
       setLanguage(detectedLanguage);
       setInput('');
@@ -367,34 +367,46 @@ export default function MediQOne({
         time: new Date(),
       };
 
-      setMessages((current) => [...current, userMessage]);
+      setMessages((current) => [
+        ...current,
+        userMessage,
+      ]);
+
       updateStatus('thinking');
 
       try {
         let result;
 
+        const context = {
+          language: detectedLanguage,
+          activeBooking,
+          history: messages.slice(-12),
+          sessionId: sessionRef.current?.id,
+          userName,
+        };
+
         if (onSendMessage) {
-          const response = await onSendMessage(messageText, {
-            language: detectedLanguage,
-            activeBooking,
-            history: messages.slice(-12),
-            sessionId: sessionRef.current?.id,
-            intent: detectMediQOneIntent(messageText),
-          });
+          const response = await onSendMessage(
+            messageText,
+            context
+          );
 
           result = {
             reply:
               typeof response === 'string'
                 ? response
-                : response?.reply || response?.text || '',
+                : response?.reply ||
+                  response?.text ||
+                  '',
             action: response?.action || null,
+            assessment: response?.assessment || null,
+            suggestions:
+              response?.suggestions || [],
           };
         } else {
           result = await getMediQOneReply({
             message: messageText,
-            language: detectedLanguage,
-            activeBooking,
-            history: messages.slice(-12),
+            ...context,
             session: sessionRef.current,
           });
         }
@@ -409,31 +421,41 @@ export default function MediQOne({
           text: reply,
           time: new Date(),
           action: result?.action || null,
-          urgent: result?.action?.type === 'urgent_care',
+          assessment: result?.assessment || null,
+          suggestions: result?.suggestions || [],
+          urgent:
+            result?.assessment?.urgency === 'emergency' ||
+            result?.action?.type === 'urgent_care',
         };
 
-        setMessages((current) => [...current, assistantMessage]);
+        setMessages((current) => [
+          ...current,
+          assistantMessage,
+        ]);
 
-        if (result?.action?.type) {
+        if (result?.action?.type === 'auto_trigger') {
           triggerAction(
-            result.action.type,
+            result.action.target,
             result.action.payload || null
           );
         }
-
-        await speakMessage(reply, assistantMessage.id);
       } catch (error) {
-        console.error('MediQ One request failed:', error);
+        console.error(
+          'MediQ One request failed:',
+          error
+        );
 
-        const errorMessage = {
-          id: makeId('assistant'),
-          role: 'assistant',
-          text: 'I’m having trouble connecting to MediQ right now. Please try again.',
-          time: new Date(),
-          error: true,
-        };
-
-        setMessages((current) => [...current, errorMessage]);
+        setMessages((current) => [
+          ...current,
+          {
+            id: makeId('assistant'),
+            role: 'assistant',
+            text:
+              'I’m having trouble connecting right now. Please try again in a moment.',
+            time: new Date(),
+            error: true,
+          },
+        ]);
       } finally {
         updateStatus('idle');
       }
@@ -442,10 +464,10 @@ export default function MediQOne({
       activeBooking,
       messages,
       onSendMessage,
-      speakMessage,
       status,
       triggerAction,
       updateStatus,
+      userName,
     ]
   );
 
@@ -468,6 +490,7 @@ export default function MediQOne({
     try {
       const result = await startMediQOneListening({
         language,
+
         onInterim: (interimText) => {
           if (interimText) {
             setInput(interimText);
@@ -482,7 +505,10 @@ export default function MediQOne({
         await sendMessage(spokenText);
       }
     } catch (error) {
-      console.warn('MediQ One voice input unavailable:', error);
+      console.warn(
+        'MediQ One voice input unavailable:',
+        error
+      );
     } finally {
       stopMediQOneListening();
       updateStatus('idle');
@@ -502,28 +528,23 @@ export default function MediQOne({
     setHasScrolledUp(distanceFromBottom > 100);
   }, []);
 
-  const openQuickAction = useCallback(
-    (action) => {
-      setShowActions(false);
+  const handleSuggestion = useCallback(
+    (suggestion) => {
+      if (!suggestion) return;
 
-      const prompts = {
-        find_doctor: 'I want to find a doctor.',
-        find_hospital: 'I need a nearby hospital.',
-        find_dentist: 'I need dental care.',
-        view_queue: 'Show my queue status.',
-      };
-
-      if (action.id === 'view_queue' && activeBooking) {
-        triggerAction('view_queue', {
-          booking: activeBooking,
-        });
-
+      if (suggestion.type === 'action') {
+        triggerAction(
+          suggestion.action,
+          suggestion.payload || null
+        );
         return;
       }
 
-      sendMessage(prompts[action.id] || action.label);
+      if (suggestion.prompt) {
+        sendMessage(suggestion.prompt);
+      }
     },
-    [activeBooking, sendMessage, triggerAction]
+    [sendMessage, triggerAction]
   );
 
   return (
@@ -538,7 +559,7 @@ export default function MediQOne({
           <span className="mq-trigger-halo" />
 
           <span className="mq-trigger-core">
-            <Icon name="spark" size={19} />
+            <Icon name="spark" size={20} />
           </span>
 
           <span className="mq-trigger-label">
@@ -548,34 +569,34 @@ export default function MediQOne({
       )}
 
       {open && (
-        <section
-          className="mq-shell"
-          role="dialog"
-          aria-label="MediQ One healthcare assistant"
-        >
-          <header className="mq-header">
-            <div className="mq-brand">
-              <div className="mq-mark">
-                <Icon name="spark" size={16} />
-              </div>
+        <>
+          <div
+            className="mq-backdrop"
+            onClick={closeAssistant}
+          />
 
-              <div>
-                <div className="mq-title">MediQ One</div>
-                <div className="mq-subtitle">
-                  {copy.healthcare}
+          <section
+            className="mq-shell"
+            role="dialog"
+            aria-modal="true"
+            aria-label="MediQ One healthcare assistant"
+          >
+            <header className="mq-header">
+              <div className="mq-brand">
+                <div className="mq-mark">
+                  <Icon name="spark" size={17} />
+                </div>
+
+                <div>
+                  <div className="mq-title">
+                    MediQ One
+                  </div>
+
+                  <div className="mq-subtitle">
+                    Healthcare decision copilot
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <div className="mq-header-actions">
-              <button
-                type="button"
-                className="mq-icon-button"
-                onClick={() => setShowActions((value) => !value)}
-                aria-label="Quick actions"
-              >
-                <Icon name="plus" size={17} />
-              </button>
 
               <button
                 type="button"
@@ -583,334 +604,346 @@ export default function MediQOne({
                 onClick={closeAssistant}
                 aria-label={copy.close}
               >
-                <Icon name="close" size={17} />
+                <Icon name="close" size={18} />
               </button>
-            </div>
-          </header>
+            </header>
 
-          <div
-            className="mq-body"
-            ref={listRef}
-            onScroll={handleScroll}
-          >
-            {messages.length <= 1 && (
-              <section className="mq-home">
-                <div className="mq-eyebrow">
-                  <span className="mq-status-dot" />
-                  {copy.available}
-                </div>
-
-                <h2>{copy.greeting}</h2>
-
-                <p className="mq-home-description">
-                  {copy.subGreeting}
-                </p>
-
-                {booking ? (
-                  <div className="mq-context-card">
-                    <div className="mq-context-top">
-                      <span>{copy.appointment}</span>
-
-                      <span className="mq-context-live">
-                        {booking.token
-                          ? `#${booking.token}`
-                          : 'Booked'}
-                      </span>
-                    </div>
-
-                    <div className="mq-context-doctor">
-                      {booking.doctor}
-                    </div>
-
-                    <div className="mq-context-meta">
-                      {[booking.hospital, booking.time]
-                        .filter(Boolean)
-                        .join(' · ')}
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        triggerAction('view_queue', {
-                          booking: activeBooking,
-                        })
-                      }
-                    >
-                      {booking.token
-                        ? 'Open queue'
-                        : 'View appointment'}
-
-                      <Icon name="arrow" size={14} />
-                    </button>
+            <div
+              className="mq-body"
+              ref={listRef}
+              onScroll={handleScroll}
+            >
+              {messages.length <= 1 && (
+                <section className="mq-home">
+                  <div className="mq-eyebrow">
+                    <span className="mq-status-dot" />
+                    {copy.available}
                   </div>
-                ) : (
-                  <div className="mq-empty-context">
-                    {copy.noAppointment}
+
+                  <h2>{copy.greeting}</h2>
+
+                  <p className="mq-home-description">
+                    {copy.subGreeting}
+                  </p>
+
+                  {booking && (
+                    <div className="mq-context-card">
+                      <div className="mq-context-top">
+                        <span>Active appointment</span>
+
+                        <span className="mq-context-live">
+                          {booking.token
+                            ? `Token #${booking.token}`
+                            : 'Booked'}
+                        </span>
+                      </div>
+
+                      <div className="mq-context-doctor">
+                        {booking.doctor}
+                      </div>
+
+                      <div className="mq-context-meta">
+                        {[booking.hospital, booking.time]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          triggerAction(
+                            'view_queue',
+                            {
+                              booking: activeBooking,
+                            }
+                          )
+                        }
+                      >
+                        Check appointment
+                        <Icon
+                          name="arrow"
+                          size={14}
+                        />
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="mq-starter-label">
+                    What would you like help with?
                   </div>
-                )}
 
-                <div className="mq-quick-label">
-                  {copy.quick}
-                </div>
+                  <div className="mq-starter-grid">
+                    {STARTER_PROMPTS.map((item) => (
+                      <button
+                        key={item.id}
+                        className="mq-starter-card"
+                        type="button"
+                        onClick={() =>
+                          sendMessage(item.prompt)
+                        }
+                      >
+                        <span className="mq-starter-icon">
+                          {item.icon}
+                        </span>
 
-                <div className="mq-action-list">
-                  {QUICK_ACTIONS.slice(0, 3).map((action) => (
-                    <button
-                      key={action.id}
-                      className="mq-action-row"
-                      type="button"
-                      onClick={() =>
-                        openQuickAction(action)
-                      }
-                    >
-                      <span className="mq-action-icon">
-                        {action.icon}
-                      </span>
+                        <span>
+                          <strong>{item.title}</strong>
+                          <small>{item.subtitle}</small>
+                        </span>
 
-                      <span className="mq-action-copy">
-                        <strong>{action.label}</strong>
-                        <small>{action.sub}</small>
-                      </span>
+                        <Icon
+                          name="arrow"
+                          size={15}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              )}
 
-                      <Icon name="arrow" size={15} />
-                    </button>
-                  ))}
-                </div>
-              </section>
-            )}
+              {messages.map((message) => (
+                <article
+                  key={message.id}
+                  className={`mq-message ${message.role} ${
+                    message.urgent ? 'urgent' : ''
+                  }`}
+                >
+                  {message.role === 'assistant' && (
+                    <div className="mq-message-avatar">
+                      <Icon name="spark" size={13} />
+                    </div>
+                  )}
 
-            {messages.map((message) => (
-              <article
-                key={message.id}
-                className={`mq-message ${message.role} ${
-                  message.urgent ? 'urgent' : ''
-                }`}
-              >
-                {message.role === 'assistant' && (
+                  <div className="mq-message-content">
+                    {message.assessment?.urgency && (
+                      <div
+                        className={`mq-assessment ${message.assessment.urgency}`}
+                      >
+                        <span className="mq-assessment-dot" />
+
+                        {message.assessment.label ||
+                          message.assessment.urgency}
+                      </div>
+                    )}
+
+                    <div className="mq-message-text">
+                      {message.text}
+                    </div>
+
+                    {message.suggestions?.length > 0 && (
+                      <div className="mq-suggestions">
+                        {message.suggestions.map(
+                          (suggestion, index) => (
+                            <button
+                              key={`${message.id}-${index}`}
+                              type="button"
+                              onClick={() =>
+                                handleSuggestion(
+                                  suggestion
+                                )
+                              }
+                            >
+                              {suggestion.label}
+                              <Icon
+                                name="arrow"
+                                size={13}
+                              />
+                            </button>
+                          )
+                        )}
+                      </div>
+                    )}
+
+                    {message.action?.type &&
+                      message.action?.type !==
+                        'auto_trigger' && (
+                        <button
+                          className={`mq-inline-action ${
+                            message.urgent
+                              ? 'danger'
+                              : ''
+                          }`}
+                          type="button"
+                          onClick={() =>
+                            triggerAction(
+                              message.action.type,
+                              message.action.payload
+                            )
+                          }
+                        >
+                          {message.action.label ||
+                            'Continue'}
+
+                          <Icon
+                            name="arrow"
+                            size={14}
+                          />
+                        </button>
+                      )}
+
+                    {message.role === 'assistant' &&
+                      message.text && (
+                        <button
+                          className="mq-speak-message"
+                          type="button"
+                          onClick={() =>
+                            speakMessage(
+                              message.text,
+                              message.id
+                            )
+                          }
+                        >
+                          {speakingMessageId ===
+                          message.id
+                            ? `■ ${copy.stopListening}`
+                            : `◒ ${copy.listen}`}
+                        </button>
+                      )}
+                  </div>
+                </article>
+              ))}
+
+              {status === 'thinking' && (
+                <div className="mq-message assistant">
                   <div className="mq-message-avatar">
                     <Icon name="spark" size={13} />
                   </div>
+
+                  <div className="mq-typing">
+                    <span />
+                    <span />
+                    <span />
+                    <em>{copy.thinking}</em>
+                  </div>
+                </div>
+              )}
+
+              <div className="mq-end" />
+            </div>
+
+            {hasScrolledUp && (
+              <button
+                className="mq-new-response"
+                type="button"
+                onClick={() => {
+                  setHasScrolledUp(false);
+
+                  listRef.current?.scrollTo({
+                    top:
+                      listRef.current.scrollHeight,
+                    behavior: 'smooth',
+                  });
+                }}
+              >
+                ↓ {copy.latest}
+              </button>
+            )}
+
+            {status !== 'idle' && (
+              <div
+                className={`mq-voice-state ${status}`}
+              >
+                {status === 'listening' && (
+                  <div className="mq-wave">
+                    <i />
+                    <i />
+                    <i />
+                    <i />
+                    <i />
+                  </div>
                 )}
 
-                <div className="mq-message-content">
-                  <div className="mq-message-text">
-                    {message.text}
-                  </div>
+                <span>
+                  {status === 'listening'
+                    ? copy.listening
+                    : status === 'speaking'
+                    ? copy.speaking
+                    : copy.thinking}
+                </span>
 
-                  {message.action?.type && (
-                    <button
-                      className={`mq-inline-action ${
-                        message.urgent ? 'danger' : ''
-                      }`}
-                      type="button"
-                      onClick={() =>
-                        triggerAction(
-                          message.action.type,
-                          message.action.payload
-                        )
-                      }
-                    >
-                      <span>
-                        {message.action.type ===
-                        'urgent_care'
-                          ? '!'
-                          : '→'}
-                      </span>
-
-                      {message.action.label ||
-                        'Continue'}
-
-                      <Icon name="arrow" size={14} />
-                    </button>
-                  )}
-
-                  {message.role === 'assistant' &&
-                    message.text && (
-                      <button
-                        className="mq-speak-message"
-                        type="button"
-                        onClick={() =>
-                          speakMessage(
-                            message.text,
-                            message.id
-                          )
-                        }
-                        aria-label={
-                          speakingMessageId === message.id
-                            ? copy.stop
-                            : 'Read response aloud'
-                        }
-                      >
-                        {speakingMessageId === message.id
-                          ? '■ Stop'
-                          : '◒ Listen'}
-                      </button>
-                    )}
-                </div>
-              </article>
-            ))}
-
-            {status === 'thinking' && (
-              <div className="mq-message assistant">
-                <div className="mq-message-avatar">
-                  <Icon name="spark" size={13} />
-                </div>
-
-                <div className="mq-typing">
-                  <span />
-                  <span />
-                  <span />
-                  <em>{copy.thinking}</em>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    stopMediQOneSpeech();
+                    stopMediQOneListening();
+                    setSpeakingMessageId(null);
+                    updateStatus('idle');
+                  }}
+                >
+                  ×
+                </button>
               </div>
             )}
 
-            <div className="mq-end" />
-          </div>
+            <footer className="mq-composer-area">
+              <form
+                className="mq-composer"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  sendMessage(input);
+                }}
+              >
+                <textarea
+                  value={input}
+                  onChange={(event) => {
+                    const value = event.target.value;
 
-          {hasScrolledUp && (
-            <button
-              className="mq-new-response"
-              type="button"
-              onClick={() => {
-                setHasScrolledUp(false);
+                    setInput(value);
 
-                listRef.current?.scrollTo({
-                  top: listRef.current.scrollHeight,
-                  behavior: 'smooth',
-                });
-              }}
-            >
-              ↓ {copy.latest}
-            </button>
-          )}
+                    if (value.trim()) {
+                      setLanguage(
+                        detectMediQOneLanguage(value)
+                      );
+                    }
+                  }}
+                  onKeyDown={(event) => {
+                    if (
+                      event.key === 'Enter' &&
+                      !event.shiftKey
+                    ) {
+                      event.preventDefault();
+                      sendMessage(input);
+                    }
+                  }}
+                  placeholder={copy.placeholder}
+                  rows={1}
+                  aria-label={copy.placeholder}
+                />
 
-          {showActions && (
-            <div className="mq-action-drawer">
-              {QUICK_ACTIONS.map((action) => (
                 <button
-                  key={action.id}
                   type="button"
-                  onClick={() =>
-                    openQuickAction(action)
-                  }
+                  className={`mq-mic ${
+                    status === 'listening'
+                      ? 'active'
+                      : ''
+                  }`}
+                  onClick={startVoice}
+                  aria-label={copy.voice}
                 >
-                  <span>{action.icon}</span>
-
-                  <span>
-                    <strong>{action.label}</strong>
-                    <small>{action.sub}</small>
-                  </span>
+                  {status === 'speaking' ? (
+                    '■'
+                  ) : (
+                    <Icon name="mic" size={18} />
+                  )}
                 </button>
-              ))}
-            </div>
-          )}
 
-          {status !== 'idle' && (
-            <div className={`mq-voice-state ${status}`}>
-              {status === 'listening' && (
-                <div className="mq-wave">
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                </div>
-              )}
-
-              <span>
-                {status === 'listening'
-                  ? copy.listening
-                  : status === 'speaking'
-                  ? copy.speaking
-                  : copy.thinking}
-              </span>
-
-              <button
-                type="button"
-                onClick={() => {
-                  stopMediQOneSpeech();
-                  stopMediQOneListening();
-                  setSpeakingMessageId(null);
-                  updateStatus('idle');
-                }}
-                aria-label={copy.stop}
-              >
-                ×
-              </button>
-            </div>
-          )}
-
-          <footer className="mq-composer-area">
-            <form
-              className="mq-composer"
-              onSubmit={(event) => {
-                event.preventDefault();
-                sendMessage(input);
-              }}
-            >
-              <textarea
-                ref={inputRef}
-                value={input}
-                onChange={(event) => {
-                  const value = event.target.value;
-
-                  setInput(value);
-
-                  if (value.trim()) {
-                    setLanguage(
-                      detectMediQOneLanguage(value)
-                    );
-                  }
-                }}
-                onKeyDown={(event) => {
-                  if (
-                    event.key === 'Enter' &&
-                    !event.shiftKey
-                  ) {
-                    event.preventDefault();
-                    sendMessage(input);
-                  }
-                }}
-                placeholder={copy.placeholder}
-                rows={1}
-                aria-label={copy.placeholder}
-              />
-
-              <button
-                type="button"
-                className={`mq-mic ${
-                  status === 'listening' ||
-                  status === 'speaking'
-                    ? 'active'
-                    : ''
-                }`}
-                onClick={startVoice}
-                aria-label={copy.voice}
-              >
-                {status === 'speaking' ? (
-                  '■'
-                ) : (
-                  <Icon name="mic" size={17} />
+                {input.trim() && (
+                  <button
+                    type="submit"
+                    className="mq-send"
+                    aria-label={copy.send}
+                  >
+                    <Icon name="send" size={16} />
+                  </button>
                 )}
-              </button>
+              </form>
 
-              {input.trim() && (
-                <button
-                  type="submit"
-                  className="mq-send"
-                  aria-label={copy.send}
-                >
-                  <Icon name="send" size={16} />
-                </button>
-              )}
-            </form>
-
-            <div className="mq-footnote">
-              {copy.disclaimer}
-            </div>
-          </footer>
-        </section>
+              <div className="mq-footnote">
+                {copy.disclaimer}
+              </div>
+            </footer>
+          </section>
+        </>
       )}
     </div>
   );

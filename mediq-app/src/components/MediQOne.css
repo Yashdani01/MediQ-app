@@ -1,41 +1,53 @@
 /* =========================================================
-   MediQ One
-   Styles for MediQOne.jsx
-   ========================================================= */
+   MEDIQ ONE
+   FLOATING HEALTHCARE DECISION COPILOT
+========================================================= */
+
+.mq-one,
+.mq-one * {
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   FLOATING TRIGGER
+========================================================= */
 
 .mq-one {
   position: fixed;
   right: 28px;
   bottom: 28px;
-  z-index: 999999;
+  z-index: 99999;
   font-family:
     Inter,
-    ui-sans-serif,
-    system-ui,
     -apple-system,
     BlinkMacSystemFont,
     "Segoe UI",
     sans-serif;
-  color: #173b35;
 }
 
-/* =========================================================
-   Floating trigger
-   ========================================================= */
+/* Floating trigger */
 
 .mq-trigger {
   position: relative;
-  display: flex;
+  border: none;
+  cursor: pointer;
+
+  display: inline-flex;
   align-items: center;
   gap: 10px;
-  height: 52px;
-  padding: 6px 16px 6px 6px;
-  border: 1px solid rgba(10, 79, 67, 0.14);
+
+  min-height: 56px;
+  padding: 6px 18px 6px 7px;
+
   border-radius: 999px;
-  background: #073d35;
-  color: #fff;
-  cursor: pointer;
-  box-shadow: 0 14px 35px rgba(4, 49, 42, 0.24);
+
+  color: #ffffff;
+  background: #123f38;
+
+  box-shadow:
+    0 14px 40px rgba(11, 53, 47, 0.28),
+    0 4px 12px rgba(0, 0, 0, 0.15);
+
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
@@ -43,72 +55,123 @@
 
 .mq-trigger:hover {
   transform: translateY(-2px);
-  box-shadow: 0 18px 42px rgba(4, 49, 42, 0.3);
+  box-shadow:
+    0 18px 45px rgba(11, 53, 47, 0.35),
+    0 6px 15px rgba(0, 0, 0, 0.18);
+}
+
+.mq-trigger:active {
+  transform: scale(0.97);
 }
 
 .mq-trigger-halo {
   position: absolute;
-  inset: -7px;
-  border: 1px solid rgba(20, 126, 105, 0.22);
-  border-radius: 999px;
+  inset: -6px;
+
+  border-radius: inherit;
+
+  border: 1px solid rgba(201, 164, 71, 0.2);
+
   pointer-events: none;
-  animation: mqPulse 2.8s ease-in-out infinite;
 }
 
 .mq-trigger-core {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
+
   border-radius: 50%;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #e9b949;
-  color: #073d35;
+
+  color: #17423b;
+  background: linear-gradient(
+    135deg,
+    #e8c86c,
+    #c9a447
+  );
+
+  flex-shrink: 0;
 }
 
 .mq-trigger-label {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: -0.1px;
+  letter-spacing: 0.1px;
+  white-space: nowrap;
 }
 
 /* =========================================================
-   Main assistant shell
-   ========================================================= */
+   BACKDROP
+========================================================= */
+
+.mq-backdrop {
+  position: fixed;
+  inset: 0;
+
+  z-index: 99990;
+
+  background: rgba(11, 31, 28, 0.24);
+  backdrop-filter: blur(3px);
+
+  animation: mqFadeIn 0.2s ease;
+}
+
+/* =========================================================
+   MAIN ASSISTANT SHELL
+========================================================= */
 
 .mq-shell {
-  width: min(420px, calc(100vw - 32px));
-  height: min(690px, calc(100vh - 48px));
+  position: fixed;
+
+  right: 28px;
+  bottom: 28px;
+
+  width: min(430px, calc(100vw - 32px));
+  height: min(680px, calc(100vh - 56px));
+
+  z-index: 100000;
+
   display: flex;
   flex-direction: column;
+
   overflow: hidden;
 
-  background: #fbfaf4;
-  color: #183d36;
+  background: #fcfbf7;
 
-  border: 1px solid rgba(13, 67, 57, 0.12);
-  border-radius: 26px;
+  border-radius: 24px;
+
+  border: 1px solid
+    rgba(20, 64, 58, 0.1);
 
   box-shadow:
-    0 30px 80px rgba(7, 50, 43, 0.22),
-    0 8px 24px rgba(7, 50, 43, 0.12);
+    0 28px 80px rgba(8, 34, 30, 0.25),
+    0 8px 25px rgba(0, 0, 0, 0.1);
 
-  animation: mqOpen 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: mqPanelIn 0.25s ease;
 }
 
 /* =========================================================
-   Header
-   ========================================================= */
+   HEADER
+========================================================= */
 
 .mq-header {
-  flex: 0 0 auto;
+  min-height: 72px;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 17px;
 
-  background: rgba(255, 255, 255, 0.82);
-  border-bottom: 1px solid rgba(16, 71, 61, 0.09);
+  padding: 14px 16px;
+
+  border-bottom: 1px solid
+    rgba(20, 64, 58, 0.08);
+
+  background:
+    rgba(255, 255, 255, 0.78);
+
+  backdrop-filter: blur(16px);
 }
 
 .mq-brand {
@@ -118,76 +181,88 @@
 }
 
 .mq-mark {
-  width: 36px;
-  height: 36px;
-  border-radius: 11px;
+  width: 40px;
+  height: 40px;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  background: #073d35;
-  color: #e9b949;
+  border-radius: 13px;
+
+  color: #16463e;
+
+  background:
+    linear-gradient(
+      135deg,
+      #efd67f,
+      #c9a447
+    );
 }
 
 .mq-title {
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: -0.2px;
+  color: #183b35;
+
+  font-size: 16px;
+  font-weight: 750;
 }
 
 .mq-subtitle {
   margin-top: 2px;
-  font-size: 10px;
-  color: #82918d;
-  font-weight: 600;
-}
 
-.mq-header-actions {
-  display: flex;
-  gap: 7px;
+  color: #80908c;
+
+  font-size: 11px;
 }
 
 .mq-icon-button {
-  width: 34px;
-  height: 34px;
-  padding: 0;
+  width: 36px;
+  height: 36px;
+
+  border: 1px solid
+    rgba(20, 64, 58, 0.1);
+
+  border-radius: 11px;
+
+  cursor: pointer;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  border: 1px solid rgba(13, 67, 57, 0.1);
-  border-radius: 10px;
+  color: #45605a;
+  background: #ffffff;
 
-  background: #fff;
-  color: #42635d;
-  cursor: pointer;
-
-  transition:
-    background 0.18s ease,
-    transform 0.18s ease;
+  transition: 0.2s ease;
 }
 
 .mq-icon-button:hover {
-  background: #edf5f1;
-  transform: translateY(-1px);
+  color: #173f38;
+  background: #f2f6f4;
 }
 
 /* =========================================================
-   Chat body
-   ========================================================= */
+   BODY
+========================================================= */
 
 .mq-body {
   position: relative;
+
   flex: 1;
-  min-height: 0;
 
   overflow-y: auto;
-  padding: 20px 18px 12px;
+  overflow-x: hidden;
 
-  scrollbar-width: thin;
-  scrollbar-color: rgba(36, 91, 81, 0.22) transparent;
+  padding: 18px 16px 8px;
+
+  scroll-behavior: smooth;
+
+  background:
+    linear-gradient(
+      180deg,
+      #fcfbf7 0%,
+      #f7f8f4 100%
+    );
 }
 
 .mq-body::-webkit-scrollbar {
@@ -195,76 +270,92 @@
 }
 
 .mq-body::-webkit-scrollbar-thumb {
-  background: rgba(36, 91, 81, 0.22);
+  background: #d5dfdb;
   border-radius: 10px;
 }
 
 /* =========================================================
-   Home
-   ========================================================= */
+   HOME / FIRST SCREEN
+========================================================= */
 
 .mq-home {
-  padding-bottom: 10px;
+  padding-bottom: 20px;
 }
 
 .mq-eyebrow {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 7px;
 
   margin-bottom: 12px;
 
-  color: #4b756c;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  color: #628078;
+
+  font-size: 11px;
+  font-weight: 650;
+
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .mq-status-dot {
   width: 7px;
   height: 7px;
+
   border-radius: 50%;
-  background: #39a56d;
-  box-shadow: 0 0 0 4px rgba(57, 165, 109, 0.1);
+
+  background: #46a17e;
+
+  box-shadow:
+    0 0 0 4px
+    rgba(70, 161, 126, 0.1);
 }
 
 .mq-home h2 {
   margin: 0;
 
-  color: #163d35;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 29px;
-  line-height: 1.05;
-  letter-spacing: -0.8px;
+  max-width: 320px;
+
+  color: #1d3934;
+
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  font-size: 28px;
+  line-height: 1.15;
 }
 
 .mq-home-description {
-  max-width: 340px;
-  margin: 10px 0 18px;
+  margin: 10px 0 20px;
 
-  color: #71817d;
-  font-size: 13px;
+  color: #667671;
+
+  font-size: 14px;
   line-height: 1.55;
 }
 
 /* =========================================================
-   Appointment context
-   ========================================================= */
+   APPOINTMENT CONTEXT
+========================================================= */
 
 .mq-context-card {
   padding: 15px;
+
   margin-bottom: 20px;
 
-  border: 1px solid rgba(28, 111, 91, 0.15);
-  border-radius: 17px;
+  border-radius: 16px;
 
   background:
     linear-gradient(
       135deg,
-      rgba(228, 246, 236, 0.95),
-      rgba(246, 250, 239, 0.95)
+      rgba(220, 238, 229, 0.9),
+      rgba(246, 241, 220, 0.8)
     );
+
+  border: 1px solid
+    rgba(48, 112, 94, 0.14);
 }
 
 .mq-context-top {
@@ -274,158 +365,166 @@
 
   margin-bottom: 8px;
 
-  font-size: 10px;
-  font-weight: 800;
-  color: #688078;
+  color: #5c756e;
+
+  font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
 }
 
 .mq-context-live {
-  color: #187553;
+  padding: 5px 8px;
+
+  border-radius: 999px;
+
+  color: #22614f;
+
+  background:
+    rgba(255, 255, 255, 0.65);
+
+  font-size: 10px;
 }
 
 .mq-context-doctor {
+  color: #203e38;
+
   font-size: 15px;
-  font-weight: 800;
-  color: #173f37;
+  font-weight: 750;
 }
 
 .mq-context-meta {
-  margin-top: 4px;
+  margin-top: 5px;
 
-  color: #71847e;
-  font-size: 11px;
+  color: #657872;
+
+  font-size: 12px;
 }
 
 .mq-context-card button {
-  margin-top: 12px;
-  padding: 0;
-
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
 
-  border: 0;
-  background: transparent;
+  margin-top: 13px;
 
-  color: #08775d;
-  font-size: 11px;
-  font-weight: 800;
+  border: none;
 
   cursor: pointer;
-}
 
-.mq-empty-context {
-  padding: 11px 13px;
-  margin-bottom: 18px;
+  color: #1d6554;
+  background: transparent;
 
-  border: 1px dashed rgba(43, 91, 81, 0.18);
-  border-radius: 12px;
-
-  color: #8a9793;
-  background: rgba(255, 255, 255, 0.55);
-
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 750;
 }
 
 /* =========================================================
-   Quick actions
-   ========================================================= */
+   STARTER CARDS
+========================================================= */
 
-.mq-quick-label {
-  margin-bottom: 9px;
+.mq-starter-label {
+  margin-bottom: 10px;
 
-  color: #788983;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  color: #526863;
+
+  font-size: 12px;
+  font-weight: 700;
 }
 
-.mq-action-list {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-}
-
-.mq-action-row {
-  width: 100%;
-  min-height: 55px;
-
+.mq-starter-grid {
   display: grid;
-  grid-template-columns: 34px 1fr auto;
+  gap: 9px;
+}
+
+.mq-starter-card {
+  width: 100%;
+
+  padding: 13px;
+
+  display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 11px;
 
-  padding: 8px 10px;
+  border: 1px solid
+    rgba(24, 70, 62, 0.1);
 
-  border: 1px solid rgba(16, 70, 60, 0.09);
-  border-radius: 14px;
+  border-radius: 15px;
 
-  background: rgba(255, 255, 255, 0.72);
-  color: #173e36;
+  cursor: pointer;
 
   text-align: left;
-  cursor: pointer;
+
+  color: #23423c;
+  background: #ffffff;
 
   transition:
     transform 0.18s ease,
     border-color 0.18s ease,
-    background 0.18s ease;
+    box-shadow 0.18s ease;
 }
 
-.mq-action-row:hover {
-  transform: translateX(2px);
-  border-color: rgba(16, 105, 84, 0.2);
-  background: #fff;
+.mq-starter-card:hover {
+  transform: translateY(-1px);
+
+  border-color:
+    rgba(31, 103, 88, 0.25);
+
+  box-shadow:
+    0 8px 20px
+    rgba(27, 66, 59, 0.07);
 }
 
-.mq-action-icon {
-  width: 34px;
-  height: 34px;
+.mq-starter-icon {
+  width: 36px;
+  height: 36px;
+
+  flex-shrink: 0;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  border-radius: 10px;
+  border-radius: 11px;
 
-  background: #edf6f1;
-  color: #0c765d;
+  color: #276b5b;
 
-  font-size: 16px;
-  font-weight: 700;
+  background: #edf5f0;
+
+  font-size: 17px;
 }
 
-.mq-action-copy {
-  min-width: 0;
+.mq-starter-card > span:nth-child(2) {
+  flex: 1;
+
   display: flex;
   flex-direction: column;
 }
 
-.mq-action-copy strong {
-  font-size: 12px;
-  font-weight: 800;
+.mq-starter-card strong {
+  color: #263f3a;
+
+  font-size: 13px;
 }
 
-.mq-action-copy small {
-  margin-top: 2px;
+.mq-starter-card small {
+  margin-top: 3px;
 
-  color: #87938f;
-  font-size: 10px;
+  color: #82908c;
+
+  font-size: 11px;
 }
 
 /* =========================================================
-   Messages
-   ========================================================= */
+   MESSAGES
+========================================================= */
 
 .mq-message {
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   gap: 8px;
 
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 .mq-message.user {
@@ -433,125 +532,237 @@
 }
 
 .mq-message-avatar {
-  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
 
-  width: 25px;
-  height: 25px;
+  flex-shrink: 0;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  margin-top: 2px;
+  border-radius: 10px;
 
-  border-radius: 8px;
+  color: #234f46;
 
-  background: #073d35;
-  color: #e9b949;
+  background:
+    linear-gradient(
+      135deg,
+      #e8cc72,
+      #f5e7aa
+    );
 }
 
 .mq-message-content {
   max-width: 82%;
 }
 
-.mq-message.user .mq-message-content {
-  max-width: 84%;
-}
-
 .mq-message-text {
-  padding: 10px 12px;
+  padding: 11px 13px;
 
-  border-radius: 15px;
+  border-radius: 16px;
 
-  color: #36534d;
-  background: #fff;
-
-  border: 1px solid rgba(20, 71, 61, 0.08);
-
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.55;
   white-space: pre-wrap;
 }
 
+.mq-message.assistant .mq-message-text {
+  color: #38514b;
+
+  background: #ffffff;
+
+  border: 1px solid
+    rgba(24, 70, 62, 0.08);
+
+  border-bottom-left-radius: 5px;
+
+  box-shadow:
+    0 3px 10px
+    rgba(22, 53, 48, 0.04);
+}
+
 .mq-message.user .mq-message-text {
-  background: #073d35;
-  color: #fff;
-  border-color: #073d35;
+  color: #ffffff;
+
+  background:
+    linear-gradient(
+      135deg,
+      #1e6255,
+      #17483f
+    );
+
   border-bottom-right-radius: 5px;
 }
 
-.mq-message.assistant .mq-message-text {
-  border-bottom-left-radius: 5px;
-}
-
 /* =========================================================
-   Inline actions
-   ========================================================= */
+   ASSESSMENT BADGES
+========================================================= */
 
-.mq-inline-action {
-  margin-top: 7px;
-  padding: 8px 10px;
-
+.mq-assessment {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
 
-  border: 1px solid rgba(12, 113, 88, 0.14);
-  border-radius: 10px;
+  margin-bottom: 6px;
+  padding: 5px 9px;
 
-  background: #edf7f1;
-  color: #087458;
+  border-radius: 999px;
 
   font-size: 10px;
-  font-weight: 800;
-
-  cursor: pointer;
-}
-
-.mq-inline-action.danger {
-  background: #fff0ed;
-  border-color: rgba(190, 67, 48, 0.16);
-  color: #bd3f30;
-}
-
-/* =========================================================
-   Listen button
-   ========================================================= */
-
-.mq-speak-message {
-  display: block;
-
-  margin-top: 5px;
-  padding: 2px 0;
-
-  border: 0;
-  background: transparent;
-
-  color: #8a9894;
-  font-size: 9px;
   font-weight: 700;
-
-  cursor: pointer;
+  text-transform: capitalize;
 }
 
-.mq-speak-message:hover {
-  color: #087458;
+.mq-assessment-dot {
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+}
+
+.mq-assessment.low {
+  color: #26734e;
+  background: #e7f5ec;
+}
+
+.mq-assessment.low .mq-assessment-dot {
+  background: #3da866;
+}
+
+.mq-assessment.moderate {
+  color: #9a6816;
+  background: #fff5db;
+}
+
+.mq-assessment.moderate .mq-assessment-dot {
+  background: #e2a42c;
+}
+
+.mq-assessment.urgent {
+  color: #a24d1d;
+  background: #fff0e7;
+}
+
+.mq-assessment.urgent .mq-assessment-dot {
+  background: #e77835;
+}
+
+.mq-assessment.emergency {
+  color: #b53131;
+  background: #ffeaea;
+}
+
+.mq-assessment.emergency .mq-assessment-dot {
+  background: #df4a4a;
 }
 
 /* =========================================================
-   Thinking indicator
-   ========================================================= */
+   SUGGESTIONS
+========================================================= */
 
-.mq-typing {
-  min-height: 38px;
+.mq-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+
+  margin-top: 8px;
+}
+
+.mq-suggestions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  padding: 8px 10px;
+
+  border: 1px solid
+    rgba(31, 102, 86, 0.18);
+
+  border-radius: 10px;
+
+  cursor: pointer;
+
+  color: #246150;
+  background: #f4faf7;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.mq-suggestions button:hover {
+  background: #eaf5ef;
+}
+
+/* =========================================================
+   INLINE ACTION
+========================================================= */
+
+.mq-inline-action {
+  width: 100%;
+
+  margin-top: 8px;
+  padding: 10px 12px;
 
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: space-between;
 
-  padding: 0 9px;
+  border: none;
+  border-radius: 11px;
 
-  color: #7a8b86;
+  cursor: pointer;
+
+  color: #ffffff;
+
+  background: #1c6253;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mq-inline-action.danger {
+  background: #c84c45;
+}
+
+/* =========================================================
+   LISTEN BUTTON
+========================================================= */
+
+.mq-speak-message {
+  margin-top: 5px;
+  padding: 3px 5px;
+
+  border: none;
+
+  cursor: pointer;
+
+  color: #82928d;
+  background: transparent;
+
+  font-size: 10px;
+}
+
+/* =========================================================
+   THINKING
+========================================================= */
+
+.mq-typing {
+  min-width: 110px;
+
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  padding: 12px 14px;
+
+  border-radius: 15px;
+  border-bottom-left-radius: 5px;
+
+  background: #ffffff;
+
+  border: 1px solid
+    rgba(24, 70, 62, 0.08);
 }
 
 .mq-typing span {
@@ -560,7 +771,7 @@
 
   border-radius: 50%;
 
-  background: #4e8277;
+  background: #8ba099;
 
   animation: mqTyping 1.2s infinite ease-in-out;
 }
@@ -574,151 +785,56 @@
 }
 
 .mq-typing em {
-  margin-left: 5px;
+  margin-left: 4px;
+
+  color: #80908c;
 
   font-size: 10px;
   font-style: normal;
 }
 
 /* =========================================================
-   New response button
-   ========================================================= */
-
-.mq-new-response {
-  position: absolute;
-  right: 18px;
-  bottom: 92px;
-
-  padding: 7px 11px;
-
-  border: 1px solid rgba(10, 91, 73, 0.14);
-  border-radius: 999px;
-
-  background: #fff;
-  color: #087258;
-
-  box-shadow: 0 6px 18px rgba(7, 55, 47, 0.13);
-
-  font-size: 10px;
-  font-weight: 800;
-
-  cursor: pointer;
-}
-
-/* =========================================================
-   Quick action drawer
-   ========================================================= */
-
-.mq-action-drawer {
-  position: absolute;
-  right: 16px;
-  top: 62px;
-  z-index: 20;
-
-  width: 230px;
-  padding: 7px;
-
-  border: 1px solid rgba(12, 67, 57, 0.12);
-  border-radius: 15px;
-
-  background: rgba(255, 255, 255, 0.97);
-
-  box-shadow: 0 16px 40px rgba(6, 50, 43, 0.18);
-
-  animation: mqDrawer 0.18s ease;
-}
-
-.mq-action-drawer button {
-  width: 100%;
-
-  display: grid;
-  grid-template-columns: 28px 1fr;
-  gap: 9px;
-
-  padding: 9px;
-
-  border: 0;
-  border-radius: 10px;
-
-  background: transparent;
-  color: #183e37;
-
-  text-align: left;
-  cursor: pointer;
-}
-
-.mq-action-drawer button:hover {
-  background: #eef6f2;
-}
-
-.mq-action-drawer button > span:first-child {
-  width: 28px;
-  height: 28px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 8px;
-
-  background: #edf6f1;
-  color: #08765b;
-}
-
-.mq-action-drawer strong {
-  display: block;
-  font-size: 11px;
-}
-
-.mq-action-drawer small {
-  display: block;
-  margin-top: 2px;
-  color: #87948f;
-  font-size: 9px;
-}
-
-/* =========================================================
-   Voice state
-   ========================================================= */
+   VOICE STATE
+========================================================= */
 
 .mq-voice-state {
-  flex: 0 0 auto;
-
-  min-height: 34px;
-
   display: flex;
   align-items: center;
   gap: 9px;
 
-  padding: 7px 13px;
+  margin: 0 16px 8px;
+  padding: 10px 12px;
 
-  border-top: 1px solid rgba(20, 70, 60, 0.08);
+  border-radius: 12px;
 
-  background: #f3f8f4;
+  color: #406058;
 
-  color: #53736b;
+  background: #edf5f1;
 
-  font-size: 10px;
-  font-weight: 800;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.mq-voice-state span {
+  flex: 1;
 }
 
 .mq-voice-state button {
-  margin-left: auto;
+  width: 25px;
+  height: 25px;
 
-  width: 22px;
-  height: 22px;
+  border: none;
 
-  border: 0;
   border-radius: 50%;
 
-  background: rgba(10, 72, 60, 0.08);
-  color: #58736c;
-
   cursor: pointer;
+
+  color: #59736b;
+  background: #ffffff;
 }
 
 .mq-wave {
-  height: 17px;
+  height: 18px;
 
   display: flex;
   align-items: center;
@@ -727,77 +843,73 @@
 
 .mq-wave i {
   width: 3px;
-  height: 6px;
+  height: 7px;
 
   border-radius: 3px;
 
-  background: #16876a;
+  background: #287261;
 
-  animation: mqWave 0.9s infinite ease-in-out;
+  animation: mqWave 0.8s infinite ease-in-out;
 }
 
 .mq-wave i:nth-child(2) {
-  animation-delay: 0.12s;
+  animation-delay: 0.1s;
 }
 
 .mq-wave i:nth-child(3) {
-  animation-delay: 0.24s;
+  animation-delay: 0.2s;
 }
 
 .mq-wave i:nth-child(4) {
-  animation-delay: 0.36s;
+  animation-delay: 0.3s;
 }
 
 .mq-wave i:nth-child(5) {
-  animation-delay: 0.48s;
+  animation-delay: 0.4s;
 }
 
 /* =========================================================
-   Composer
-   ========================================================= */
+   COMPOSER
+========================================================= */
 
 .mq-composer-area {
-  flex: 0 0 auto;
+  padding: 10px 14px 14px;
 
-  padding: 10px 14px 13px;
+  border-top: 1px solid
+    rgba(24, 70, 62, 0.07);
 
-  background: #fbfaf4;
-  border-top: 1px solid rgba(20, 70, 60, 0.07);
+  background: #ffffff;
 }
 
 .mq-composer {
-  min-height: 48px;
-
   display: flex;
   align-items: flex-end;
-  gap: 6px;
+  gap: 7px;
 
-  padding: 5px 6px 5px 13px;
+  padding: 6px;
 
-  border: 1px solid rgba(18, 72, 61, 0.13);
-  border-radius: 17px;
+  border: 1px solid
+    rgba(24, 70, 62, 0.12);
 
-  background: #fff;
+  border-radius: 16px;
 
-  box-shadow: 0 3px 12px rgba(10, 62, 52, 0.05);
+  background: #f9faf8;
 }
 
 .mq-composer textarea {
   flex: 1;
 
-  min-width: 0;
-  max-height: 90px;
+  min-height: 36px;
+  max-height: 100px;
 
+  padding: 8px 8px 8px 10px;
+
+  border: none;
+  outline: none;
   resize: none;
 
-  padding: 7px 0;
-
-  border: 0;
-  outline: none;
-
+  color: #2e4741;
   background: transparent;
-
-  color: #173e36;
 
   font-family: inherit;
   font-size: 12px;
@@ -805,71 +917,101 @@
 }
 
 .mq-composer textarea::placeholder {
-  color: #9aa6a2;
+  color: #96a39f;
 }
 
 .mq-mic,
 .mq-send {
-  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
 
-  width: 34px;
-  height: 34px;
+  flex-shrink: 0;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  border: 0;
+  border: none;
+
   border-radius: 11px;
 
   cursor: pointer;
 }
 
 .mq-mic {
-  background: #edf5f1;
-  color: #176a58;
+  color: #527069;
+  background: #eef3f0;
 }
 
-.mq-mic:hover,
 .mq-mic.active {
-  background: #dcefe7;
+  color: #ffffff;
+  background: #cf514b;
+
+  animation: mqPulse 1.5s infinite;
 }
 
 .mq-send {
-  background: #073d35;
-  color: #fff;
-}
-
-.mq-send:hover {
-  background: #0a5146;
+  color: #ffffff;
+  background: #1b6152;
 }
 
 .mq-footnote {
-  margin-top: 7px;
+  margin-top: 8px;
 
   text-align: center;
 
-  color: #9aa49f;
-  font-size: 8px;
-  line-height: 1.35;
+  color: #98a39f;
+
+  font-size: 9px;
+  line-height: 1.4;
 }
 
 /* =========================================================
-   End marker
-   ========================================================= */
+   NEW RESPONSE
+========================================================= */
 
-.mq-end {
-  height: 1px;
+.mq-new-response {
+  position: absolute;
+
+  left: 50%;
+  bottom: 82px;
+
+  transform: translateX(-50%);
+
+  padding: 7px 12px;
+
+  border: none;
+  border-radius: 999px;
+
+  cursor: pointer;
+
+  color: #ffffff;
+  background: #1d5c50;
+
+  box-shadow:
+    0 5px 15px rgba(0, 0, 0, 0.15);
+
+  font-size: 11px;
 }
 
 /* =========================================================
-   Animations
-   ========================================================= */
+   ANIMATIONS
+========================================================= */
 
-@keyframes mqOpen {
+@keyframes mqFadeIn {
   from {
     opacity: 0;
-    transform: translateY(12px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes mqPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
   }
 
   to {
@@ -878,41 +1020,16 @@
   }
 }
 
-@keyframes mqDrawer {
-  from {
-    opacity: 0;
-    transform: translateY(-5px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes mqPulse {
-  0%,
-  100% {
-    transform: scale(0.98);
-    opacity: 0.4;
-  }
-
-  50% {
-    transform: scale(1.05);
-    opacity: 0.9;
-  }
-}
-
 @keyframes mqTyping {
   0%,
   60%,
   100% {
     transform: translateY(0);
-    opacity: 0.45;
+    opacity: 0.5;
   }
 
   30% {
-    transform: translateY(-3px);
+    transform: translateY(-4px);
     opacity: 1;
   }
 }
@@ -920,40 +1037,136 @@
 @keyframes mqWave {
   0%,
   100% {
-    height: 5px;
+    height: 6px;
   }
 
   50% {
-    height: 17px;
+    height: 18px;
+  }
+}
+
+@keyframes mqPulse {
+  0% {
+    box-shadow:
+      0 0 0 0
+      rgba(207, 81, 75, 0.4);
+  }
+
+  70% {
+    box-shadow:
+      0 0 0 10px
+      rgba(207, 81, 75, 0);
+  }
+
+  100% {
+    box-shadow:
+      0 0 0 0
+      rgba(207, 81, 75, 0);
   }
 }
 
 /* =========================================================
-   Mobile
-   ========================================================= */
+   MOBILE
+========================================================= */
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
+
+  /*
+    IMPORTANT:
+
+    Your bottom navigation is approximately 72px.
+    MediQ One sits ABOVE it instead of overlapping it.
+  */
+
   .mq-one {
-    right: 14px;
-    bottom: 14px;
+    right: 16px;
+
+    bottom: calc(
+      86px + env(safe-area-inset-bottom, 0px)
+    );
   }
 
-  .mq-shell {
-    width: calc(100vw - 20px);
-    height: calc(100vh - 28px);
-    border-radius: 22px;
-  }
+  /* Circular floating assistant */
 
   .mq-trigger {
-    height: 48px;
+    width: 58px;
+    height: 58px;
+
+    min-height: 58px;
+
+    padding: 0;
+
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mq-trigger-label {
+    display: none;
   }
 
   .mq-trigger-core {
-    width: 36px;
-    height: 36px;
+    width: 46px;
+    height: 46px;
+  }
+
+  .mq-trigger-halo {
+    inset: -5px;
+    border-radius: 50%;
+  }
+
+  /*
+    Full mobile assistant drawer
+  */
+
+  .mq-shell {
+    position: fixed;
+
+    right: 0;
+    bottom: 0;
+
+    width: 100%;
+    height: min(82vh, 720px);
+
+    border-radius:
+      24px 24px 0 0;
+
+    padding-bottom:
+      env(safe-area-inset-bottom, 0px);
   }
 
   .mq-home h2 {
-    font-size: 26px;
+    font-size: 25px;
+  }
+
+  .mq-message-content {
+    max-width: 85%;
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE DEVICES
+========================================================= */
+
+@media (max-width: 380px) {
+  .mq-one {
+    right: 14px;
+
+    bottom: calc(
+      82px + env(safe-area-inset-bottom, 0px)
+    );
+  }
+
+  .mq-trigger {
+    width: 54px;
+    height: 54px;
+    min-height: 54px;
+  }
+
+  .mq-trigger-core {
+    width: 42px;
+    height: 42px;
   }
 }
