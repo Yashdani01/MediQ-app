@@ -230,7 +230,7 @@ export default function MediQOne({
   initialOpen = false,
   accentLabel = 'MediQ One',
 }) {
-  const [open, setOpen] = useState(initialOpen);
+  const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
   const [status, setStatus] = useState('idle');
@@ -548,7 +548,7 @@ export default function MediQOne({
   );
 
   return (
-    <div className={`mq-one ${open ? 'is-open' : ''}`}>
+    <div className={`mq-one ${open ? 'is-open' : ''}`} style={{ overflow: 'hidden' }}>
       {!open && (
         <button
           className="mq-trigger"
