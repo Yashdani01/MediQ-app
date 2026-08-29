@@ -730,6 +730,36 @@
   box-sizing: border-box;
 }
 
+/* =========================================================
+   MODERN BACK TO HOSPITALS BUTTON
+========================================================= */
+
+.back-to-hospitals-btn,
+button.back-btn,
+.flow-page button:has(> svg), 
+.flow-content button:first-of-type {
+  background: #ffffff !important;
+  color: #0b332c !important;
+  border: 1px solid #cbd5e1 !important;
+  padding: 8px 14px !important;
+  border-radius: 999px !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03) !important;
+  transition: all 0.2s ease !important;
+  margin-bottom: 12px !important;
+}
+
+.back-to-hospitals-btn:hover,
+button.back-btn:hover {
+  background: #f8fafc !important;
+  border-color: #0b332c !important;
+}
+
 /* Section Titles */
 .flow-section-title {
   font-family: 'Fraunces', Georgia, serif;

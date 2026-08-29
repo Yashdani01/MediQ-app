@@ -9,17 +9,18 @@
 }
 
 /* =========================================================
-   FLOATING TRIGGER FIX (Removes white box/border)
+   CLEAN GLASSMORPHIC MEDIQ ONE BUTTON
 ========================================================= */
 
 .mq-one {
   position: fixed;
   right: 20px;
-  bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(80px + env(safe-area-inset-bottom, 0px));
   z-index: 99999;
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
+  outline: none !important;
   font-family:
     Inter,
     -apple-system,
@@ -32,28 +33,27 @@
 
 .mq-trigger {
   position: relative;
-  border: none;
+  border: none !important;
   cursor: pointer;
-  background: #0b332c !important;
+  /* Semi-transparent dark emerald glass look */
+  background: rgba(11, 51, 44, 0.88) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   width: 56px;
   height: 56px;
   border-radius: 50% !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22) !important;
   padding: 0 !important;
   outline: none !important;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+  transition: transform 0.2s ease, background 0.2s ease;
 }
 
 .mq-trigger:hover {
   transform: translateY(-2px);
-  box-shadow:
-    0 18px 45px rgba(11, 53, 47, 0.35),
-    0 6px 15px rgba(0, 0, 0, 0.18);
+  background: rgba(11, 51, 44, 0.96) !important;
 }
 
 .mq-trigger:active {
@@ -61,7 +61,7 @@
 }
 
 .mq-trigger-halo {
-  display: none; /* Removes any conflicting outer halos */
+  display: none !important; /* Completely removes any bounding box borders */
 }
 
 .mq-trigger-core {
@@ -71,14 +71,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #d4af37;
-  background: linear-gradient(135deg, #0b332c 0%, #134e44 100%);
+  color: #fef08a; /* Gold star icon */
+  background: transparent !important;
   font-size: 22px;
+  border: none !important;
   flex-shrink: 0;
 }
 
 .mq-trigger-label {
-  display: none; /* Keeps it as a clean circular icon button on all screens */
+  display: none !important;
 }
 
 /* =========================================================
