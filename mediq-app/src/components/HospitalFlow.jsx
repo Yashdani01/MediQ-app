@@ -283,6 +283,27 @@ export default function HospitalFlow({
   useEffect(() => {
     getAllCities().then(setAllCities);
   }, []);
+  const [specialtyDoctors, setSpecialtyDoctors] = useState([]);
+  const [loadingSpecialtySearch, setLoadingSpecialtySearch] = useState(false);
+
+  useEffect(() => {
+    if (!activeSpecialty) {
+      setSpecialtyDoctors([]);
+      return;
+    }
+
+    setLoadingSpecialtySearch(true);
+    searchDoctors(currentCity, activeSpecialty).then(async (docs) => {
+      const withQueue = await Promise.all(
+        docs.map(async (doc) => ({
+          ...doc,
+          liveQueue: await getWaitingCount(doc.id),
+        }))
+      );
+      setSpecialtyDoctors(withQueue);
+      setLoadingSpecialtySearch(false);
+    });
+  }, [activeSpecialty, currentCity]);
 
   useEffect(() => {
     if (
@@ -887,205 +908,79 @@ export default function HospitalFlow({
           </div>
         </div>
 
-        {!selectedHospital && (
+       {!selectedHospital && (
           <div>
-            <div
-              className="search-bar-wrap"
-              style={{
-                display: 'flex',
-                gap: '8px',
-                alignItems: 'center',
-                marginBottom: '16px',
-                width: '100%',
-                boxSizing: 'border-box',
-              }}
-            >
+            {/* STRUCTURED SPECIALTY CHIPS (Step 2) */}
+            <div style={{ marginBottom: '18px' }}>
+              <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Step 2: Choose Specialty
+              </label>
               <div
+                className="specialty-chips"
                 style={{
-                  position: 'relative',
-                  flex: 1,
-                  minWidth: 0,
-                }}
-              >
-                <input
-                  type="text"
-                  className="search-bar"
-                  placeholder={
-                    isListening
-                      ? 'Listening... Speak now'
-                      : 'Search doctor or symptom...'
-                  }
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(
-                      e.target.value
-                    );
-                    setActiveSpecialty('');
-                  }}
-                  style={{
-                    width: '100%',
-                    paddingRight:
-                      isSearchActive
-                        ? '50px'
-                        : '16px',
-                    boxSizing: 'border-box',
-                    background: '#fff',
-                    borderRadius: '14px',
-                    border: '1px solid #e2e8f0',
-                    padding: '12px 16px',
-                    fontSize: '14px'
-                  }}
-                />
-
-                {isSearchActive && (
-                  <button
-                    className="search-clear-btn"
-                    onClick={clearSearch}
-                  >
-                    Clear
-                  </button>
-                )}
-              </div>
-
-              <button
-                type="button"
-                onClick={startVoiceSearch}
-                title="Search with Voice"
-                style={{
-                  background:
-                    isListening
-                      ? '#ef4444'
-                      : '#0b332c',
-                  color: '#fff',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: '12px 16px',
-                  borderRadius: '14px',
+                  width: '100%',
+                  boxSizing: 'border-box',
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                  boxShadow:
-                    '0 4px 12px rgba(11, 51, 44, 0.15)',
-                  transition:
-                    'background 0.2s',
+                  gap: '8px',
+                  overflowX: 'auto',
+                  paddingBottom: '4px'
                 }}
               >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#fff"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-                  <path d="M19 10v1a7 7 0 0 1-14 0v-1" />
-                  <line
-                    x1="12"
-                    y1="19"
-                    x2="12"
-                    y2="23"
-                  />
-                  <line
-                    x1="8"
-                    y1="23"
-                    x2="16"
-                    y2="23"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            {/* SPECIALTY CHIPS */}
-            <div
-              className="specialty-chips"
-              style={{
-                width: '100%',
-                boxSizing: 'border-box',
-                marginBottom: '22px'
-              }}
-            >
-              <button
-                className={`specialty-chip ${!activeSpecialty && !searchTerm ? 'active' : ''}`}
-                onClick={() => { setActiveSpecialty(''); setSearchTerm(''); }}
-                style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-              >
-                <span>🔲</span> All
-              </button>
-
-              {specialties.map((s) => (
                 <button
-                  key={s}
-                  className={`specialty-chip ${
-                    activeSpecialty === s
-                      ? 'active'
-                      : ''
-                  }`}
-                  onClick={() => {
-                    setActiveSpecialty(
-                      activeSpecialty === s
-                        ? ''
-                        : s
-                    );
-                    setSearchTerm('');
-                  }}
+                  className={`specialty-chip ${!activeSpecialty ? 'active' : ''}`}
+                  onClick={() => setActiveSpecialty('')}
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', cursor: 'pointer' }}
                 >
-                  {s}
+                  <span>🔲</span> All Specialties
                 </button>
-              ))}
+
+                {specialties.map((s) => (
+                  <button
+                    key={s}
+                    className={`specialty-chip ${
+                      activeSpecialty === s ? 'active' : ''
+                    }`}
+                    onClick={() => setActiveSpecialty(activeSpecialty === s ? '' : s)}
+                    style={{ whiteSpace: 'nowrap', cursor: 'pointer' }}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {isSearchActive ? (
+            {/* CONDITIONAL RENDERING: SPECIALTY DOCTORS MAP VS HOSPITALS LIST */}
+            {activeSpecialty ? (
               <>
                 <h3 className="flow-section-title">
-                  Search Results
+                  Doctors in {activeSpecialty}
                 </h3>
 
-                {searching ? (
+                {loadingSpecialtySearch ? (
                   <p className="flow-empty">
-                    Searching...
+                    Finding specialists in {currentCity || 'all locations'}...
                   </p>
-                ) : searchResults.length === 0 ? (
+                ) : specialtyDoctors.length === 0 ? (
                   <p className="flow-empty">
-                    No doctors found. Try a different search.
+                    No doctors found for {activeSpecialty}. Try a different specialty.
                   </p>
                 ) : (
                   <div className="doctor-list">
-                    {searchResults
-                      .sort(
-                        (a, b) =>
-                          a.liveQueue -
-                          b.liveQueue
-                      )
+                    {specialtyDoctors
+                      .sort((a, b) => a.liveQueue - b.liveQueue)
                       .map((doc) => {
-                        const availability =
-                          getAvailability(doc);
-
-                        const specs =
-                          doc.specialties ||
-                          [
-                            doc.specialty ||
-                              'General Physician',
-                          ];
+                        const availability = getAvailability(doc);
+                        const specs = doc.specialties || [doc.specialty || 'General Physician'];
 
                         return (
                           <div
                             key={doc.id}
                             className={`doctor-card ${
-                              availability.bookable
-                                ? ''
-                                : 'muted'
+                              availability.bookable ? '' : 'muted'
                             }`}
                           >
                             <div className="doctor-info">
-                              <DoctorAvatar
-                                bookable={
-                                  availability.bookable
-                                }
-                              />
+                              <DoctorAvatar bookable={availability.bookable} />
                               <div className="doctor-details">
                                 <div className="doctor-details-top">
                                   <div>
@@ -1100,15 +995,10 @@ export default function HospitalFlow({
                                         fontWeight: 700,
                                       }}
                                     >
-                                      {doc.degrees ||
-                                        'MBBS, General Practitioner'}
+                                      {doc.degrees || 'MBBS, Specialist'}
                                     </p>
                                   </div>
-                                  <DoctorStatusBadge
-                                    availability={
-                                      availability
-                                    }
-                                  />
+                                  <DoctorStatusBadge availability={availability} />
                                 </div>
                                 <p className="doctor-specialty">
                                   {specs.join(', ')}
@@ -1119,11 +1009,10 @@ export default function HospitalFlow({
                             <div className="doc-stats">
                               <div>
                                 <p className="doc-stats-label">
-                                  Waiting
+                                  Waiting Queue
                                 </p>
                                 <p className="doc-stats-value green">
-                                  {doc.liveQueue}{' '}
-                                  Patients
+                                  {doc.liveQueue} Patients
                                 </p>
                               </div>
                             </div>
@@ -1132,19 +1021,12 @@ export default function HospitalFlow({
                                 <p className="doc-fee-label">
                                   Consultation Fee
                                 </p>
-                                <DoctorFee
-                                  doc={doc}
-                                />
+                                <DoctorFee doc={doc} />
                               </div>
                               <BookButton
-                                availability={
-                                  availability
-                                }
+                                availability={availability}
                                 onClick={() =>
-                                  openPaymentChoice(
-                                    doc,
-                                    doc.hospital_id
-                                  )
+                                  openPaymentChoice(doc, doc.hospital_id)
                                 }
                               />
                             </div>
@@ -1172,130 +1054,91 @@ export default function HospitalFlow({
                 ) : hospitals.length === 0 ? (
                   <p className="flow-empty">
                     No hospitals available in{' '}
-                    {currentCity ||
-                      'this area'}{' '}
-                    yet.
+                    {currentCity || 'this area'} yet.
                   </p>
                 ) : (
                   <div className="hospital-list">
-                    {hospitals.map(
-                      (hosp) => {
-                        const isMapLink =
-                          hosp.location &&
-                          (
-                            hosp.location.startsWith(
-                              'http://'
-                            ) ||
-                            hosp.location.startsWith(
-                              'https://'
-                            )
-                          );
+                    {hospitals.map((hosp) => {
+                      const isMapLink =
+                        hosp.location &&
+                        (hosp.location.startsWith('http://') ||
+                         hosp.location.startsWith('https://'));
 
-                        const directionsUrl =
-                          isMapLink
-                            ? hosp.location
-                            : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
-                                `${hosp.name}, ${
-                                  hosp.location || ''
-                                }, ${
-                                  hosp.city || ''
-                                }`
-                              )}`;
+                      const directionsUrl = isMapLink
+                        ? hosp.location
+                        : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+                            `${hosp.name}, ${hosp.location || ''}, ${hosp.city || ''}`
+                          )}`;
 
-                        return (
-                          <div
-                            key={hosp.id}
-                            className="hospital-card"
-                            onClick={() =>
-                              setSelectedHospital(
-                                hosp
-                              )
-                            }
-                          >
-                            <div className="hospital-card-main">
-                              <div className="hospital-icon">
-                                <svg
-                                  width="24"
-                                  height="24"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="1.8"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                >
-                                  <path d="M3 21h18" />
-                                  <path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16" />
-                                  <path d="M9 9h6" />
-                                  <path d="M12 6v6" />
-                                  <path d="M8 21v-4h8v4" />
-                                </svg>
-                              </div>
-                              <div className="hospital-info">
-                                <div className="hospital-title-row">
-                                  <div>
-                                    <h4>
-                                      {hosp.name}
-                                    </h4>
-                                    {!isMapLink &&
-                                      hosp.location && (
-                                        <p className="hospital-location">
-                                          <span>
-                                            📍
-                                          </span>{' '}
-                                          {hosp.location}
-                                        </p>
-                                      )}
-                                  </div>
-                                  <div className="hospital-arrow">
-                                    →
-                                  </div>
-                                </div>
-                                <div className="hospital-meta-row">
-                                  {availableCounts[
-                                    hosp.id
-                                  ] > 0 ? (
-                                    <span className="doctor-available-badge">
-                                      <span className="availability-dot" />
-                                      {
-                                        availableCounts[
-                                          hosp.id
-                                        ]
-                                      }{' '}
-                                      Doctor
-                                      {availableCounts[
-                                        hosp.id
-                                      ] > 1
-                                        ? 's'
-                                        : ''}{' '}
-                                      Available
-                                    </span>
-                                  ) : (
-                                    <span className="no-doctor-badge">
-                                      Check schedule
-                                    </span>
+                      return (
+                        <div
+                          key={hosp.id}
+                          className="hospital-card"
+                          onClick={() => setSelectedHospital(hosp)}
+                        >
+                          <div className="hospital-card-main">
+                            <div className="hospital-icon">
+                              <svg
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.8"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M3 21h18" />
+                                <path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16" />
+                                <path d="M9 9h6" />
+                                <path d="M12 6v6" />
+                                <path d="M8 21v-4h8v4" />
+                              </svg>
+                            </div>
+                            <div className="hospital-info">
+                              <div className="hospital-title-row">
+                                <div>
+                                  <h4>{hosp.name}</h4>
+                                  {!isMapLink && hosp.location && (
+                                    <p className="hospital-location">
+                                      <span>📍</span> {hosp.location}
+                                    </p>
                                   )}
                                 </div>
-                                <div style={{ marginTop: '10px' }}>
-                                  <a
-                                    href={directionsUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    onClick={(e) =>
-                                      e.stopPropagation()
-                                    }
-                                    className="directions-btn"
-                                    style={{ background: '#e6f4ea', color: '#0b332c', padding: '8px 14px', borderRadius: '10px', fontWeight: '700', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
-                                  >
-                                    <span>📍</span> Directions
-                                  </a>
+                                <div className="hospital-arrow">
+                                  →
                                 </div>
+                              </div>
+                              <div className="hospital-meta-row">
+                                {availableCounts[hosp.id] > 0 ? (
+                                  <span className="doctor-available-badge">
+                                    <span className="availability-dot" />
+                                    {availableCounts[hosp.id]} Doctor
+                                    {availableCounts[hosp.id] > 1 ? 's' : ''} Available
+                                  </span>
+                                ) : (
+                                  <span className="no-doctor-badge">
+                                    Check schedule
+                                  </span>
+                                )}
+                              </div>
+                              <div style={{ marginTop: '10px' }}>
+                                <a
+                                  href={directionsUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="directions-btn"
+                                  style={{ background: '#e6f4ea', color: '#0b332c', padding: '8px 14px', borderRadius: '10px', fontWeight: '700', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
+                                >
+                                  <span>📍</span> Directions
+                                </a>
                               </div>
                             </div>
                           </div>
-                        );
-                      }
-                    )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </>
