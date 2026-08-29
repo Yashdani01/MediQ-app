@@ -90,14 +90,8 @@ export default function ClinicPortal() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Screen width state for responsive mobile/desktop layout
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  // Left Drawer State
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Command Center Navigation Tab State: 'dashboard', 'roster', 'settings'
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -235,6 +229,7 @@ export default function ClinicPortal() {
     setExpandedDoctor(null);
     setBookingsByDoctor({});
     setActiveTab('dashboard');
+    setDrawerOpen(false);
   };
 
   const handleSaveUpi = async () => {
@@ -481,56 +476,84 @@ export default function ClinicPortal() {
   const todayDateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8f6f0', color: '#0b332c', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", display: 'flex', flexDirection: isMobile ? 'column' : 'row' }}>
+    <div style={{ minHeight: '100vh', background: '#f8f6f0', color: '#0b332c', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", display: 'flex', flexDirection: 'column' }}>
       
-      {/* SIDEBAR NAVIGATION (Converts to Top Bar on Mobile) */}
-      <aside style={{ width: isMobile ? '100%' : '260px', background: '#0b332c', color: '#fff', display: 'flex', flexDirection: isMobile ? 'row' : 'column', justifyContent: isMobile ? 'space-between' : 'flex-start', alignItems: isMobile ? 'center' : 'stretch', padding: isMobile ? '12px 16px' : '24px 16px', boxSizing: 'border-box', flexShrink: 0, position: isMobile ? 'relative' : 'sticky', top: 0, height: isMobile ? 'auto' : '100vh', overflowY: 'auto', zIndex: 100 }}>
-        <div style={{ marginBottom: isMobile ? '0' : '28px', paddingLeft: isMobile ? '0' : '8px' }}>
-          <div style={{ fontSize: '9.5px', fontWeight: '800', color: '#10b981', textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: '2px' }}>MediQ Command</div>
-          <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: isMobile ? '15px' : '18px', color: '#fff', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{clinicName}</h2>
+      {/* TOP HEADER WITH HAMBURGER MENU */}
+      <header style={{ background: '#0b332c', color: '#fff', padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 100, boxShadow: '0 2px 10px rgba(0,0,0,0.15)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <button
+            onClick={() => setDrawerOpen(true)}
+            style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '22px', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            aria-label="Open Menu"
+          >
+            ☰
+          </button>
+          <div>
+            <div style={{ fontSize: '9.5px', fontWeight: '800', color: '#10b981', textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: '1px' }}>MediQ Command</div>
+            <h1 style={{ fontFamily: 'Fraunces, serif', fontSize: '16px', color: '#fff', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '200px' }}>{clinicName}</h1>
+          </div>
         </div>
 
-        <nav style={{ display: 'flex', flexDirection: isMobile ? 'row' : 'column', gap: '6px', overflowX: isMobile ? 'auto' : 'visible' }}>
-          <button
-            onClick={() => setActiveTab('dashboard')}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', borderRadius: '12px', border: 'none', background: activeTab === 'dashboard' ? 'rgba(16,185,129,0.18)' : 'transparent', color: activeTab === 'dashboard' ? '#34d399' : '#cbd5e1', fontSize: '13px', fontWeight: '700', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s ease' }}
-          >
-            <span>⚡</span> {isMobile ? 'Operations' : 'Live Operations Desk'}
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <button onClick={() => loadDoctors(unlockedPin)} disabled={refreshing} style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '11.5px', fontWeight: '700', color: '#fff' }}>
+            {refreshing ? 'Syncing...' : '↻ Sync'}
           </button>
-          
-          <button
-            onClick={() => setActiveTab('roster')}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', borderRadius: '12px', border: 'none', background: activeTab === 'roster' ? 'rgba(16,185,129,0.18)' : 'transparent', color: activeTab === 'roster' ? '#34d399' : '#cbd5e1', fontSize: '13px', fontWeight: '700', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s ease' }}
-          >
-            <span>👨‍⚕️</span> {isMobile ? 'Roster' : 'Doctor Roster & Setup'}
-          </button>
-
-          <button
-            onClick={() => setActiveTab('settings')}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', borderRadius: '12px', border: 'none', background: activeTab === 'settings' ? 'rgba(16,185,129,0.18)' : 'transparent', color: activeTab === 'settings' ? '#34d399' : '#cbd5e1', fontSize: '13px', fontWeight: '700', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s ease' }}
-          >
-            <span>⚙️</span> {isMobile ? 'Settings' : 'Clinic Settings & UPI'}
-          </button>
-        </nav>
-
-        {!isMobile ? (
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px', marginTop: 'auto' }}>
-            <button onClick={handleLogout} style={{ width: '100%', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5', padding: '10px', borderRadius: '10px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer' }}>
-              🚪 Logout Staff
-            </button>
-          </div>
-        ) : (
-          <button onClick={handleLogout} style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5', padding: '6px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}>
+          <button onClick={handleLogout} style={{ background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)', color: '#fca5a5', padding: '6px 12px', borderRadius: '8px', fontSize: '11.5px', fontWeight: '700', cursor: 'pointer' }}>
             Logout
           </button>
-        )}
-      </aside>
+        </div>
+      </header>
+
+      {/* LEFT SLIDE-OUT DRAWER OVERLAY */}
+      {drawerOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(6, 43, 37, 0.6)', backdropFilter: 'blur(3px)', display: 'flex', transition: 'opacity 0.2s ease' }} onClick={() => setDrawerOpen(false)}>
+          <div style={{ width: '280px', background: '#0b332c', color: '#fff', height: '100%', padding: '24px 20px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', boxShadow: '5px 0 25px rgba(0,0,0,0.3)' }} onClick={(e) => e.stopPropagation()}>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '16px' }}>
+              <div>
+                <div style={{ fontSize: '10px', fontWeight: '800', color: '#10b981', textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: '2px' }}>Navigation Menu</div>
+                <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '17px', color: '#fff', margin: 0 }}>{clinicName}</h3>
+              </div>
+              <button onClick={() => setDrawerOpen(false)} style={{ background: 'transparent', border: 'none', color: '#cbd5e1', fontSize: '20px', cursor: 'pointer' }}>✕</button>
+            </div>
+
+            <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+              <button
+                onClick={() => { setActiveTab('dashboard'); setDrawerOpen(false); }}
+                style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '12px 14px', borderRadius: '12px', border: 'none', background: activeTab === 'dashboard' ? 'rgba(16,185,129,0.2)' : 'transparent', color: activeTab === 'dashboard' ? '#34d399' : '#cbd5e1', fontSize: '14px', fontWeight: '700', cursor: 'pointer', textAlign: 'left' }}
+              >
+                <span>⚡</span> Live Operations Desk
+              </button>
+              
+              <button
+                onClick={() => { setActiveTab('roster'); setDrawerOpen(false); }}
+                style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '12px 14px', borderRadius: '12px', border: 'none', background: activeTab === 'roster' ? 'rgba(16,185,129,0.2)' : 'transparent', color: activeTab === 'roster' ? '#34d399' : '#cbd5e1', fontSize: '14px', fontWeight: '700', cursor: 'pointer', textAlign: 'left' }}
+              >
+                <span>👨‍⚕️</span> Doctor Roster &amp; Setup
+              </button>
+
+              <button
+                onClick={() => { setActiveTab('settings'); setDrawerOpen(false); }}
+                style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '12px 14px', borderRadius: '12px', border: 'none', background: activeTab === 'settings' ? 'rgba(16,185,129,0.2)' : 'transparent', color: activeTab === 'settings' ? '#34d399' : '#cbd5e1', fontSize: '14px', fontWeight: '700', cursor: 'pointer', textAlign: 'left' }}
+              >
+                <span>⚙️</span> Clinic Settings &amp; UPI
+              </button>
+            </nav>
+
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px', marginTop: 'auto' }}>
+              <button onClick={handleLogout} style={{ width: '100%', background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)', color: '#fca5a5', padding: '12px', borderRadius: '10px', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}>
+                🚪 Logout Staff
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MAIN CONTENT AREA */}
-      <main style={{ flex: 1, padding: isMobile ? '16px' : '24px 28px', boxSizing: 'border-box', overflowY: 'auto', width: '100%' }}>
+      <main style={{ flex: 1, padding: '20px 16px', boxSizing: 'border-box', maxWidth: '680px', width: '100%', margin: '0 auto' }}>
         
-        {/* TOP STATUS BAR */}
-        <div style={{ background: '#fff', borderRadius: '16px', padding: '16px 20px', marginBottom: '20px', border: '1px solid #e7e1d3', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 8px rgba(11,51,44,0.03)', flexWrap: 'wrap', gap: '10px' }}>
+        {/* ACTIVE SECTION HEADER TITLE */}
+        <div style={{ background: '#fff', borderRadius: '16px', padding: '16px 20px', marginBottom: '16px', border: '1px solid #e7e1d3', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 8px rgba(11,51,44,0.03)' }}>
           <div>
             <p style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', margin: '0 0 2px' }}>📅 {todayDateStr}</p>
             <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: '17px', color: '#0b332c', margin: 0 }}>
@@ -538,11 +561,6 @@ export default function ClinicPortal() {
               {activeTab === 'roster' && '👨‍⚕️ Doctor Roster Management'}
               {activeTab === 'settings' && '⚙️ Clinic Settings & QR Code'}
             </h2>
-          </div>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <button onClick={() => loadDoctors(unlockedPin)} disabled={refreshing} style={{ background: '#f1f5f9', border: '1px solid #e7e1d3', padding: '8px 12px', borderRadius: '10px', cursor: 'pointer', fontSize: '12px', fontWeight: '700', color: '#0b332c' }}>
-              {refreshing ? 'Refreshing...' : '↻ Sync Data'}
-            </button>
           </div>
         </div>
 
@@ -552,15 +570,15 @@ export default function ClinicPortal() {
         {activeTab === 'dashboard' && (
           <div>
             {/* STATS AT A GLANCE */}
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '14px', marginBottom: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '16px' }}>
               {[
-                { label: 'Total Tokens Today', value: totalBookings, bg: '#fff', color: '#0b332c' },
-                { label: 'Waiting in Queue', value: waitingBookings, bg: '#fffbeb', color: '#d97706' },
-                { label: 'Consulted / Done', value: completedBookings, bg: '#f0fdf4', color: '#15803d' },
+                { label: 'Tokens', value: totalBookings, bg: '#fff', color: '#0b332c' },
+                { label: 'Waiting', value: waitingBookings, bg: '#fffbeb', color: '#d97706' },
+                { label: 'Done', value: completedBookings, bg: '#f0fdf4', color: '#15803d' },
               ].map((st, idx) => (
-                <div key={idx} style={{ background: st.bg, border: '1px solid #e7e1d3', borderRadius: '16px', padding: '18px 16px', textAlign: 'center', boxShadow: '0 2px 8px rgba(11,51,44,0.04)' }}>
-                  <div style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '6px' }}>{st.label}</div>
-                  <div style={{ fontSize: '28px', fontWeight: '900', color: st.color, fontFamily: 'Fraunces, serif', lineHeight: 1 }}>{st.value}</div>
+                <div key={idx} style={{ background: st.bg, border: '1px solid #e7e1d3', borderRadius: '16px', padding: '16px 12px', textAlign: 'center', boxShadow: '0 2px 8px rgba(11,51,44,0.04)' }}>
+                  <div style={{ fontSize: '10px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '4px' }}>{st.label}</div>
+                  <div style={{ fontSize: '24px', fontWeight: '900', color: st.color, fontFamily: 'Fraunces, serif', lineHeight: 1 }}>{st.value}</div>
                 </div>
               ))}
             </div>
