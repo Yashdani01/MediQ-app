@@ -912,9 +912,6 @@ export default function HospitalFlow({
           <div>
             {/* STRUCTURED SPECIALTY CHIPS (Step 2) */}
             <div style={{ marginBottom: '18px' }}>
-              <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Step 2: Choose Specialty
-              </label>
               <div
                 className="specialty-chips"
                 style={{
