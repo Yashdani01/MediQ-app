@@ -90,7 +90,16 @@ export default function ClinicPortal() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // New Command Center Navigation Tab State: 'dashboard', 'roster', 'settings'
+  // Screen width state for responsive mobile/desktop layout
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Command Center Navigation Tab State: 'dashboard', 'roster', 'settings'
   const [activeTab, setActiveTab] = useState('dashboard');
 
   const [doctors, setDoctors] = useState([]);
@@ -472,50 +481,56 @@ export default function ClinicPortal() {
   const todayDateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8f6f0', color: '#0b332c', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", display: 'flex' }}>
+    <div style={{ minHeight: '100vh', background: '#f8f6f0', color: '#0b332c', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", display: 'flex', flexDirection: isMobile ? 'column' : 'row' }}>
       
-      {/* SIDEBAR NAVIGATION */}
-      <aside style={{ width: '260px', background: '#0b332c', color: '#fff', display: 'flex', flexDirection: 'column', padding: '24px 16px', boxSizing: 'border-box', flexShrink: 0, position: 'sticky', top: 0, height: '100vh', overflowY: 'auto' }}>
-        <div style={{ marginBottom: '28px', paddingLeft: '8px' }}>
-          <div style={{ fontSize: '10px', fontWeight: '800', color: '#10b981', textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: '4px' }}>MediQ Command</div>
-          <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: '18px', color: '#fff', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{clinicName}</h2>
+      {/* SIDEBAR NAVIGATION (Converts to Top Bar on Mobile) */}
+      <aside style={{ width: isMobile ? '100%' : '260px', background: '#0b332c', color: '#fff', display: 'flex', flexDirection: isMobile ? 'row' : 'column', justifyContent: isMobile ? 'space-between' : 'flex-start', alignItems: isMobile ? 'center' : 'stretch', padding: isMobile ? '12px 16px' : '24px 16px', boxSizing: 'border-box', flexShrink: 0, position: isMobile ? 'relative' : 'sticky', top: 0, height: isMobile ? 'auto' : '100vh', overflowY: 'auto', zIndex: 100 }}>
+        <div style={{ marginBottom: isMobile ? '0' : '28px', paddingLeft: isMobile ? '0' : '8px' }}>
+          <div style={{ fontSize: '9.5px', fontWeight: '800', color: '#10b981', textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: '2px' }}>MediQ Command</div>
+          <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: isMobile ? '15px' : '18px', color: '#fff', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{clinicName}</h2>
         </div>
 
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
+        <nav style={{ display: 'flex', flexDirection: isMobile ? 'row' : 'column', gap: '6px', overflowX: isMobile ? 'auto' : 'visible' }}>
           <button
             onClick={() => setActiveTab('dashboard')}
-            style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '12px 14px', borderRadius: '12px', border: 'none', background: activeTab === 'dashboard' ? 'rgba(16,185,129,0.18)' : 'transparent', color: activeTab === 'dashboard' ? '#34d399' : '#cbd5e1', fontSize: '13.5px', fontWeight: '700', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', borderRadius: '12px', border: 'none', background: activeTab === 'dashboard' ? 'rgba(16,185,129,0.18)' : 'transparent', color: activeTab === 'dashboard' ? '#34d399' : '#cbd5e1', fontSize: '13px', fontWeight: '700', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s ease' }}
           >
-            <span>⚡</span> Live Operations Desk
+            <span>⚡</span> {isMobile ? 'Operations' : 'Live Operations Desk'}
           </button>
           
           <button
             onClick={() => setActiveTab('roster')}
-            style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '12px 14px', borderRadius: '12px', border: 'none', background: activeTab === 'roster' ? 'rgba(16,185,129,0.18)' : 'transparent', color: activeTab === 'roster' ? '#34d399' : '#cbd5e1', fontSize: '13.5px', fontWeight: '700', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', borderRadius: '12px', border: 'none', background: activeTab === 'roster' ? 'rgba(16,185,129,0.18)' : 'transparent', color: activeTab === 'roster' ? '#34d399' : '#cbd5e1', fontSize: '13px', fontWeight: '700', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s ease' }}
           >
-            <span>👨‍⚕️</span> Doctor Roster &amp; Setup
+            <span>👨‍⚕️</span> {isMobile ? 'Roster' : 'Doctor Roster & Setup'}
           </button>
 
           <button
             onClick={() => setActiveTab('settings')}
-            style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '12px 14px', borderRadius: '12px', border: 'none', background: activeTab === 'settings' ? 'rgba(16,185,129,0.18)' : 'transparent', color: activeTab === 'settings' ? '#34d399' : '#cbd5e1', fontSize: '13.5px', fontWeight: '700', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', borderRadius: '12px', border: 'none', background: activeTab === 'settings' ? 'rgba(16,185,129,0.18)' : 'transparent', color: activeTab === 'settings' ? '#34d399' : '#cbd5e1', fontSize: '13px', fontWeight: '700', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s ease' }}
           >
-            <span>⚙️</span> Clinic Settings &amp; UPI
+            <span>⚙️</span> {isMobile ? 'Settings' : 'Clinic Settings & UPI'}
           </button>
         </nav>
 
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px', marginTop: 'auto' }}>
-          <button onClick={handleLogout} style={{ width: '100%', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5', padding: '10px', borderRadius: '10px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer' }}>
-            🚪 Logout Staff
+        {!isMobile ? (
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px', marginTop: 'auto' }}>
+            <button onClick={handleLogout} style={{ width: '100%', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5', padding: '10px', borderRadius: '10px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer' }}>
+              🚪 Logout Staff
+            </button>
+          </div>
+        ) : (
+          <button onClick={handleLogout} style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5', padding: '6px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}>
+            Logout
           </button>
-        </div>
+        )}
       </aside>
 
       {/* MAIN CONTENT AREA */}
-      <main style={{ flex: 1, padding: '24px 28px', boxSizing: 'border-box', overflowY: 'auto' }}>
+      <main style={{ flex: 1, padding: isMobile ? '16px' : '24px 28px', boxSizing: 'border-box', overflowY: 'auto', width: '100%' }}>
         
         {/* TOP STATUS BAR */}
-        <div style={{ background: '#fff', borderRadius: '16px', padding: '16px 20px', marginBottom: '20px', border: '1px solid #e7e1d3', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 8px rgba(11,51,44,0.03)' }}>
+        <div style={{ background: '#fff', borderRadius: '16px', padding: '16px 20px', marginBottom: '20px', border: '1px solid #e7e1d3', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 8px rgba(11,51,44,0.03)', flexWrap: 'wrap', gap: '10px' }}>
           <div>
             <p style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', margin: '0 0 2px' }}>📅 {todayDateStr}</p>
             <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: '17px', color: '#0b332c', margin: 0 }}>
@@ -537,7 +552,7 @@ export default function ClinicPortal() {
         {activeTab === 'dashboard' && (
           <div>
             {/* STATS AT A GLANCE */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px', marginBottom: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '14px', marginBottom: '20px' }}>
               {[
                 { label: 'Total Tokens Today', value: totalBookings, bg: '#fff', color: '#0b332c' },
                 { label: 'Waiting in Queue', value: waitingBookings, bg: '#fffbeb', color: '#d97706' },
@@ -615,7 +630,7 @@ export default function ClinicPortal() {
                         </button>
                       </div>
 
-                      <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
                         <button onClick={() => toggleTodaysPatients(doc.id)} style={{ background: '#f1f5f9', border: '1px solid #e7e1d3', color: '#0b332c', padding: '8px 12px', borderRadius: '8px', fontSize: '11.5px', fontWeight: '700', cursor: 'pointer' }}>
                           {expandedDoctor === doc.id ? 'Hide Full Queue' : `View Full Queue (${waitingList.length} Waiting)`}
                         </button>
@@ -651,7 +666,7 @@ export default function ClinicPortal() {
                                 const isWaiting = b.status?.toLowerCase() === 'waiting' || b.status?.toLowerCase() === 'checked_in';
                                 const isUpdating = updatingPatient === b.id;
                                 return (
-                                  <div key={b.id} style={{ background: '#f8f6f0', border: '1px solid #e7e1d3', borderRadius: '10px', padding: '10px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                                  <div key={b.id} style={{ background: '#f8f6f0', border: '1px solid #e7e1d3', borderRadius: '10px', padding: '10px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                     <div>
                                       <span style={{ fontWeight: 'bold', fontSize: '12.5px', color: '#0b332c' }}>#{b.queue_number || '1'} — {b.patient_name}</span>
                                       <div style={{ fontSize: '11px', color: '#64748b' }}>{b.is_walkin ? '🚶 Walk-in' : '📱 App'} • <span style={{ textTransform: 'capitalize', fontWeight: '600' }}>{b.status}</span></div>
@@ -684,7 +699,7 @@ export default function ClinicPortal() {
         {/* ================= SECTION 2: DOCTOR ROSTER & SETUP ================= */}
         {activeTab === 'roster' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
               <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '17px', color: '#0b332c', margin: 0 }}>Clinic Doctors ({doctors.length})</h3>
               <button onClick={() => setShowAddForm(!showAddForm)} style={{ background: '#10b981', color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '10px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer' }}>
                 {showAddForm ? 'Close Form' : '+ Add Doctor'}
@@ -779,16 +794,16 @@ export default function ClinicPortal() {
             
             <div style={{ marginBottom: '20px' }}>
               <label style={{ fontSize: '12px', fontWeight: '700', color: '#0b332c', display: 'block', marginBottom: '6px' }}>Google Maps Location Link:</label>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <input placeholder="Paste Google Maps URL" value={locationInput} onChange={(e) => setLocationInput(e.target.value)} style={{ flex: 1, padding: '11px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13px' }} />
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <input placeholder="Paste Google Maps URL" value={locationInput} onChange={(e) => setLocationInput(e.target.value)} style={{ flex: 1, padding: '11px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13px', minWidth: '200px' }} />
                 <button onClick={handleSaveLocation} disabled={savingLocation} style={{ background: '#0b332c', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '10px', fontWeight: '700', fontSize: '12px', cursor: 'pointer' }}>{savingLocation ? 'Saving...' : 'Save'}</button>
               </div>
             </div>
 
             <div style={{ marginBottom: '20px' }}>
               <label style={{ fontSize: '12px', fontWeight: '700', color: '#0b332c', display: 'block', marginBottom: '6px' }}>Clinic UPI ID (for Patient Token Payments):</label>
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
-                <input placeholder="e.g. clinic@paytm" value={upiInput} onChange={(e) => setUpiInput(e.target.value)} style={{ flex: 1, padding: '11px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13px' }} />
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '10px', flexWrap: 'wrap' }}>
+                <input placeholder="e.g. clinic@paytm" value={upiInput} onChange={(e) => setUpiInput(e.target.value)} style={{ flex: 1, padding: '11px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13px', minWidth: '200px' }} />
                 <button onClick={handleSaveUpi} disabled={savingUpi} style={{ background: '#0b332c', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '10px', fontWeight: '700', fontSize: '12px', cursor: 'pointer' }}>{savingUpi ? 'Saving...' : 'Save'}</button>
               </div>
               {upiId && (
