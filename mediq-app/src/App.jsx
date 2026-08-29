@@ -179,6 +179,7 @@ export default function App() {
   }
 
   const [session, setSession] = useState(null);
+  const [activeBooking, setActiveBooking] = useState(null);
   const [isGuest, setIsGuest] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -813,6 +814,10 @@ export default function App() {
     if (type === 'view_queue') {
       setActiveTab('queue');
     }
+    if (type === 'view_appointment') {
+  setActiveBooking(payload);
+  setActiveTab('bookings');
+}
 
     if (type === 'view_appointment') {
       setActiveTab('bookings');
