@@ -779,38 +779,51 @@ button.back-btn:hover {
   border: 1px solid #e2e8f0;
 }
 
-/* Specialty Chips Horizontal Scroll */
+/* =========================================================
+   REFINED SPECIALTY FILTER TABS
+========================================================= */
+
 .specialty-chips {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   overflow-x: auto;
-  padding-bottom: 6px;
-  scrollbar-width: none; /* Firefox */
+  padding: 4px 2px 12px 2px;
+  scrollbar-width: none;
 }
 
 .specialty-chips::-webkit-scrollbar {
-  display: none; /* Chrome/Safari */
+  display: none;
 }
 
 .specialty-chip {
-  background: #fff;
-  color: #0b332c;
-  border: 1px solid #cbd5e1;
-  padding: 8px 14px;
-  border-radius: 20px;
-  font-size: 12.5px;
+  background: #ffffff;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  padding: 9px 16px;
+  border-radius: 12px;
+  font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
   transition: all 0.2s ease;
-  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.specialty-chip.active,
 .specialty-chip:hover {
-  background: #0b332c;
-  color: #fff;
-  border-color: #0b332c;
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+/* Active State - Premium Dark Emerald Matching Your App */
+.specialty-chip.active,
+.specialty-chip[aria-selected="true"] {
+  background: #0b332c !important;
+  color: #ffffff !important;
+  border-color: #0b332c !important;
+  box-shadow: 0 4px 12px rgba(11, 51, 44, 0.2) !important;
 }
 
 /* Hospital & Clinic Cards */

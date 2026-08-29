@@ -9,18 +9,17 @@
 }
 
 /* =========================================================
-   CLEAN GLASSMORPHIC MEDIQ ONE BUTTON
+   PREMIUM MEDIQ ONE FLOATING TRIGGER BUTTON
 ========================================================= */
 
 .mq-one {
   position: fixed;
   right: 20px;
-  bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(84px + env(safe-area-inset-bottom, 0px));
   z-index: 99999;
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  outline: none !important;
   font-family:
     Inter,
     -apple-system,
@@ -35,25 +34,22 @@
   position: relative;
   border: none !important;
   cursor: pointer;
-  /* Semi-transparent dark emerald glass look */
-  background: rgba(11, 51, 44, 0.88) !important;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  width: 56px;
-  height: 56px;
-  border-radius: 50% !important;
+  background: linear-gradient(135deg, #0b332c 0%, #134e44 100%) !important;
+  width: 58px;
+  height: 58px;
+  border-radius: 18px !important; /* Modern rounded-square look */
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22) !important;
+  box-shadow: 0 10px 25px rgba(11, 51, 44, 0.35), 0 2px 6px rgba(0, 0, 0, 0.15) !important;
   padding: 0 !important;
   outline: none !important;
-  transition: transform 0.2s ease, background 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .mq-trigger:hover {
-  transform: translateY(-2px);
-  background: rgba(11, 51, 44, 0.96) !important;
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 14px 30px rgba(11, 51, 44, 0.45), 0 4px 10px rgba(0, 0, 0, 0.2) !important;
 }
 
 .mq-trigger:active {
@@ -61,19 +57,19 @@
 }
 
 .mq-trigger-halo {
-  display: none !important; /* Completely removes any bounding box borders */
+  display: none !important;
 }
 
 .mq-trigger-core {
   width: 100%;
   height: 100%;
-  border-radius: 50%;
+  border-radius: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fef08a; /* Gold star icon */
+  color: #fef08a; /* Luxury gold icon color */
   background: transparent !important;
-  font-size: 22px;
+  font-size: 24px;
   border: none !important;
   flex-shrink: 0;
 }
