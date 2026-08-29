@@ -3,6 +3,10 @@ import { supabase } from '../supabaseClient';
 import { getMyBookings, cancelAppointment } from '../hospitalData';
 import './MyBookings.css';
 
+// Add this right below your imports at the top of MyBookings.jsx
+let bookingsCache = { data: null, timestamp: 0 };
+const CACHE_DURATION = 30 * 1000; // 30 seconds
+
 export default function MyBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -11,8 +15,45 @@ export default function MyBookings() {
   const [showSupportModal, setShowSupportModal] = useState(false); // Interactive Support Popup State
 
   useEffect(() => {
-    loadBookings();
-  }, []);
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    async function fetchBookings() {
+      // 1. Check if cached data is fresh and load it instantly
+      const now = Date.now();
+      if (bookingsCache.data && (now - bookingsCache.timestamp < CACHE_DURATION)) {
+        setBookings(bookingsCache.data);
+        setLoading(false);
+        return;
+      }
+
+      // Only show full loader if there's no cache at all
+      if (!bookingsCache.data) {
+        setLoading(true);
+      }
+
+      const { data, error } = await supabase
+        .from('appointments')
+        .select(`
+          *,
+          doctors (name, specialty, consultation_fee),
+          hospitals (name, city, location)
+        `)
+        .eq('patient_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        // 2. Save fetched data to cache with a timestamp
+        bookingsCache = { data, timestamp: Date.now() };
+        setBookings(data);
+      }
+      setLoading(false);
+    }
+
+    fetchBookings();
+  }, [user]);
 
   async function loadBookings() {
     setLoading(true);
