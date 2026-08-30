@@ -525,13 +525,7 @@ export default function App() {
             </div>
 
             <div 
-              onClick={() => {
-                if (selectedBookingId) {
-                  setActiveTab('queue');
-                } else {
-                  setActiveModal('queue');
-                }
-              }}
+              onClick={() => setActiveModal('queue')}
               style={{ 
                 background: activeQueueToken ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(11, 51, 44, 0.4) 100%)' : 'rgba(255,255,255,0.05)', 
                 border: activeQueueToken ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(255,255,255,0.08)', 
