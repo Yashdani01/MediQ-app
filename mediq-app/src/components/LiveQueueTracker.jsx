@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { getMyCurrentBooking } from '../hospitalData';
 
 export default function LiveQueueTracker({ user, onClose, bookingId }) {
   const [activeBooking, setActiveBooking] = useState(null);
@@ -8,13 +7,19 @@ export default function LiveQueueTracker({ user, onClose, bookingId }) {
 
   useEffect(() => {
     async function fetchLiveQueue() {
-      if (!user) {
+      if (!bookingId) {
         setLoading(false);
         return;
       }
       try {
-        const booking = await getMyCurrentBooking(bookingId || user.id);
-        setActiveBooking(booking);
+        const { data, error } = await supabase
+          .from('appointments')
+          .select('*, doctors(*), hospitals(*)')
+          .eq('id', bookingId)
+          .single();
+
+        if (error) throw error;
+        setActiveBooking(data);
       } catch (err) {
         console.error('Error fetching live queue:', err);
       } finally {
@@ -22,7 +27,7 @@ export default function LiveQueueTracker({ user, onClose, bookingId }) {
       }
     }
     fetchLiveQueue();
-  }, [user, bookingId]);
+  }, [bookingId]);
 
   useEffect(() => {
     if (!bookingId) return;
@@ -88,8 +93,8 @@ export default function LiveQueueTracker({ user, onClose, bookingId }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', background: '#f8f6f0', padding: '14px 16px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
         <div>
           <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1px', color: '#134e44', fontWeight: '800' }}>Live Hospital Tracker</span>
-          <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: '18px', color: '#0b332c', margin: '2px 0 2px' }}>{activeBooking.hospital?.name || 'MediQ Clinic'}</h2>
-          <p style={{ fontSize: '12px', color: '#10b981', fontWeight: '700', margin: 0 }}>Dr. {activeBooking.doctor?.name || 'Doctor'} • <span style={{ color: '#64748b', fontWeight: '600' }}>{activeBooking.doctor?.specialty || 'General'}</span></p>
+          <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: '18px', color: '#0b332c', margin: '2px 0 2px' }}>{activeBooking.hospitals?.name || 'MediQ Clinic'}</h2>
+          <p style={{ fontSize: '12px', color: '#10b981', fontWeight: '700', margin: 0 }}>Dr. {activeBooking.doctors?.name || 'Doctor'} • <span style={{ color: '#64748b', fontWeight: '600' }}>{activeBooking.doctors?.specialty || 'General'}</span></p>
         </div>
         <div style={{ background: '#dcfce7', border: '1px solid #bbf7d0', padding: '5px 10px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
           <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }}></span>
