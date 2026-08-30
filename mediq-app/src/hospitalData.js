@@ -489,26 +489,30 @@ export async function bookAppointment(
 export async function getMyCurrentBooking(identifier = null) {
   if (!identifier) return null;
 
-  // 1. First, check if the identifier is a user_id (used by App.jsx sidebar)
-  const { data: byUser } = await supabase
+  // 1. Check by user_id (for sidebar)
+  const { data: byUser, error: userError } = await supabase
     .from('appointments')
     .select('*, doctors(*), hospitals(*)')
     .eq('user_id', identifier)
-    .in('status', ['waiting', 'checked_in'])
+    .or('status.eq.waiting,status.eq.checked_in')
     .order('created_at', { ascending: false })
     .maybeSingle();
 
   if (byUser) return byUser;
+  if (userError) console.error('Error fetching by user:', userError);
 
-  // 2. Otherwise, check if it's a direct appointment id (used by LiveQueueTracker)
-  const { data: byId } = await supabase
+  // 2. Check by appointment id (for live tracker)
+  const { data: byId, error: idError } = await supabase
     .from('appointments')
     .select('*, doctors(*), hospitals(*)')
     .eq('id', identifier)
-    .in('status', ['waiting', 'checked_in'])
+    .or('status.eq.waiting,status.eq.checked_in')
     .maybeSingle();
 
-  return byId || null;
+  if (byId) return byId;
+  if (idError) console.error('Error fetching by id:', idError);
+
+  return null;
 }
 
 
