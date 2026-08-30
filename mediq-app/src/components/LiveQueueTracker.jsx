@@ -103,7 +103,7 @@ export default function LiveQueueTracker({ user, onClose, bookingId }) {
         <div>
           <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1px', color: '#134e44', fontWeight: '800' }}>Live Hospital Tracker</span>
           <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: '18px', color: '#0b332c', margin: '2px 0 2px' }}>{activeBooking.hospitals?.name || 'MediQ Clinic'}</h2>
-          <p style={{ fontSize: '12px', color: '#10b981', fontWeight: '700', margin: 0 }}>Dr. {activeBooking.doctors?.name || 'Doctor'} • <span style={{ color: '#64748b', fontWeight: '600' }}>{activeBooking.doctors?.specialty || 'General'}</span></p>
+          <p style={{ fontSize: '12px', color: '#10b981', fontWeight: '700', margin: 0 }}>{activeBooking.doctors?.name?.startsWith('Dr.') ? activeBooking.doctors.name : `Dr. ${activeBooking.doctors?.name || 'Doctor'}`} • <span style={{ color: '#64748b', fontWeight: '600' }}>{activeBooking.doctors?.specialty || 'General'}</span></p>
         </div>
         <div style={{ background: '#dcfce7', border: '1px solid #bbf7d0', padding: '5px 10px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
           <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }}></span>
