@@ -3,7 +3,7 @@ import { supabase } from '../supabaseClient';
 import { getMyBookings, cancelAppointment } from '../hospitalData';
 import './MyBookings.css';
 
-export default function MyBookings() {
+export default function MyBookings({ onTrackQueue }) {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState(null);
@@ -331,11 +331,12 @@ export default function MyBookings() {
 
                   <div className="booking-actions" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                     {isWaiting && (
-                      <button
-                        type="button"
-                        className="track-queue-btn"
-                        onClick={() => setTrackingBookingId(booking.id)}
-                        style={{ flex: 1, background: '#0b332c', color: '#fff', border: 'none', padding: '10px', borderRadius: '12px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer', minWidth: '140px' }}
+                      <button 
+                        onClick={() => {
+                          // Pass this specific booking's ID to your parent navigation state
+                          onTrackQueue(booking.id); 
+                        }}
+                        style={{ background: '#0b332c', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '12px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer' }}
                       >
                         📍 Track Live Queue
                       </button>

@@ -81,7 +81,8 @@ export default function LiveQueueTracker({ user, onClose, bookingId }) {
     );
   }
 
-  const tokenNumber = activeBooking.queue_number || '27';
+  const isYourTurn = activeBooking.status === 'checked_in' || activeBooking.status === 'seen';
+  const tokenNumber = activeBooking.queue_number || '1';
   const currentServing = Number(tokenNumber) > 1 ? Number(tokenNumber) - 1 : 1;
   const patientsBefore = Math.max(0, Number(tokenNumber) - currentServing - 1);
   const estimatedWaitMins = Math.max(5, patientsBefore * 5);
@@ -89,6 +90,14 @@ export default function LiveQueueTracker({ user, onClose, bookingId }) {
   return (
     <div style={{ width: '100%', maxWidth: '440px', margin: '0 auto', fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
       
+      {/* YOUR TURN ALERT BANNER */}
+      {isYourTurn && (
+        <div style={{ background: '#fef3c7', border: '2px solid #f59e0b', borderRadius: '16px', padding: '16px', marginBottom: '18px', textAlign: 'center', animation: 'pulse 1.5s infinite', boxShadow: '0 4px 12px rgba(245,158,11,0.3)' }}>
+          <div style={{ fontSize: '20px', marginBottom: '4px' }}>🚨</div>
+          <div style={{ fontSize: '15px', fontWeight: '900', color: '#92400e' }}>Your Turn! Please head to the doctor's room.</div>
+        </div>
+      )}
+
       {/* TOP HEADER STATUS */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', background: '#f8f6f0', padding: '14px 16px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
         <div>

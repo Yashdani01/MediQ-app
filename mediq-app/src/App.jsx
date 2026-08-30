@@ -431,6 +431,12 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleTrackQueue = (bookingId) => {
+    setSelectedBookingId(bookingId);
+    setActiveTab('queue');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const pageTitles = {
     home: t.home,
     triage: t.triage,
@@ -804,7 +810,7 @@ export default function App() {
           )}
           {activeTab === 'triage' && <SymptomTriage onClose={() => handleNavigation('home')} onSelectSpecialty={() => handleNavigation('home')} />}
           {activeTab === 'reports' && <Reports user={session?.user || null} lang={lang} />}
-          {activeTab === 'bookings' && <MyBookings />}
+          {activeTab === 'bookings' && <MyBookings onTrackQueue={handleTrackQueue} />}
           {activeTab === 'rxDecoder' && <RxDecoder user={session?.user || null} />}
           {activeTab === 'bloodHub' && <BloodHub user={session?.user || null} />}
           {activeTab === 'queue' && (
