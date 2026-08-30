@@ -438,7 +438,7 @@ export default function ClinicPortal() {
       alert('No waiting patients in the queue for this doctor.');
       return;
     }
-    await handleMarkSeen(nextWaiting.id, doctorId);
+    await handleCheckIn(nextWaiting.id, doctorId);
   };
 
   if (!unlocked) {

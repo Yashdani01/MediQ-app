@@ -9,6 +9,7 @@ export default function MyBookings() {
   const [cancellingId, setCancellingId] = useState(null);
   const [activeTab, setActiveTab] = useState('upcoming'); // 'upcoming' | 'completed' | 'cancelled'
   const [showSupportModal, setShowSupportModal] = useState(false); // Interactive Support Popup State
+  const [trackingBookingId, setTrackingBookingId] = useState(null); // Track Live Queue State
 
   useEffect(() => {
     loadBookings();
@@ -328,14 +329,25 @@ export default function MyBookings() {
                     </div>
                   )}
 
-                  <div className="booking-actions" style={{ display: 'flex', gap: '10px' }}>
+                  <div className="booking-actions" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                    {isWaiting && (
+                      <button
+                        type="button"
+                        className="track-queue-btn"
+                        onClick={() => setTrackingBookingId(booking.id)}
+                        style={{ flex: 1, background: '#0b332c', color: '#fff', border: 'none', padding: '10px', borderRadius: '12px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer', minWidth: '140px' }}
+                      >
+                        📍 Track Live Queue
+                      </button>
+                    )}
+
                     {mapsUrl && (
                       <a
                         href={mapsUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="directions-btn"
-                        style={{ flex: 1, background: '#f1f5f9', color: '#0b332c', textAlign: 'center', padding: '10px', borderRadius: '12px', fontSize: '12.5px', fontWeight: '700', textDecoration: 'none' }}
+                        style={{ flex: 1, background: '#f1f5f9', color: '#0b332c', textAlign: 'center', padding: '10px', borderRadius: '12px', fontSize: '12.5px', fontWeight: '700', textDecoration: 'none', minWidth: '120px' }}
                       >
                         📍 Directions
                       </a>
@@ -347,12 +359,24 @@ export default function MyBookings() {
                         className="cancel-booking-btn"
                         onClick={() => handleCancel(booking.id)}
                         disabled={cancellingId === booking.id}
-                        style={{ flex: 1, background: '#fef2f2', border: '1px solid #fca5a5', color: '#dc2626', padding: '10px', borderRadius: '12px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer' }}
+                        style={{ flex: 1, background: '#fef2f2', border: '1px solid #fca5a5', color: '#dc2626', padding: '10px', borderRadius: '12px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer', minWidth: '140px' }}
                       >
                         {cancellingId === booking.id ? 'Cancelling...' : 'Cancel Appointment'}
                       </button>
                     )}
                   </div>
+
+                  {/* LIVE QUEUE TRACKER VIEW */}
+                  {trackingBookingId === booking.id && (
+                    <div style={{ marginTop: '16px', borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
+                      <p style={{ fontSize: '12px', color: '#10b981', fontWeight: '700', margin: '0 0 8px' }}>
+                        🔴 Live Queue Tracking Active
+                      </p>
+                      <p style={{ fontSize: '11.5px', color: '#64748b', margin: 0 }}>
+                        Tracking appointment ID: <strong>{booking.id}</strong>
+                      </p>
+                    </div>
+                  )}
                 </div>
               );
             })}

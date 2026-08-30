@@ -486,100 +486,20 @@ export async function bookAppointment(
   };
 }
 
-export async function getMyCurrentBooking(
-  patientUserId
-) {
-  const {
-    data: patient,
-    error: patientError,
-  } = await supabase
-    .from('patients')
-    .select('id')
-    .eq('user_id', patientUserId)
-    .single();
+export async function getMyCurrentBooking(appointmentId = null) {
+  let query = supabase
+    .from('appointments')
+    .select('*, doctors(*), hospitals(*)')
+    .in('status', ['waiting', 'checked_in'])
+    .order('created_at', { ascending: false });
 
-  if (patientError || !patient) {
-    return null;
+  if (appointmentId) {
+    query = query.eq('id', appointmentId);
   }
 
-  const {
-    data: appointment,
-    error,
-  } = await supabase
-    .from('appointments')
-    .select(`
-      id,
-      queue_number,
-      token_number,
-      status,
-      doctor_id,
-      hospital_id,
-      created_at,
-      booked_at,
-      checked_in_at,
-      appointment_time,
-      payment_method,
-      patient_name,
-      is_priority,
-      consultation_fee
-    `)
-    .eq('patient_id', patient.id)
-    .eq('status', 'waiting')
-    .order('created_at', {
-      ascending: false,
-    })
-    .limit(1)
-    .maybeSingle();
-
-  if (error || !appointment) {
-    return null;
-  }
-
-  const { data: doctor } = await supabase
-    .from('doctors')
-    .select(`
-      name,
-      specialty,
-      avg_minutes_per_patient,
-      consultation_fee
-    `)
-    .eq('id', appointment.doctor_id)
-    .single();
-
-  const { data: hospital } = await supabase
-    .from('hospitals')
-    .select('name')
-    .eq(
-      'id',
-      appointment.hospital_id
-    )
-    .single();
-
-  const {
-    count: patientsAhead,
-  } = await supabase
-    .from('appointments')
-    .select('*', {
-      count: 'exact',
-      head: true,
-    })
-    .eq(
-      'doctor_id',
-      appointment.doctor_id
-    )
-    .eq('status', 'waiting')
-    .lt(
-      'queue_number',
-      appointment.queue_number
-    );
-
-  return {
-    ...appointment,
-    doctor,
-    hospital,
-    patientsAhead:
-      patientsAhead || 0,
-  };
+  const { data, error } = await query.maybeSingle();
+  if (error) throw error;
+  return data;
 }
 
 

@@ -195,6 +195,8 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
 
+  const [selectedBookingId, setSelectedBookingId] = useState(null);
+
   const [familyMembers, setFamilyMembers] = useState(() => {
     const saved = localStorage.getItem('mediq_family_members');
     return saved ? JSON.parse(saved) : [
@@ -222,8 +224,10 @@ export default function App() {
             doctorName: active.doctor?.name || 'Doctor',
             hospitalName: active.hospital?.name || 'Clinic'
           });
+          setSelectedBookingId(active.id);
         } else {
           setActiveQueueToken(null);
+          setSelectedBookingId(null);
         }
       } catch (err) {
         console.error("Queue fetch error:", err);
@@ -434,6 +438,7 @@ export default function App() {
     bookings: t.myBookings,
     rxDecoder: 'AI Rx Decoder',
     bloodHub: 'Blood Bridge Hub',
+    queue: 'Live Queue Tracker',
   };
 
   return (
@@ -515,7 +520,13 @@ export default function App() {
             </div>
 
             <div 
-              onClick={() => setActiveModal('queue')} 
+              onClick={() => {
+                if (selectedBookingId) {
+                  setActiveTab('queue');
+                } else {
+                  setActiveModal('queue');
+                }
+              }}
               style={{ 
                 background: activeQueueToken ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(11, 51, 44, 0.4) 100%)' : 'rgba(255,255,255,0.05)', 
                 border: activeQueueToken ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(255,255,255,0.08)', 
@@ -718,7 +729,7 @@ export default function App() {
             {activeModal === 'physio' && <PhysioGuideModal onClose={() => setActiveModal(null)} />}
 
           {activeModal === 'queue' && (
-              <LiveQueueTracker user={session?.user || null} onClose={() => setActiveModal(null)} />
+              <LiveQueueTracker user={session?.user || null} bookingId={selectedBookingId} onClose={() => setActiveModal(null)} />
             )}
 
             {activeModal === 'sos' && (
@@ -796,6 +807,13 @@ export default function App() {
           {activeTab === 'bookings' && <MyBookings />}
           {activeTab === 'rxDecoder' && <RxDecoder user={session?.user || null} />}
           {activeTab === 'bloodHub' && <BloodHub user={session?.user || null} />}
+          {activeTab === 'queue' && (
+            <LiveQueueTracker 
+              user={session?.user || null} 
+              bookingId={selectedBookingId} 
+              onClose={() => handleNavigation('home')} 
+            />
+          )}
         </main>
       </div>
 
@@ -818,10 +836,6 @@ export default function App() {
   setActiveBooking(payload);
   setActiveTab('bookings');
 }
-
-    if (type === 'view_appointment') {
-      setActiveTab('bookings');
-    }
 
     if (type === 'view_bookings') {
       setActiveTab('bookings');

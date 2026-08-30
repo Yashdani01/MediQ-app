@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { getMyCurrentBooking } from '../hospitalData';
 
-export default function LiveQueueTracker({ user, onClose }) {
+export default function LiveQueueTracker({ user, onClose, bookingId }) {
   const [activeBooking, setActiveBooking] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -13,7 +13,7 @@ export default function LiveQueueTracker({ user, onClose }) {
         return;
       }
       try {
-        const booking = await getMyCurrentBooking(user.id);
+        const booking = await getMyCurrentBooking(bookingId || user.id);
         setActiveBooking(booking);
       } catch (err) {
         console.error('Error fetching live queue:', err);
@@ -22,7 +22,31 @@ export default function LiveQueueTracker({ user, onClose }) {
       }
     }
     fetchLiveQueue();
-  }, [user]);
+  }, [user, bookingId]);
+
+  useEffect(() => {
+    if (!bookingId) return;
+    
+    const channel = supabase
+      .channel(`public:appointments:id=eq.${bookingId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'appointments',
+          filter: `id=eq.${bookingId}`,
+        },
+        (payload) => {
+          setActiveBooking(payload.new);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [bookingId]);
 
   if (loading) {
     return (
