@@ -556,7 +556,7 @@ export default function App() {
                     {activeQueueToken && <span style={{ fontSize: '9px', background: '#10b981', color: '#fff', padding: '1px 5px', borderRadius: '4px', textTransform: 'uppercase', fontWeight: '800' }}>Live</span>}
                   </div>
                   <div style={{ fontSize: '11px', color: activeQueueToken ? '#4ade80' : 'rgba(255,255,255,0.5)', fontWeight: activeQueueToken ? '600' : 'normal' }}>
-                    {activeQueueToken ? `Active Token #${activeQueueToken.number}` : 'No active booking'}
+                    {activeQueueToken ? `Active Token #${activeQueueToken.queue_number}` : 'No active booking'}
                   </div>
                 </div>
               </div>
