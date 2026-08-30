@@ -214,28 +214,27 @@ export default function App() {
   const [activeQueueToken, setActiveQueueToken] = useState(null);
 
   useEffect(() => {
-    const fetchActiveQueue = async () => {
-      if (!session?.user) return;
+    async function fetchSidebarQueue() {
+      // Make sure you have a user/session object available here
+      const userId = session?.user?.id || user?.id; 
+      if (!userId) return;
+
       try {
-        const active = await getMyCurrentBooking(session.user.id);
-        if (active) {
-          setActiveQueueToken({
-            number: active.queue_number || active.token_number || '2',
-            doctorName: active.doctor?.name || 'Doctor',
-            hospitalName: active.hospital?.name || 'Clinic'
-          });
-          setSelectedBookingId(active.id);
+        const activeBooking = await getMyCurrentBooking(userId);
+        setActiveQueueToken(activeBooking); // This updates the sidebar state
+        
+        if (activeBooking) {
+          setSelectedBookingId(activeBooking.id);
         } else {
-          setActiveQueueToken(null);
           setSelectedBookingId(null);
         }
       } catch (err) {
-        console.error("Queue fetch error:", err);
+        console.error('Failed to load sidebar active queue:', err);
       }
-    };
+    }
 
-    fetchActiveQueue();
-  }, [session]);
+    fetchSidebarQueue();
+  }, [session, user]);
 
   const commonSymptoms = {
     en: [
@@ -556,7 +555,7 @@ export default function App() {
                     {activeQueueToken && <span style={{ fontSize: '9px', background: '#10b981', color: '#fff', padding: '1px 5px', borderRadius: '4px', textTransform: 'uppercase', fontWeight: '800' }}>Live</span>}
                   </div>
                   <div style={{ fontSize: '11px', color: activeQueueToken ? '#4ade80' : 'rgba(255,255,255,0.5)', fontWeight: activeQueueToken ? '600' : 'normal' }}>
-                    {activeQueueToken ? `Active Token #${activeQueueToken.queue_number}` : 'No active booking'}
+                    {activeQueueToken ? `Active Token #${activeQueueToken.queue_number || activeQueueToken.token_number || 'N/A'}` : 'No active booking'}
                   </div>
                 </div>
               </div>
