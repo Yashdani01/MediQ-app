@@ -734,7 +734,14 @@ export default function App() {
             {activeModal === 'physio' && <PhysioGuideModal onClose={() => setActiveModal(null)} />}
 
           {activeModal === 'queue' && (
-              <LiveQueueTracker user={session?.user || null} bookingId={selectedBookingId} onClose={() => setActiveModal(null)} />
+              <LiveQueueTracker
+                user={session?.user || null}
+                bookingId={selectedBookingId}
+                onClose={() => {
+                  setActiveModal(null);
+                  handleNavigation('home');
+                }}
+              />
             )}
 
             {activeModal === 'sos' && (

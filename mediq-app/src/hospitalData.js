@@ -486,33 +486,36 @@ export async function bookAppointment(
   };
 }
 
-export async function getMyCurrentBooking(identifier = null) {
-  if (!identifier) return null;
+export async function getMyCurrentBooking(userId = null) {
+  if (!userId) return null;
 
-  // 1. Check by user_id (for sidebar)
-  const { data: byUser, error: userError } = await supabase
+  // Appointments link to patients via patient_id, not user_id —
+  // resolve the patient row for this auth user first.
+  const { data: patient, error: patientError } = await supabase
+    .from('patients')
+    .select('id')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (patientError || !patient) {
+    if (patientError) console.error('Error fetching patient for queue lookup:', patientError);
+    return null;
+  }
+
+  const { data: activeAppointment, error } = await supabase
     .from('appointments')
     .select('*, doctors(*), hospitals(*)')
-    .eq('user_id', identifier)
+    .eq('patient_id', patient.id)
     .or('status.eq.waiting,status.eq.checked_in')
     .order('created_at', { ascending: false })
     .maybeSingle();
 
-  if (byUser) return byUser;
-  if (userError) console.error('Error fetching by user:', userError);
+  if (error) {
+    console.error('Error fetching active booking:', error);
+    return null;
+  }
 
-  // 2. Check by appointment id (for live tracker)
-  const { data: byId, error: idError } = await supabase
-    .from('appointments')
-    .select('*, doctors(*), hospitals(*)')
-    .eq('id', identifier)
-    .or('status.eq.waiting,status.eq.checked_in')
-    .maybeSingle();
-
-  if (byId) return byId;
-  if (idError) console.error('Error fetching by id:', idError);
-
-  return null;
+  return activeAppointment || null;
 }
 
 
