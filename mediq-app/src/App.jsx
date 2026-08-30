@@ -215,13 +215,13 @@ export default function App() {
 
   useEffect(() => {
     async function fetchSidebarQueue() {
-      // Make sure you have a user/session object available here
-      const userId = session?.user?.id || user?.id; 
+      // Use session?.user?.id safely instead of referencing undefined 'user'
+      const userId = session?.user?.id; 
       if (!userId) return;
 
       try {
         const activeBooking = await getMyCurrentBooking(userId);
-        setActiveQueueToken(activeBooking); // This updates the sidebar state
+        setActiveQueueToken(activeBooking);
         
         if (activeBooking) {
           setSelectedBookingId(activeBooking.id);
@@ -234,7 +234,7 @@ export default function App() {
     }
 
     fetchSidebarQueue();
-  }, [session, user]);
+  }, [session]);
 
   const commonSymptoms = {
     en: [
