@@ -204,11 +204,13 @@ export async function getMediQOneReply({
       }
 
       if (data?.type === 'function_call') {
-        const { name, args } = data;
+        const { name, args, thoughtSignature } = data;
 
-        // Keep the model's own function-call turn in the transcript so
-        // Gemini's context stays consistent on the next round-trip.
-        turns.push({ role: 'model', functionCall: { name, args } });
+        // Keep the model's own function-call turn (and its thoughtSignature,
+        // which Gemini requires to be echoed back unchanged) in the
+        // transcript so Gemini's context stays consistent on the next
+        // round-trip.
+        turns.push({ role: 'model', functionCall: { name, args }, thoughtSignature });
 
         let toolResult;
 
