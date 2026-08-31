@@ -452,8 +452,7 @@ export default function MediQOne({
           {
             id: makeId('assistant'),
             role: 'assistant',
-            text:
-              'I'm having trouble connecting right now. Please try again in a moment.',
+           text: "I'm having trouble connecting right now. Please try again in a moment.",
             time: new Date(),
             error: true,
           },
