@@ -223,6 +223,7 @@ function Icon({ name, size = 18 }) {
 
 export default function MediQOne({
   userName = '',
+  userId = null,
   activeBooking = null,
   onActionTrigger,
   onSendMessage,
@@ -383,6 +384,7 @@ export default function MediQOne({
           history: messages.slice(-12),
           sessionId: sessionRef.current?.id,
           userName,
+          userId,
         };
 
         if (onSendMessage) {
@@ -451,7 +453,7 @@ export default function MediQOne({
             id: makeId('assistant'),
             role: 'assistant',
             text:
-              'I’m having trouble connecting right now. Please try again in a moment.',
+              'I'm having trouble connecting right now. Please try again in a moment.',
             time: new Date(),
             error: true,
           },
@@ -468,6 +470,7 @@ export default function MediQOne({
       triggerAction,
       updateStatus,
       userName,
+      userId,
     ]
   );
 

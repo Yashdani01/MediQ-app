@@ -833,6 +833,7 @@ export default function App() {
       </nav>
           <MediQOne
   userName={displayName}
+  userId={session?.user?.id || null}
   activeBooking={activeBooking}
   onActionTrigger={(type, payload) => {
     if (type === 'view_queue') {
