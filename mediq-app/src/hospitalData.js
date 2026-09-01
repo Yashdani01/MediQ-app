@@ -21,6 +21,7 @@ export async function getHospitals(city = '') {
     return [];
   }
 
+  console.log('HOSPITALS DATA:', data); // 👈 Debug: Check if contact fields are present
   return data || [];
 }
 
