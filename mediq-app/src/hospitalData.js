@@ -157,7 +157,7 @@ export async function getAvailableDoctorCounts(hospitalIds) {
 export async function searchDoctors(city = '', searchTerm = '') {
   let hospitalQuery = supabase
     .from('hospitals')
-    .select('id, name, location, city, google_maps_url');
+    .select('id, name, location, city');
 
   if (city && city.trim() !== '') {
     hospitalQuery = hospitalQuery.ilike(
