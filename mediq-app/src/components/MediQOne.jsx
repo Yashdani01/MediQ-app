@@ -877,6 +877,42 @@ export default function MediQOne({
               </div>
             )}
 
+            <div
+              style={{
+                display: 'flex',
+                gap: 6,
+                padding: '0 16px 6px',
+              }}
+            >
+              {[
+                { code: 'en', label: 'EN' },
+                { code: 'bn', label: 'বাং' },
+                { code: 'hi', label: 'हिं' },
+              ].map((item) => (
+                <button
+                  key={item.code}
+                  type="button"
+                  onClick={() => setLanguage(item.code)}
+                  style={{
+                    fontSize: 12,
+                    padding: '4px 10px',
+                    borderRadius: 999,
+                    border:
+                      language === item.code
+                        ? '1.5px solid #0d9488'
+                        : '1px solid #d1d5db',
+                    background:
+                      language === item.code ? '#0d948815' : 'transparent',
+                    color: language === item.code ? '#0d9488' : '#6b7280',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+
             <footer className="mq-composer-area">
               <form
                 className="mq-composer"

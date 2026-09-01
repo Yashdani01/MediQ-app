@@ -3,6 +3,7 @@ import {
   searchDoctors,
   bookAppointment,
   getMyCurrentBooking,
+  cancelAppointment,
 } from '../hospitalData';
 
 function makeSessionId() {
@@ -50,9 +51,34 @@ export function detectMediQOneLanguage(text = '') {
    does in chat is a real, valid action in the database.
 ========================================================= */
 
-async function runMediQOneTool(name, args = {}, { userId } = {}) {
-  console.log('[MediQ One DEBUG] tool call:', name, args);
+async function checkDailyBookingLimit(userId) {
+  const { data: patient } = await supabase
+    .from('patients')
+    .select('id')
+    .eq('user_id', userId)
+    .single();
 
+  if (!patient) {
+    // Can't check — let bookAppointment's own patient lookup handle the error.
+    return { allowed: true };
+  }
+
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  const { count } = await supabase
+    .from('appointments')
+    .select('*', { count: 'exact', head: true })
+    .eq('patient_id', patient.id)
+    .neq('status', 'cancelled')
+    .gte('booked_at', startOfToday.toISOString());
+
+  const DAILY_BOOKING_CAP = 3;
+
+  return { allowed: (count || 0) < DAILY_BOOKING_CAP, count: count || 0 };
+}
+
+async function runMediQOneTool(name, args = {}, { userId } = {}) {
   if (name === 'search_doctors') {
     let results = await searchDoctors(
       args.city || '',
@@ -91,8 +117,6 @@ async function runMediQOneTool(name, args = {}, { userId } = {}) {
         }
       : { doctors };
 
-    console.log('[MediQ One DEBUG] search_doctors result:', resultPayload);
-
     return resultPayload;
   }
 
@@ -129,6 +153,15 @@ async function runMediQOneTool(name, args = {}, { userId } = {}) {
 
     if (!args.contact_phone) {
       return { error: 'Missing contact_phone — ask the patient for their phone number before booking.' };
+    }
+
+    const dailyLimit = await checkDailyBookingLimit(userId);
+
+    if (!dailyLimit.allowed) {
+      return {
+        error:
+          'Daily booking limit reached (3 bookings today). Please contact the clinic directly for further bookings today, or try again tomorrow.',
+      };
     }
 
     const { data: doctorRow, error: doctorErr } = await supabase
@@ -172,6 +205,30 @@ async function runMediQOneTool(name, args = {}, { userId } = {}) {
     };
   }
 
+  if (name === 'cancel_appointment') {
+    if (!userId) {
+      return { error: 'No logged-in patient found.' };
+    }
+
+    const booking = await getMyCurrentBooking(userId);
+
+    if (!booking) {
+      return { error: 'No active booking found to cancel.' };
+    }
+
+    const result = await cancelAppointment(booking.id);
+
+    if (result?.error) {
+      return { error: 'Could not cancel the booking. It may already be completed or cancelled.' };
+    }
+
+    return {
+      success: true,
+      cancelled_booking_code: booking.booking_code,
+      doctor: booking.doctors?.name,
+    };
+  }
+
   return { error: `Unknown tool: ${name}` };
 }
 
@@ -199,6 +256,8 @@ export async function getMediQOneReply({
   }));
 
   const turns = [...baseTurns, { role: 'user', text: message }];
+
+  let lastDoctorResults = null;
 
   try {
     for (let step = 0; step < MAX_TOOL_STEPS; step += 1) {
@@ -242,6 +301,10 @@ export async function getMediQOneReply({
           toolResult = { error: 'Tool execution failed.' };
         }
 
+        if (name === 'search_doctors' && toolResult?.doctors?.length) {
+          lastDoctorResults = toolResult.doctors;
+        }
+
         turns.push({ toolResult: { id, response: toolResult } });
 
         // Give the model one extra turn to react in plain text to an
@@ -261,13 +324,20 @@ export async function getMediQOneReply({
         continue;
       }
 
+      const suggestions = lastDoctorResults
+        ? lastDoctorResults.slice(0, 4).map((d) => ({
+            label: `Book with Dr. ${d.name}${d.consultation_fee ? ` — ₹${d.consultation_fee}` : ''}`,
+            prompt: `I'd like to book an appointment with Dr. ${d.name} (${d.specialty}) at ${d.hospital}.`,
+          }))
+        : (data?.suggestions || []);
+
       return {
         reply:
           data?.reply ||
           'I could not get a response right now. Please try again.',
         assessment: data?.assessment || null,
         action: data?.action || null,
-        suggestions: data?.suggestions || [],
+        suggestions,
       };
     }
 
@@ -375,7 +445,7 @@ export function startMediQOneListening({
 
     const languageMap = {
       en: 'en-US',
-      bn: 'bn-BD',
+      bn: 'bn-IN',
       hi: 'hi-IN',
     };
 
