@@ -51,6 +51,8 @@ export function detectMediQOneLanguage(text = '') {
 ========================================================= */
 
 async function runMediQOneTool(name, args = {}, { userId } = {}) {
+  console.log('[MediQ One DEBUG] tool call:', name, args);
+
   if (name === 'search_doctors') {
     let results = await searchDoctors(
       args.city || '',
@@ -82,12 +84,16 @@ async function runMediQOneTool(name, args = {}, { userId } = {}) {
       degrees: d.degrees,
     }));
 
-    return cityFallbackUsed
+    const resultPayload = cityFallbackUsed
       ? {
           doctors,
           note: "No hospitals matched that city name exactly, so these results are from all locations. Check each doctor's 'location' field and only tell the patient it's nearby if it genuinely matches what they said.",
         }
       : { doctors };
+
+    console.log('[MediQ One DEBUG] search_doctors result:', resultPayload);
+
+    return resultPayload;
   }
 
   if (name === 'get_my_current_booking') {
