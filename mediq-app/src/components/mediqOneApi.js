@@ -52,25 +52,42 @@ export function detectMediQOneLanguage(text = '') {
 
 async function runMediQOneTool(name, args = {}, { userId } = {}) {
   if (name === 'search_doctors') {
-    const results = await searchDoctors(
+    let results = await searchDoctors(
       args.city || '',
       args.specialty_or_symptom || ''
     );
 
-    return {
-      doctors: (results || []).slice(0, 8).map((d) => ({
-        id: d.id,
-        name: d.name,
-        specialty: d.specialty,
-        hospital: d.hospital?.name || '',
-        city: d.hospital?.city || '',
-        consultation_fee: d.consultation_fee,
-        status: d.status,
-        delay_minutes: d.delay_minutes,
-        patients_waiting: d.liveQueue,
-        degrees: d.degrees,
-      })),
-    };
+    let cityFallbackUsed = false;
+
+    if ((!results || results.length === 0) && args.city) {
+      // No exact city match — the hospital's `city` field may not match
+      // what the patient typed (it could be stored differently from the
+      // `location` field shown on the Home page). Retry across all
+      // locations rather than falsely reporting zero doctors.
+      results = await searchDoctors('', args.specialty_or_symptom || '');
+      cityFallbackUsed = true;
+    }
+
+    const doctors = (results || []).slice(0, 8).map((d) => ({
+      id: d.id,
+      name: d.name,
+      specialty: d.specialty,
+      hospital: d.hospital?.name || '',
+      city: d.hospital?.city || '',
+      location: d.hospital?.location || '',
+      consultation_fee: d.consultation_fee,
+      status: d.status,
+      delay_minutes: d.delay_minutes,
+      patients_waiting: d.liveQueue,
+      degrees: d.degrees,
+    }));
+
+    return cityFallbackUsed
+      ? {
+          doctors,
+          note: "No hospitals matched that city name exactly, so these results are from all locations. Check each doctor's 'location' field and only tell the patient it's nearby if it genuinely matches what they said.",
+        }
+      : { doctors };
   }
 
   if (name === 'get_my_current_booking') {
