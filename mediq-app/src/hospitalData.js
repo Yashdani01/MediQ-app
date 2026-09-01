@@ -1127,6 +1127,23 @@ export async function updateHospitalUpi(
   };
 }
 
+export async function getHospitalContact(pin) {
+  const { data, error } = await supabase.rpc('get_hospital_contact', { input_pin: pin });
+  if (error) return null;
+  return data;
+}
+
+export async function updateHospitalContact(pin, phone, whatsapp, email) {
+  const { error } = await supabase.rpc('update_hospital_contact', {
+    input_pin: pin,
+    input_phone: phone,
+    input_whatsapp: whatsapp,
+    input_email: email,
+  });
+  if (error) return { error };
+  return { success: true };
+}
+
 
 /* =========================================================
    CLINIC BOOKINGS

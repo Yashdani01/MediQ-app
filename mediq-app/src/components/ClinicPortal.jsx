@@ -15,6 +15,8 @@ import {
   updateHospitalLocation,
   cancelAppointment,
   checkInAppointment,
+  getHospitalContact,
+  updateHospitalContact,
 } from '../hospitalData';
 
 import { supabase } from '../supabaseClient';
@@ -145,27 +147,24 @@ export default function ClinicPortal() {
   const [updatingPatient, setUpdatingPatient] = useState(null);
 
   const saveField = async (field, value) => {
-    if (!currentClinicId) {
-      alert('Clinic ID is missing. Please try again.');
-      return;
-    }
     setSavingContact(field);
-    try {
-      const { error: saveError } = await supabase
-        .from('hospitals')
-        .update({ [field]: value })
-        .eq('id', currentClinicId);
-      
-      if (saveError) {
-        alert('Could not save. Please try again.');
-      } else {
-        alert('Saved successfully!');
-      }
-    } catch (err) {
-      alert('Something went wrong.');
-    } finally {
-      setSavingContact(null);
+    const nextPhone = field === 'phone_number' ? value : phone;
+    const nextWhatsapp = field === 'whatsapp_link' ? value : whatsapp;
+    const nextEmail = field === 'support_email' ? value : email;
+
+    const { error: saveError } = await updateHospitalContact(
+      unlockedPin,
+      nextPhone,
+      nextWhatsapp,
+      nextEmail
+    );
+
+    if (saveError) {
+      alert('Could not save. Please try again.');
+    } else {
+      alert('Saved successfully!');
     }
+    setSavingContact(null);
   };
 
   useEffect(() => {
@@ -216,11 +215,20 @@ export default function ClinicPortal() {
     setLocationInput(data || '');
   };
 
+  const loadContact = async (currentPin) => {
+    if (!currentPin) return;
+    const data = await getHospitalContact(currentPin);
+    setPhone(data?.phone_number || '');
+    setWhatsapp(data?.whatsapp_link || '');
+    setEmail(data?.support_email || '');
+  };
+
   useEffect(() => {
     if (!unlocked || !unlockedPin) return undefined;
     loadDoctors(unlockedPin);
     loadUpi(unlockedPin);
     loadLocation(unlockedPin);
+    loadContact(unlockedPin);   // add this line
     const interval = setInterval(() => {
       loadDoctors(unlockedPin);
     }, 30000);
