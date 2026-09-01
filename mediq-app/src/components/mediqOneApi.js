@@ -153,11 +153,11 @@ async function runMediQOneTool(name, args = {}, { userId } = {}) {
 }
 
 /* =========================================================
-   MAIN MEDIQ ONE RESPONSE — now powered by Gemini function
-   calling via the "mediq-one-brain" Supabase Edge Function.
-   Loops: send turns -> if Gemini wants a tool, run it for
-   real -> feed the result back -> repeat until Gemini gives
-   a plain-language reply.
+   MAIN MEDIQ ONE RESPONSE — now powered by Groq (OpenAI-
+   compatible) function calling via the "mediq-one-brain"
+   Supabase Edge Function. Loops: send turns -> if the model
+   wants a tool, run it for real -> feed the result back ->
+   repeat until it gives a plain-language reply.
 ========================================================= */
 
 const MAX_TOOL_STEPS = 4;
@@ -171,7 +171,7 @@ export async function getMediQOneReply({
   userId = null,
 }) {
   const baseTurns = (history || []).map((m) => ({
-    role: m.role === 'user' ? 'user' : 'model',
+    role: m.role === 'user' ? 'user' : 'assistant',
     text: m.text,
   }));
 
@@ -204,13 +204,11 @@ export async function getMediQOneReply({
       }
 
       if (data?.type === 'function_call') {
-        const { name, args, thoughtSignature } = data;
+        const { id, name, args } = data;
 
-        // Keep the model's own function-call turn (and its thoughtSignature,
-        // which Gemini requires to be echoed back unchanged) in the
-        // transcript so Gemini's context stays consistent on the next
-        // round-trip.
-        turns.push({ role: 'model', functionCall: { name, args }, thoughtSignature });
+        // Keep the model's own tool-call turn in the transcript, then run
+        // it for real and feed the result back as a tool-result turn.
+        turns.push({ toolCall: { id, name, args } });
 
         let toolResult;
 
@@ -221,10 +219,21 @@ export async function getMediQOneReply({
           toolResult = { error: 'Tool execution failed.' };
         }
 
-        turns.push({
-          role: 'user',
-          functionResponse: { name, response: toolResult },
-        });
+        turns.push({ toolResult: { id, response: toolResult } });
+
+        // Give the model one extra turn to react in plain text to an
+        // error (e.g. ask for a missing phone number) — if it errors
+        // again right after, stop looping and surface something useful
+        // instead of burning through the whole step budget silently.
+        if (toolResult?.error && step >= 1) {
+          return {
+            reply:
+              "I need a bit more information to finish that — could you share your contact phone number, or tell me which doctor you'd like to book with?",
+            assessment: null,
+            action: null,
+            suggestions: [],
+          };
+        }
 
         continue;
       }
