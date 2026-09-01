@@ -107,6 +107,12 @@ export default function ClinicPortal() {
   const [locationInput, setLocationInput] = useState('');
   const [savingLocation, setSavingLocation] = useState(false);
 
+  // New contact fields state
+  const [phone, setPhone] = useState('');
+  const [whatsapp, setWhatsapp] = useState('');
+  const [email, setEmail] = useState('');
+  const [savingContact, setSavingContact] = useState(null);
+
   const [showQrModal, setShowQrModal] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
 
@@ -136,6 +142,27 @@ export default function ClinicPortal() {
   const [bookingsByDoctor, setBookingsByDoctor] = useState({});
   const [loadingBookings, setLoadingBookings] = useState(false);
   const [updatingPatient, setUpdatingPatient] = useState(null);
+
+  const saveField = async (field, value) => {
+    if (!unlockedPin) return;
+    setSavingContact(field);
+    try {
+      const { error: saveError } = await supabase
+        .from('hospitals')
+        .update({ [field]: value })
+        .eq('pin', unlockedPin);
+      
+      if (saveError) {
+        alert('Could not save. Please try again.');
+      } else {
+        alert('Saved successfully!');
+      }
+    } catch (err) {
+      alert('Something went wrong.');
+    } finally {
+      setSavingContact(null);
+    }
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -829,6 +856,49 @@ export default function ClinicPortal() {
                   📱 View Payment QR Code
                 </button>
               )}
+            </div>
+
+            {/* Contact Information Fields */}
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ fontSize: '12px', fontWeight: '700', color: '#0b332c', display: 'block', marginBottom: '6px' }}>Clinic Phone Number (for Calls):</label>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <input 
+                  type="text" 
+                  value={phone} 
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+919876543210" 
+                  style={{ flex: 1, padding: '11px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13px', minWidth: '200px' }}
+                />
+                <button onClick={() => saveField('phone_number', phone)} disabled={savingContact === 'phone_number'} style={{ background: '#0b332c', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '10px', fontWeight: '700', fontSize: '12px', cursor: 'pointer' }}>{savingContact === 'phone_number' ? 'Saving...' : 'Save'}</button>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ fontSize: '12px', fontWeight: '700', color: '#0b332c', display: 'block', marginBottom: '6px' }}>WhatsApp Contact Link / Number:</label>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <input 
+                  type="text" 
+                  value={whatsapp} 
+                  onChange={(e) => setWhatsapp(e.target.value)}
+                  placeholder="919876543210" 
+                  style={{ flex: 1, padding: '11px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13px', minWidth: '200px' }}
+                />
+                <button onClick={() => saveField('whatsapp_link', whatsapp)} disabled={savingContact === 'whatsapp_link'} style={{ background: '#0b332c', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '10px', fontWeight: '700', fontSize: '12px', cursor: 'pointer' }}>{savingContact === 'whatsapp_link' ? 'Saving...' : 'Save'}</button>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ fontSize: '12px', fontWeight: '700', color: '#0b332c', display: 'block', marginBottom: '6px' }}>Support Email:</label>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <input 
+                  type="email" 
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="clinic@support.com" 
+                  style={{ flex: 1, padding: '11px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13px', minWidth: '200px' }}
+                />
+                <button onClick={() => saveField('support_email', email)} disabled={savingContact === 'support_email'} style={{ background: '#0b332c', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '10px', fontWeight: '700', fontSize: '12px', cursor: 'pointer' }}>{savingContact === 'support_email' ? 'Saving...' : 'Save'}</button>
+              </div>
             </div>
           </div>
         )}

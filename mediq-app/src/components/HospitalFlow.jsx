@@ -1119,7 +1119,7 @@ export default function HospitalFlow({
                                   </span>
                                 )}
                               </div>
-                              <div style={{ marginTop: '10px' }}>
+                              <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                 <a
                                   href={directionsUrl}
                                   target="_blank"
@@ -1130,6 +1130,38 @@ export default function HospitalFlow({
                                 >
                                   <span>📍</span> Directions
                                 </a>
+
+                                {hosp.phone_number && (
+                                  <a
+                                    href={`tel:${hosp.phone_number}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                    style={{ background: '#f1f5f9', color: '#334155', padding: '8px 14px', borderRadius: '10px', fontWeight: '700', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none', cursor: 'pointer' }}
+                                  >
+                                    <span>📞</span> Call
+                                  </a>
+                                )}
+
+                                {hosp.whatsapp_link && (
+                                  <a
+                                    href={`https://wa.me/${hosp.whatsapp_link}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    style={{ background: '#f0fdf4', color: '#15803d', padding: '8px 14px', borderRadius: '10px', fontWeight: '700', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none', cursor: 'pointer' }}
+                                  >
+                                    <span>💬</span> WhatsApp
+                                  </a>
+                                )}
+
+                                {hosp.support_email && (
+                                  <a
+                                    href={`mailto:${hosp.support_email}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                    style={{ background: '#eff6ff', color: '#1d4ed8', padding: '8px 14px', borderRadius: '10px', fontWeight: '700', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none', cursor: 'pointer' }}
+                                  >
+                                    <span>✉️</span> Email
+                                  </a>
+                                )}
                               </div>
                             </div>
                           </div>
