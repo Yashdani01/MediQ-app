@@ -89,6 +89,7 @@ export default function ClinicPortal() {
   const [clinicName, setClinicName] = useState('Clinic Portal');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [currentClinicId, setCurrentClinicId] = useState(null);
 
   // Left Drawer State
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -144,13 +145,16 @@ export default function ClinicPortal() {
   const [updatingPatient, setUpdatingPatient] = useState(null);
 
   const saveField = async (field, value) => {
-    if (!unlockedPin) return;
+    if (!currentClinicId) {
+      alert('Clinic ID is missing. Please try again.');
+      return;
+    }
     setSavingContact(field);
     try {
       const { error: saveError } = await supabase
         .from('hospitals')
         .update({ [field]: value })
-        .eq('pin', unlockedPin);
+        .eq('id', currentClinicId);
       
       if (saveError) {
         alert('Could not save. Please try again.');
@@ -234,6 +238,7 @@ export default function ClinicPortal() {
       setLoading(false);
       return;
     }
+    setCurrentClinicId(hospitalId);
     const { data: hospData } = await supabase
       .from('hospitals')
       .select('name')
@@ -257,6 +262,7 @@ export default function ClinicPortal() {
     setBookingsByDoctor({});
     setActiveTab('dashboard');
     setDrawerOpen(false);
+    setCurrentClinicId(null);
   };
 
   const handleSaveUpi = async () => {
