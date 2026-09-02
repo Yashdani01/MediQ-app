@@ -269,6 +269,8 @@ export default function HospitalFlow({
 
   const [bookingTier, setBookingTier] = useState('standard');
 
+  const [activeContactClinic, setActiveContactClinic] = useState(null);
+
   const getDynamicGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good Morning, MediQ';
@@ -1119,8 +1121,8 @@ export default function HospitalFlow({
                                   </span>
                                 )}
                               </div>
-                              {/* UNIFIED 2x2 CONTACT GRID */}
-                              <div style={{ marginTop: '12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                              {/* DIRECT CONTACT BUTTONS WITH POPUP */}
+                              <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', position: 'relative' }}>
                                 {/* Directions Button */}
                                 <a
                                   href={directionsUrl}
@@ -1131,102 +1133,151 @@ export default function HospitalFlow({
                                     background: '#e1f5ee', 
                                     color: '#113f32', 
                                     padding: '8px 12px', 
-                                    borderRadius: '12px', 
+                                    borderRadius: '10px', 
                                     fontWeight: '600', 
                                     fontSize: '12px', 
-                                    display: 'flex', 
+                                    display: 'inline-flex', 
                                     alignItems: 'center', 
-                                    justifyContent: 'center', 
                                     gap: '6px', 
                                     textDecoration: 'none',
-                                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                                    cursor: 'pointer'
                                   }}
                                 >
                                   <span>📍</span> Directions
                                 </a>
 
-                                {/* Call Button */}
-                                <a
-                                  href={hosp.phone_number ? `tel:${hosp.phone_number}` : '#'}
+                                {/* Direct Contact Toggle Button */}
+                                <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    if (!hosp.phone_number) e.preventDefault();
+                                    setActiveContactClinic(activeContactClinic === hosp.id ? null : hosp.id);
                                   }}
                                   style={{ 
+                                    background: '#f3f4f6', 
+                                    color: '#1f2937', 
                                     padding: '8px 12px', 
-                                    borderRadius: '12px', 
+                                    borderRadius: '10px', 
                                     fontWeight: '600', 
                                     fontSize: '12px', 
-                                    display: 'flex', 
+                                    display: 'inline-flex', 
                                     alignItems: 'center', 
-                                    justifyContent: 'center', 
                                     gap: '6px', 
-                                    textDecoration: 'none',
-                                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                                    background: hosp.phone_number ? '#f3f4f6' : '#f9fafb',
-                                    color: hosp.phone_number ? '#1f2937' : '#d1d5db',
-                                    cursor: hosp.phone_number ? 'pointer' : 'not-allowed',
+                                    border: 'none',
+                                    cursor: 'pointer',
                                     transition: 'background 0.2s ease'
                                   }}
+                                  onMouseEnter={(e) => e.currentTarget.style.background = '#e5e7eb'}
+                                  onMouseLeave={(e) => e.currentTarget.style.background = '#f3f4f6'}
                                 >
-                                  <span>📞</span> Call
-                                </a>
+                                  <span>📞</span> Direct Contact ▾
+                                </button>
 
-                                {/* WhatsApp Button */}
-                                <a
-                                  href={hosp.whatsapp_link ? `https://wa.me/${hosp.whatsapp_link}` : '#'}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (!hosp.whatsapp_link) e.preventDefault();
-                                  }}
-                                  style={{ 
-                                    padding: '8px 12px', 
-                                    borderRadius: '12px', 
-                                    fontWeight: '600', 
-                                    fontSize: '12px', 
-                                    display: 'flex', 
-                                    alignItems: 'center', 
-                                    justifyContent: 'center', 
-                                    gap: '6px', 
-                                    textDecoration: 'none',
-                                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                                    background: hosp.whatsapp_link ? '#ecfdf5' : '#f9fafb',
-                                    color: hosp.whatsapp_link ? '#047857' : '#d1d5db',
-                                    cursor: hosp.whatsapp_link ? 'pointer' : 'not-allowed',
-                                    transition: 'background 0.2s ease'
-                                  }}
-                                >
-                                  <span>💬</span> WhatsApp
-                                </a>
+                                {/* Popup Drawer / Menu */}
+                                {activeContactClinic === hosp.id && (
+                                  <div 
+                                    style={{ 
+                                      position: 'absolute', 
+                                      top: '100%', 
+                                      left: 0, 
+                                      marginTop: '8px', 
+                                      width: '200px', 
+                                      background: '#fff', 
+                                      borderRadius: '14px', 
+                                      boxShadow: '0 10px 25px rgba(0,0,0,0.15)', 
+                                      border: '1px solid #f3f4f6', 
+                                      padding: '8px', 
+                                      zIndex: 20, 
+                                      display: 'flex', 
+                                      flexDirection: 'column', 
+                                      gap: '6px'
+                                    }}
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <div style={{ fontSize: '10px', fontWeight: '600', color: '#9ca3af', padding: '2px 8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                      Connect With Clinic
+                                    </div>
+                                    
+                                    {hosp.phone_number ? (
+                                      <a 
+                                        href={`tel:${hosp.phone_number}`} 
+                                        style={{ 
+                                          display: 'flex', 
+                                          alignItems: 'center', 
+                                          gap: '8px', 
+                                          padding: '6px 10px', 
+                                          borderRadius: '10px', 
+                                          fontSize: '12px', 
+                                          color: '#374151', 
+                                          textDecoration: 'none', 
+                                          fontWeight: '500',
+                                          transition: 'background 0.15s ease'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.background = '#f9fafb'}
+                                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                                      >
+                                        <span>📞</span> Call Clinic
+                                      </a>
+                                    ) : (
+                                      <span style={{ padding: '6px 10px', fontSize: '12px', color: '#d1d5db' }}>
+                                        📞 No Phone Available
+                                      </span>
+                                    )}
 
-                                {/* Email Button */}
-                                <a
-                                  href={hosp.support_email ? `mailto:${hosp.support_email}` : '#'}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (!hosp.support_email) e.preventDefault();
-                                  }}
-                                  style={{ 
-                                    padding: '8px 12px', 
-                                    borderRadius: '12px', 
-                                    fontWeight: '600', 
-                                    fontSize: '12px', 
-                                    display: 'flex', 
-                                    alignItems: 'center', 
-                                    justifyContent: 'center', 
-                                    gap: '6px', 
-                                    textDecoration: 'none',
-                                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                                    background: hosp.support_email ? '#eff6ff' : '#f9fafb',
-                                    color: hosp.support_email ? '#1d4ed8' : '#d1d5db',
-                                    cursor: hosp.support_email ? 'pointer' : 'not-allowed',
-                                    transition: 'background 0.2s ease'
-                                  }}
-                                >
-                                  <span>✉️</span> Email
-                                </a>
+                                    {hosp.whatsapp_link ? (
+                                      <a 
+                                        href={`https://wa.me/${hosp.whatsapp_link}`} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer" 
+                                        style={{ 
+                                          display: 'flex', 
+                                          alignItems: 'center', 
+                                          gap: '8px', 
+                                          padding: '6px 10px', 
+                                          borderRadius: '10px', 
+                                          fontSize: '12px', 
+                                          color: '#047857', 
+                                          textDecoration: 'none', 
+                                          fontWeight: '500',
+                                          transition: 'background 0.15s ease'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.background = '#ecfdf5'}
+                                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                                      >
+                                        <span>💬</span> WhatsApp Chat
+                                      </a>
+                                    ) : (
+                                      <span style={{ padding: '6px 10px', fontSize: '12px', color: '#d1d5db' }}>
+                                        💬 No WhatsApp Available
+                                      </span>
+                                    )}
+
+                                    {hosp.support_email ? (
+                                      <a 
+                                        href={`mailto:${hosp.support_email}`} 
+                                        style={{ 
+                                          display: 'flex', 
+                                          alignItems: 'center', 
+                                          gap: '8px', 
+                                          padding: '6px 10px', 
+                                          borderRadius: '10px', 
+                                          fontSize: '12px', 
+                                          color: '#1d4ed8', 
+                                          textDecoration: 'none', 
+                                          fontWeight: '500',
+                                          transition: 'background 0.15s ease'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.background = '#eff6ff'}
+                                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                                      >
+                                        <span>✉️</span> Send Email
+                                      </a>
+                                    ) : (
+                                      <span style={{ padding: '6px 10px', fontSize: '12px', color: '#d1d5db' }}>
+                                        ✉️ No Email Available
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </div>
