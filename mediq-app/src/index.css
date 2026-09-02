@@ -2,7 +2,7 @@
 
 
 /* =========================================================
-   MEDIQ DESIGN SYSTEM (DARK THEME)
+   MEDIQ DESIGN SYSTEM
 ========================================================= */
 
 :root {
@@ -15,11 +15,6 @@
 
   --gold: #c49a3a;
   --gold-soft: #f5eddc;
-
-  --dark-bg: #06070b;
-  --dark-surface: #090a10;
-  --dark-border: rgba(255, 255, 255, 0.1);
-  --dark-hover: rgba(255, 255, 255, 0.07);
 
   --sand-50: #fcfaf6;
   --sand-100: #f7f3eb;
@@ -48,13 +43,13 @@
   --info-soft: #e9f1f8;
 
   --shadow-xs:
-    0 2px 6px rgba(0, 0, 0, 0.2);
+    0 2px 6px rgba(23, 32, 29, 0.03);
 
   --shadow-sm:
-    0 6px 20px rgba(0, 0, 0, 0.3);
+    0 6px 20px rgba(23, 32, 29, 0.05);
 
   --shadow-md:
-    0 14px 40px rgba(0, 0, 0, 0.4);
+    0 14px 40px rgba(23, 32, 29, 0.08);
 
   --sidebar-width: 264px;
 
@@ -89,12 +84,12 @@ body {
   background:
     radial-gradient(
       circle at top right,
-      rgba(196, 154, 58, 0.04),
+      rgba(196, 154, 58, 0.06),
       transparent 28%
     ),
-    var(--dark-bg);
+    var(--sand-100);
 
-  color: #f1f5f9;
+  color: var(--ink);
 
   font-family:
     'Inter',
@@ -138,12 +133,12 @@ a {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--sand-300);
   border-radius: 20px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: #d4cbbb;
 }
 
 
@@ -153,7 +148,7 @@ a {
 
 .mediq-app {
   min-height: 100vh;
-  background: var(--dark-bg);
+  background: var(--sand-100);
 }
 
 
@@ -176,10 +171,10 @@ a {
   background:
     radial-gradient(
       circle at center,
-      rgba(196, 154, 58, 0.06),
+      rgba(196, 154, 58, 0.08),
       transparent 32%
     ),
-    var(--dark-bg);
+    var(--sand-100);
 }
 
 .app-loading-logo {
@@ -187,7 +182,7 @@ a {
   font-size: 38px;
   font-weight: 700;
 
-  color: #ffffff;
+  color: var(--teal-900);
 }
 
 .app-loading-logo span {
@@ -199,7 +194,7 @@ a {
   height: 28px;
 
   border: 3px solid
-    rgba(255, 255, 255, 0.12);
+    rgba(11, 51, 44, 0.12);
 
   border-top-color:
     var(--gold);
@@ -212,7 +207,7 @@ a {
 
 .app-loading-screen p {
   margin: 0;
-  color: #9ca3af;
+  color: var(--ink-soft);
   font-size: 14px;
 }
 
@@ -224,7 +219,7 @@ a {
 
 
 /* =========================================================
-   SIDEBAR (Dark Glassmorphic)
+   SIDEBAR
 ========================================================= */
 
 .app-sidebar {
@@ -247,14 +242,14 @@ a {
   background:
     linear-gradient(
       180deg,
-      #090a10,
-      #06070b
+      var(--teal-950),
+      var(--teal-900)
     );
 
   color: var(--white);
 
   border-right:
-    1px solid rgba(255, 255, 255, 0.1);
+    1px solid rgba(255, 255, 255, 0.05);
 }
 
 .sidebar-top {
@@ -275,11 +270,6 @@ a {
   font-size: 28px;
   font-weight: 700;
   letter-spacing: -0.8px;
-
-  background: linear-gradient(to right, #a78bfa, #f472b6, #ffffff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 .sidebar-brand span {
@@ -302,10 +292,10 @@ a {
   margin-bottom: 30px;
 
   background:
-    linear-gradient(to right, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    rgba(255, 255, 255, 0.055);
 
   border:
-    1px solid rgba(255, 255, 255, 0.1);
+    1px solid rgba(255, 255, 255, 0.07);
 
   border-radius: 18px;
 }
@@ -325,11 +315,11 @@ a {
   background:
     linear-gradient(
       135deg,
-      #7c3aed,
-      #a78bfa
+      var(--gold),
+      #dfbd68
     );
 
-  color: #ffffff;
+  color: var(--teal-950);
 
   font-family: 'Fraunces', serif;
   font-size: 18px;
@@ -428,7 +418,7 @@ a {
 
 .sidebar-nav-item:hover {
   background:
-    rgba(255, 255, 255, 0.07);
+    rgba(255, 255, 255, 0.055);
 
   color: var(--white);
 
@@ -437,7 +427,7 @@ a {
 
 .sidebar-nav-item.active {
   background:
-    rgba(168, 85, 247, 0.2);
+    rgba(255, 255, 255, 0.1);
 
   color: var(--white);
 
@@ -457,7 +447,7 @@ a {
 }
 
 .sidebar-nav-item.active .sidebar-nav-icon {
-  color: #a78bfa;
+  color: var(--gold);
 }
 
 .sidebar-active-dot {
@@ -468,7 +458,7 @@ a {
 
   border-radius: 50%;
 
-  background: #a78bfa;
+  background: var(--gold);
 }
 
 
@@ -492,7 +482,7 @@ a {
   padding: 5px 10px;
 
   border:
-    1px solid rgba(255, 255, 255, 0.1);
+    1px solid rgba(255, 255, 255, 0.08);
 
   border-radius: 12px;
 
@@ -526,7 +516,7 @@ a {
 }
 
 .language-selector option {
-  color: #17201d;
+  color: var(--ink);
 }
 
 .sidebar-logout {
@@ -561,12 +551,12 @@ a {
 
 .sidebar-logout:hover {
   background:
-    rgba(239, 68, 68, 0.15);
+    rgba(195, 79, 61, 0.14);
 
   border-color:
-    rgba(239, 68, 68, 0.3);
+    rgba(195, 79, 61, 0.25);
 
-  color: #f87171;
+  color: #ffd8d2;
 }
 
 
@@ -579,13 +569,11 @@ a {
 
   margin-left:
     var(--sidebar-width);
-
-  background: var(--dark-bg);
 }
 
 
 /* =========================================================
-   DESKTOP HEADER (Dark Glassmorphic)
+   DESKTOP HEADER
 ========================================================= */
 
 .desktop-app-header {
@@ -604,10 +592,10 @@ a {
   padding: 0 36px;
 
   background:
-    rgba(9, 10, 16, 0.88);
+    rgba(252, 250, 246, 0.88);
 
   border-bottom:
-    1px solid rgba(255, 255, 255, 0.1);
+    1px solid rgba(227, 218, 203, 0.8);
 
   backdrop-filter:
     blur(16px);
@@ -624,7 +612,7 @@ a {
 }
 
 .desktop-page-eyebrow {
-  color: #9ca3af;
+  color: var(--ink-muted);
 
   font-size: 10px;
   font-weight: 700;
@@ -636,7 +624,7 @@ a {
 .desktop-page-info h1 {
   margin: 0;
 
-  color: #ffffff;
+  color: var(--teal-900);
 
   font-family: 'Fraunces', serif;
   font-size: 23px;
@@ -658,14 +646,14 @@ a {
 
   padding: 8px 11px;
 
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white);
 
   border:
-    1px solid rgba(255, 255, 255, 0.1);
+    1px solid var(--line);
 
   border-radius: 11px;
 
-  color: #a78bfa;
+  color: var(--teal-700);
 }
 
 .desktop-language select {
@@ -675,16 +663,12 @@ a {
 
   background: transparent;
 
-  color: #ffffff;
+  color: var(--ink);
 
   font-size: 12px;
   font-weight: 600;
 
   cursor: pointer;
-}
-
-.desktop-language select option {
-  color: #17201d;
 }
 
 .desktop-profile {
@@ -707,11 +691,11 @@ a {
   background:
     linear-gradient(
       135deg,
-      #7c3aed,
-      #a78bfa
+      var(--teal-700),
+      var(--teal-900)
     );
 
-  color: #ffffff;
+  color: var(--gold);
 
   font-family: 'Fraunces', serif;
   font-weight: 700;
@@ -729,7 +713,7 @@ a {
 
   overflow: hidden;
 
-  color: #ffffff;
+  color: var(--ink);
 
   font-size: 12px;
   font-weight: 600;
@@ -739,7 +723,7 @@ a {
 }
 
 .desktop-profile-info span {
-  color: #9ca3af;
+  color: var(--ink-muted);
 
   font-size: 10.5px;
 }
@@ -752,7 +736,6 @@ a {
 .app-content {
   width: 100%;
   min-height: calc(100vh - 86px);
-  background: var(--dark-bg);
 }
 
 .app-triage-page {
@@ -761,7 +744,7 @@ a {
 
 
 /* =========================================================
-   MOBILE HEADER (Dark Glassmorphic)
+   MOBILE HEADER
 ========================================================= */
 
 .mobile-app-header {
@@ -773,7 +756,7 @@ a {
 
   background: transparent;
 
-  color: #ffffff;
+  color: var(--teal-900);
 
   cursor: pointer;
 }
@@ -783,10 +766,11 @@ a {
   font-size: 23px;
   font-weight: 700;
 
-  background: linear-gradient(to right, #a78bfa, #f472b6, #ffffff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--teal-900);
+}
+
+.mobile-brand span {
+  color: var(--gold);
 }
 
 .mobile-user-avatar {
@@ -799,9 +783,9 @@ a {
 
   border-radius: 11px;
 
-  background: #7c3aed;
+  background: var(--teal-900);
 
-  color: #ffffff;
+  color: var(--gold);
 
   font-family: 'Fraunces', serif;
   font-size: 14px;
@@ -823,7 +807,7 @@ a {
 
 
 /* =========================================================
-   MOBILE BOTTOM NAVIGATION (Dark Glassmorphic)
+   MOBILE BOTTOM NAVIGATION
 ========================================================= */
 
 .mobile-bottom-nav {
@@ -833,6 +817,7 @@ a {
 
 /* =========================================================
    GENERIC GLOBAL COMPONENTS
+   These will be reused while redesigning Phase 2+
 ========================================================= */
 
 .page-container {
@@ -850,7 +835,7 @@ a {
 .page-title {
   margin: 0 0 6px;
 
-  color: #ffffff;
+  color: var(--teal-900);
 
   font-family: 'Fraunces', serif;
   font-size: 30px;
@@ -862,17 +847,17 @@ a {
 .page-subtitle {
   margin: 0;
 
-  color: #9ca3af;
+  color: var(--ink-soft);
 
   font-size: 14px;
   line-height: 1.65;
 }
 
 .card {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--white);
 
   border:
-    1px solid rgba(255, 255, 255, 0.1);
+    1px solid var(--line);
 
   border-radius: var(--radius-lg);
 
@@ -887,7 +872,7 @@ a {
 .primary-btn {
   border: none;
 
-  background: #7c3aed;
+  background: var(--teal-900);
 
   color: var(--white);
 
@@ -907,21 +892,21 @@ a {
 }
 
 .primary-btn:hover {
-  background: #6d28d9;
+  background: var(--teal-700);
 
   transform: translateY(-1px);
 
   box-shadow:
-    0 8px 20px rgba(124, 58, 237, 0.3);
+    0 8px 20px rgba(11, 51, 44, 0.14);
 }
 
 .secondary-btn {
   border:
-    1px solid rgba(255, 255, 255, 0.2);
+    1px solid var(--line-dark);
 
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white);
 
-  color: #ffffff;
+  color: var(--teal-900);
 
   border-radius: 12px;
 
@@ -937,9 +922,9 @@ a {
 }
 
 .secondary-btn:hover {
-  border-color: #a78bfa;
+  border-color: var(--teal-700);
 
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--sand-50);
 }
 
 
@@ -969,7 +954,7 @@ a {
 @media (max-width: 768px) {
 
   body {
-    background: var(--dark-bg);
+    background: var(--sand-100);
   }
 
   .app-sidebar {
@@ -984,7 +969,7 @@ a {
       transform 220ms ease;
 
     box-shadow:
-      20px 0 60px rgba(0, 0, 0, 0.5);
+      20px 0 60px rgba(0, 0, 0, 0.18);
   }
 
   .app-sidebar.open {
@@ -1004,7 +989,7 @@ a {
     pointer-events: none;
 
     background:
-      rgba(0, 0, 0, 0.6);
+      rgba(6, 43, 37, 0.42);
 
     opacity: 0;
 
@@ -1012,7 +997,7 @@ a {
       opacity 220ms ease;
 
     backdrop-filter:
-      blur(4px);
+      blur(2px);
   }
 
   .sidebar-overlay.show {
@@ -1072,10 +1057,10 @@ a {
     padding: 0 16px;
 
     background:
-      rgba(9, 10, 16, 0.94);
+      rgba(252, 250, 246, 0.94);
 
     border-bottom:
-      1px solid rgba(255, 255, 255, 0.1);
+      1px solid var(--line);
 
     backdrop-filter:
       blur(14px);
@@ -1093,11 +1078,11 @@ a {
     justify-content: center;
 
     border:
-      1px solid rgba(255, 255, 255, 0.1);
+      1px solid var(--line);
 
     border-radius: 11px;
 
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--white);
   }
 
   .mobile-bottom-nav {
@@ -1123,13 +1108,13 @@ a {
       max(7px, env(safe-area-inset-bottom));
 
     background:
-      rgba(9, 10, 16, 0.96);
+      rgba(255, 255, 255, 0.96);
 
     border-top:
-      1px solid rgba(255, 255, 255, 0.1);
+      1px solid var(--line);
 
     box-shadow:
-      0 -10px 35px rgba(0, 0, 0, 0.4);
+      0 -10px 35px rgba(23, 32, 29, 0.06);
 
     backdrop-filter:
       blur(14px);
@@ -1161,7 +1146,7 @@ a {
 
     background: transparent;
 
-    color: #9ca3af;
+    color: var(--ink-muted);
 
     font-size: 9.5px;
     font-weight: 600;
@@ -1175,10 +1160,10 @@ a {
 
   .mobile-bottom-nav button.active {
     background:
-      rgba(168, 85, 247, 0.2);
+      var(--gold-soft);
 
     color:
-      #ffffff;
+      var(--teal-900);
   }
 
   .mobile-nav-icon {
@@ -1190,7 +1175,7 @@ a {
   }
 
   .mobile-bottom-nav button.active .mobile-nav-icon {
-    color: #a78bfa;
+    color: var(--teal-700);
   }
 
   .page-container {
@@ -1241,7 +1226,7 @@ input:focus-visible,
 textarea:focus-visible {
   outline:
     3px solid
-    rgba(167, 139, 250, 0.5);
+    rgba(196, 154, 58, 0.35);
 
   outline-offset: 2px;
 }
@@ -1291,16 +1276,16 @@ textarea:focus-visible {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--white);
   padding: 18px 20px;
   border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  border: 1px solid var(--line);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
 }
 
 .hf-eyebrow {
   font-size: 11.5px;
-  color: #9ca3af;
+  color: var(--ink-soft);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   font-weight: 600;
@@ -1309,7 +1294,7 @@ textarea:focus-visible {
 .hf-top-banner h2 {
   font-family: 'Fraunces', serif;
   font-size: 20px;
-  color: #ffffff;
+  color: var(--teal-900);
   margin: 2px 0 0;
 }
 
@@ -1317,43 +1302,39 @@ textarea:focus-visible {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--sand-50);
+  border: 1px solid var(--line);
   padding: 6px 12px;
   border-radius: 100px;
   font-size: 13px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--teal-900);
 }
 
 .hf-location-pill select {
   background: transparent;
   border: none;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--teal-900);
   outline: none;
   cursor: pointer;
-}
-
-.hf-location-pill select option {
-  color: #17201d;
 }
 
 /* Search Section */
 .hf-search-box {
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--white);
+  border: 1px solid var(--line);
   border-radius: 16px;
   padding: 6px 8px 6px 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
   transition: all 0.2s ease;
 }
 
 .hf-search-box:focus-within {
-  border-color: #a78bfa;
-  box-shadow: 0 4px 16px rgba(167, 139, 250, 0.15);
+  border-color: var(--teal-700);
+  box-shadow: 0 4px 16px rgba(11, 74, 63, 0.08);
 }
 
 .hf-search-icon {
@@ -1366,17 +1347,13 @@ textarea:focus-visible {
   border: none;
   outline: none;
   font-size: 14px;
-  color: #ffffff;
+  color: var(--ink);
   background: transparent;
 }
 
-.hf-search-box input::placeholder {
-  color: #6b7280;
-}
-
 .hf-mic-btn {
-  background: #7c3aed;
-  color: #ffffff;
+  background: var(--teal-900);
+  color: var(--white);
   border: none;
   width: 38px;
   height: 38px;
@@ -1397,7 +1374,7 @@ textarea:focus-visible {
 .hf-section-title, .hf-section-header h3 {
   font-family: 'Fraunces', serif;
   font-size: 16px;
-  color: #ffffff;
+  color: var(--teal-900);
   margin-bottom: 12px;
 }
 
@@ -1406,7 +1383,7 @@ textarea:focus-visible {
   gap: 10px;
   overflow-x: auto;
   padding-bottom: 4px;
-  scrollbar-width: none;
+  scrollbar-width: none; /* Hide scrollbar for clean look */
 }
 
 .hf-specialty-scroll::-webkit-scrollbar {
@@ -1417,23 +1394,23 @@ textarea:focus-visible {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--white);
+  border: 1px solid var(--line);
   padding: 10px 16px;
   border-radius: 14px;
   font-size: 13px;
   font-weight: 600;
-  color: #e5e7eb;
+  color: var(--ink);
   white-space: nowrap;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
 }
 
 .hf-spec-pill:hover, .hf-spec-pill.active {
-  background: #7c3aed;
-  color: #ffffff;
-  border-color: #7c3aed;
+  background: var(--teal-900);
+  color: var(--white);
+  border-color: var(--teal-900);
 }
 
 /* Hospitals Section */
@@ -1447,18 +1424,18 @@ textarea:focus-visible {
 .hf-badge-count {
   font-size: 11.5px;
   font-weight: 700;
-  background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
+  background: var(--sand-200);
+  color: var(--teal-900);
   padding: 4px 10px;
   border-radius: 100px;
 }
 
 .hf-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--white);
+  border: 1px solid var(--line);
   border-radius: 20px;
   padding: 20px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.03);
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -1473,7 +1450,7 @@ textarea:focus-visible {
 .hf-card-icon-box {
   width: 48px;
   height: 48px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--sand-100);
   border-radius: 14px;
   display: flex;
   align-items: center;
@@ -1486,31 +1463,31 @@ textarea:focus-visible {
   font-size: 10.5px;
   font-weight: 700;
   text-transform: uppercase;
-  color: #a78bfa;
+  color: var(--teal-700);
   letter-spacing: 0.5px;
 }
 
 .hf-card h4 {
   font-family: 'Fraunces', serif;
   font-size: 18px;
-  color: #ffffff;
+  color: var(--teal-900);
   margin: 2px 0 4px;
 }
 
 .hf-card-address {
   font-size: 12.5px;
-  color: #9ca3af;
+  color: var(--ink-soft);
   margin: 0;
 }
 
 .hf-distance {
-  color: #ffffff;
+  color: var(--teal-900);
   font-weight: 600;
 }
 
 .hf-card-divider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--line);
   width: 100%;
 }
 
@@ -1519,7 +1496,6 @@ textarea:focus-visible {
   justify-content: space-between;
   align-items: center;
   font-size: 12px;
-  color: #e5e7eb;
 }
 
 .hf-status-badge {
@@ -1527,7 +1503,7 @@ textarea:focus-visible {
   align-items: center;
   gap: 6px;
   font-weight: 600;
-  color: #34d399;
+  color: #15803d;
 }
 
 .dot-live {
@@ -1540,7 +1516,7 @@ textarea:focus-visible {
 
 .hf-doc-availability {
   font-weight: 600;
-  color: #ffffff;
+  color: var(--teal-900);
 }
 
 .hf-card-actions {
@@ -1551,9 +1527,9 @@ textarea:focus-visible {
 
 .hf-btn-directions {
   flex: 1;
-  background: rgba(255, 255, 255, 0.05);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--sand-100);
+  color: var(--teal-900);
+  border: 1px solid var(--line);
   padding: 12px;
   border-radius: 12px;
   font-weight: 700;
@@ -1563,23 +1539,23 @@ textarea:focus-visible {
 }
 
 .hf-btn-directions:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--sand-200);
 }
 
 .hf-btn-book {
   flex: 2;
-  background: #7c3aed;
-  color: #ffffff;
+  background: var(--teal-900);
+  color: var(--white);
   border: none;
   padding: 12px;
   border-radius: 12px;
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+  box-shadow: 0 4px 12px rgba(11, 74, 63, 0.15);
   transition: opacity 0.2s;
 }
 
 .hf-btn-book:hover {
-  opacity: 0.9;
+  opacity: 0.95;
 }
