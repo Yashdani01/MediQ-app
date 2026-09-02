@@ -2,7 +2,7 @@
 
 
 /* =========================================================
-   MEDIQ DESIGN SYSTEM
+   MEDIQ DESIGN SYSTEM (DARK THEME)
 ========================================================= */
 
 :root {
@@ -15,6 +15,11 @@
 
   --gold: #c49a3a;
   --gold-soft: #f5eddc;
+
+  --dark-bg: #06070b;
+  --dark-surface: #090a10;
+  --dark-border: rgba(255, 255, 255, 0.1);
+  --dark-hover: rgba(255, 255, 255, 0.07);
 
   --sand-50: #fcfaf6;
   --sand-100: #f7f3eb;
@@ -43,13 +48,13 @@
   --info-soft: #e9f1f8;
 
   --shadow-xs:
-    0 2px 6px rgba(23, 32, 29, 0.03);
+    0 2px 6px rgba(0, 0, 0, 0.2);
 
   --shadow-sm:
-    0 6px 20px rgba(23, 32, 29, 0.05);
+    0 6px 20px rgba(0, 0, 0, 0.3);
 
   --shadow-md:
-    0 14px 40px rgba(23, 32, 29, 0.08);
+    0 14px 40px rgba(0, 0, 0, 0.4);
 
   --sidebar-width: 264px;
 
@@ -84,12 +89,12 @@ body {
   background:
     radial-gradient(
       circle at top right,
-      rgba(196, 154, 58, 0.06),
+      rgba(196, 154, 58, 0.04),
       transparent 28%
     ),
-    var(--sand-100);
+    var(--dark-bg);
 
-  color: var(--ink);
+  color: #f1f5f9;
 
   font-family:
     'Inter',
@@ -133,12 +138,12 @@ a {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--sand-300);
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 20px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #d4cbbb;
+  background: rgba(255, 255, 255, 0.25);
 }
 
 
@@ -148,7 +153,7 @@ a {
 
 .mediq-app {
   min-height: 100vh;
-  background: var(--sand-100);
+  background: var(--dark-bg);
 }
 
 
@@ -171,10 +176,10 @@ a {
   background:
     radial-gradient(
       circle at center,
-      rgba(196, 154, 58, 0.08),
+      rgba(196, 154, 58, 0.06),
       transparent 32%
     ),
-    var(--sand-100);
+    var(--dark-bg);
 }
 
 .app-loading-logo {
@@ -182,7 +187,7 @@ a {
   font-size: 38px;
   font-weight: 700;
 
-  color: var(--teal-900);
+  color: #ffffff;
 }
 
 .app-loading-logo span {
@@ -194,7 +199,7 @@ a {
   height: 28px;
 
   border: 3px solid
-    rgba(11, 51, 44, 0.12);
+    rgba(255, 255, 255, 0.12);
 
   border-top-color:
     var(--gold);
@@ -207,7 +212,7 @@ a {
 
 .app-loading-screen p {
   margin: 0;
-  color: var(--ink-soft);
+  color: #9ca3af;
   font-size: 14px;
 }
 
@@ -219,7 +224,7 @@ a {
 
 
 /* =========================================================
-   SIDEBAR
+   SIDEBAR (Dark Glassmorphic)
 ========================================================= */
 
 .app-sidebar {
@@ -242,14 +247,14 @@ a {
   background:
     linear-gradient(
       180deg,
-      var(--teal-950),
-      var(--teal-900)
+      #090a10,
+      #06070b
     );
 
   color: var(--white);
 
   border-right:
-    1px solid rgba(255, 255, 255, 0.05);
+    1px solid rgba(255, 255, 255, 0.1);
 }
 
 .sidebar-top {
@@ -270,6 +275,11 @@ a {
   font-size: 28px;
   font-weight: 700;
   letter-spacing: -0.8px;
+
+  background: linear-gradient(to right, #a78bfa, #f472b6, #ffffff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .sidebar-brand span {
@@ -292,10 +302,10 @@ a {
   margin-bottom: 30px;
 
   background:
-    rgba(255, 255, 255, 0.055);
+    linear-gradient(to right, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
 
   border:
-    1px solid rgba(255, 255, 255, 0.07);
+    1px solid rgba(255, 255, 255, 0.1);
 
   border-radius: 18px;
 }
@@ -315,11 +325,11 @@ a {
   background:
     linear-gradient(
       135deg,
-      var(--gold),
-      #dfbd68
+      #7c3aed,
+      #a78bfa
     );
 
-  color: var(--teal-950);
+  color: #ffffff;
 
   font-family: 'Fraunces', serif;
   font-size: 18px;
@@ -418,7 +428,7 @@ a {
 
 .sidebar-nav-item:hover {
   background:
-    rgba(255, 255, 255, 0.055);
+    rgba(255, 255, 255, 0.07);
 
   color: var(--white);
 
@@ -427,7 +437,7 @@ a {
 
 .sidebar-nav-item.active {
   background:
-    rgba(255, 255, 255, 0.1);
+    rgba(168, 85, 247, 0.2);
 
   color: var(--white);
 
@@ -447,7 +457,7 @@ a {
 }
 
 .sidebar-nav-item.active .sidebar-nav-icon {
-  color: var(--gold);
+  color: #a78bfa;
 }
 
 .sidebar-active-dot {
@@ -458,7 +468,7 @@ a {
 
   border-radius: 50%;
 
-  background: var(--gold);
+  background: #a78bfa;
 }
 
 
@@ -482,7 +492,7 @@ a {
   padding: 5px 10px;
 
   border:
-    1px solid rgba(255, 255, 255, 0.08);
+    1px solid rgba(255, 255, 255, 0.1);
 
   border-radius: 12px;
 
@@ -516,7 +526,7 @@ a {
 }
 
 .language-selector option {
-  color: var(--ink);
+  color: #17201d;
 }
 
 .sidebar-logout {
@@ -551,12 +561,12 @@ a {
 
 .sidebar-logout:hover {
   background:
-    rgba(195, 79, 61, 0.14);
+    rgba(239, 68, 68, 0.15);
 
   border-color:
-    rgba(195, 79, 61, 0.25);
+    rgba(239, 68, 68, 0.3);
 
-  color: #ffd8d2;
+  color: #f87171;
 }
 
 
@@ -569,11 +579,13 @@ a {
 
   margin-left:
     var(--sidebar-width);
+
+  background: var(--dark-bg);
 }
 
 
 /* =========================================================
-   DESKTOP HEADER
+   DESKTOP HEADER (Dark Glassmorphic)
 ========================================================= */
 
 .desktop-app-header {
@@ -592,10 +604,10 @@ a {
   padding: 0 36px;
 
   background:
-    rgba(252, 250, 246, 0.88);
+    rgba(9, 10, 16, 0.88);
 
   border-bottom:
-    1px solid rgba(227, 218, 203, 0.8);
+    1px solid rgba(255, 255, 255, 0.1);
 
   backdrop-filter:
     blur(16px);
@@ -612,7 +624,7 @@ a {
 }
 
 .desktop-page-eyebrow {
-  color: var(--ink-muted);
+  color: #9ca3af;
 
   font-size: 10px;
   font-weight: 700;
@@ -624,7 +636,7 @@ a {
 .desktop-page-info h1 {
   margin: 0;
 
-  color: var(--teal-900);
+  color: #ffffff;
 
   font-family: 'Fraunces', serif;
   font-size: 23px;
@@ -646,14 +658,14 @@ a {
 
   padding: 8px 11px;
 
-  background: var(--white);
+  background: rgba(255, 255, 255, 0.05);
 
   border:
-    1px solid var(--line);
+    1px solid rgba(255, 255, 255, 0.1);
 
   border-radius: 11px;
 
-  color: var(--teal-700);
+  color: #a78bfa;
 }
 
 .desktop-language select {
@@ -663,12 +675,16 @@ a {
 
   background: transparent;
 
-  color: var(--ink);
+  color: #ffffff;
 
   font-size: 12px;
   font-weight: 600;
 
   cursor: pointer;
+}
+
+.desktop-language select option {
+  color: #17201d;
 }
 
 .desktop-profile {
@@ -691,11 +707,11 @@ a {
   background:
     linear-gradient(
       135deg,
-      var(--teal-700),
-      var(--teal-900)
+      #7c3aed,
+      #a78bfa
     );
 
-  color: var(--gold);
+  color: #ffffff;
 
   font-family: 'Fraunces', serif;
   font-weight: 700;
@@ -713,7 +729,7 @@ a {
 
   overflow: hidden;
 
-  color: var(--ink);
+  color: #ffffff;
 
   font-size: 12px;
   font-weight: 600;
@@ -723,7 +739,7 @@ a {
 }
 
 .desktop-profile-info span {
-  color: var(--ink-muted);
+  color: #9ca3af;
 
   font-size: 10.5px;
 }
@@ -736,6 +752,7 @@ a {
 .app-content {
   width: 100%;
   min-height: calc(100vh - 86px);
+  background: var(--dark-bg);
 }
 
 .app-triage-page {
@@ -744,7 +761,7 @@ a {
 
 
 /* =========================================================
-   MOBILE HEADER
+   MOBILE HEADER (Dark Glassmorphic)
 ========================================================= */
 
 .mobile-app-header {
@@ -756,7 +773,7 @@ a {
 
   background: transparent;
 
-  color: var(--teal-900);
+  color: #ffffff;
 
   cursor: pointer;
 }
@@ -766,11 +783,10 @@ a {
   font-size: 23px;
   font-weight: 700;
 
-  color: var(--teal-900);
-}
-
-.mobile-brand span {
-  color: var(--gold);
+  background: linear-gradient(to right, #a78bfa, #f472b6, #ffffff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .mobile-user-avatar {
@@ -783,9 +799,9 @@ a {
 
   border-radius: 11px;
 
-  background: var(--teal-900);
+  background: #7c3aed;
 
-  color: var(--gold);
+  color: #ffffff;
 
   font-family: 'Fraunces', serif;
   font-size: 14px;
@@ -807,7 +823,7 @@ a {
 
 
 /* =========================================================
-   MOBILE BOTTOM NAVIGATION
+   MOBILE BOTTOM NAVIGATION (Dark Glassmorphic)
 ========================================================= */
 
 .mobile-bottom-nav {
@@ -817,7 +833,6 @@ a {
 
 /* =========================================================
    GENERIC GLOBAL COMPONENTS
-   These will be reused while redesigning Phase 2+
 ========================================================= */
 
 .page-container {
@@ -835,7 +850,7 @@ a {
 .page-title {
   margin: 0 0 6px;
 
-  color: var(--teal-900);
+  color: #ffffff;
 
   font-family: 'Fraunces', serif;
   font-size: 30px;
@@ -847,17 +862,17 @@ a {
 .page-subtitle {
   margin: 0;
 
-  color: var(--ink-soft);
+  color: #9ca3af;
 
   font-size: 14px;
   line-height: 1.65;
 }
 
 .card {
-  background: var(--white);
+  background: rgba(255, 255, 255, 0.03);
 
   border:
-    1px solid var(--line);
+    1px solid rgba(255, 255, 255, 0.1);
 
   border-radius: var(--radius-lg);
 
@@ -872,7 +887,7 @@ a {
 .primary-btn {
   border: none;
 
-  background: var(--teal-900);
+  background: #7c3aed;
 
   color: var(--white);
 
@@ -892,21 +907,21 @@ a {
 }
 
 .primary-btn:hover {
-  background: var(--teal-700);
+  background: #6d28d9;
 
   transform: translateY(-1px);
 
   box-shadow:
-    0 8px 20px rgba(11, 51, 44, 0.14);
+    0 8px 20px rgba(124, 58, 237, 0.3);
 }
 
 .secondary-btn {
   border:
-    1px solid var(--line-dark);
+    1px solid rgba(255, 255, 255, 0.2);
 
-  background: var(--white);
+  background: rgba(255, 255, 255, 0.05);
 
-  color: var(--teal-900);
+  color: #ffffff;
 
   border-radius: 12px;
 
@@ -922,9 +937,9 @@ a {
 }
 
 .secondary-btn:hover {
-  border-color: var(--teal-700);
+  border-color: #a78bfa;
 
-  background: var(--sand-50);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 
@@ -954,7 +969,7 @@ a {
 @media (max-width: 768px) {
 
   body {
-    background: var(--sand-100);
+    background: var(--dark-bg);
   }
 
   .app-sidebar {
@@ -969,7 +984,7 @@ a {
       transform 220ms ease;
 
     box-shadow:
-      20px 0 60px rgba(0, 0, 0, 0.18);
+      20px 0 60px rgba(0, 0, 0, 0.5);
   }
 
   .app-sidebar.open {
@@ -989,7 +1004,7 @@ a {
     pointer-events: none;
 
     background:
-      rgba(6, 43, 37, 0.42);
+      rgba(0, 0, 0, 0.6);
 
     opacity: 0;
 
@@ -997,7 +1012,7 @@ a {
       opacity 220ms ease;
 
     backdrop-filter:
-      blur(2px);
+      blur(4px);
   }
 
   .sidebar-overlay.show {
@@ -1057,10 +1072,10 @@ a {
     padding: 0 16px;
 
     background:
-      rgba(252, 250, 246, 0.94);
+      rgba(9, 10, 16, 0.94);
 
     border-bottom:
-      1px solid var(--line);
+      1px solid rgba(255, 255, 255, 0.1);
 
     backdrop-filter:
       blur(14px);
@@ -1078,11 +1093,11 @@ a {
     justify-content: center;
 
     border:
-      1px solid var(--line);
+      1px solid rgba(255, 255, 255, 0.1);
 
     border-radius: 11px;
 
-    background: var(--white);
+    background: rgba(255, 255, 255, 0.05);
   }
 
   .mobile-bottom-nav {
@@ -1108,13 +1123,13 @@ a {
       max(7px, env(safe-area-inset-bottom));
 
     background:
-      rgba(255, 255, 255, 0.96);
+      rgba(9, 10, 16, 0.96);
 
     border-top:
-      1px solid var(--line);
+      1px solid rgba(255, 255, 255, 0.1);
 
     box-shadow:
-      0 -10px 35px rgba(23, 32, 29, 0.06);
+      0 -10px 35px rgba(0, 0, 0, 0.4);
 
     backdrop-filter:
       blur(14px);
@@ -1146,7 +1161,7 @@ a {
 
     background: transparent;
 
-    color: var(--ink-muted);
+    color: #9ca3af;
 
     font-size: 9.5px;
     font-weight: 600;
@@ -1160,10 +1175,10 @@ a {
 
   .mobile-bottom-nav button.active {
     background:
-      var(--gold-soft);
+      rgba(168, 85, 247, 0.2);
 
     color:
-      var(--teal-900);
+      #ffffff;
   }
 
   .mobile-nav-icon {
@@ -1175,7 +1190,7 @@ a {
   }
 
   .mobile-bottom-nav button.active .mobile-nav-icon {
-    color: var(--teal-700);
+    color: #a78bfa;
   }
 
   .page-container {
@@ -1226,7 +1241,7 @@ input:focus-visible,
 textarea:focus-visible {
   outline:
     3px solid
-    rgba(196, 154, 58, 0.35);
+    rgba(167, 139, 250, 0.5);
 
   outline-offset: 2px;
 }
@@ -1276,16 +1291,16 @@ textarea:focus-visible {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--white);
+  background: rgba(255, 255, 255, 0.03);
   padding: 18px 20px;
   border-radius: 18px;
-  border: 1px solid var(--line);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
 .hf-eyebrow {
   font-size: 11.5px;
-  color: var(--ink-soft);
+  color: #9ca3af;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   font-weight: 600;
@@ -1294,7 +1309,7 @@ textarea:focus-visible {
 .hf-top-banner h2 {
   font-family: 'Fraunces', serif;
   font-size: 20px;
-  color: var(--teal-900);
+  color: #ffffff;
   margin: 2px 0 0;
 }
 
@@ -1302,39 +1317,43 @@ textarea:focus-visible {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: var(--sand-50);
-  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 6px 12px;
   border-radius: 100px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--teal-900);
+  color: #ffffff;
 }
 
 .hf-location-pill select {
   background: transparent;
   border: none;
   font-weight: 600;
-  color: var(--teal-900);
+  color: #ffffff;
   outline: none;
   cursor: pointer;
+}
+
+.hf-location-pill select option {
+  color: #17201d;
 }
 
 /* Search Section */
 .hf-search-box {
   display: flex;
   align-items: center;
-  background: var(--white);
-  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
   padding: 6px 8px 6px 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   transition: all 0.2s ease;
 }
 
 .hf-search-box:focus-within {
-  border-color: var(--teal-700);
-  box-shadow: 0 4px 16px rgba(11, 74, 63, 0.08);
+  border-color: #a78bfa;
+  box-shadow: 0 4px 16px rgba(167, 139, 250, 0.15);
 }
 
 .hf-search-icon {
@@ -1347,13 +1366,17 @@ textarea:focus-visible {
   border: none;
   outline: none;
   font-size: 14px;
-  color: var(--ink);
+  color: #ffffff;
   background: transparent;
 }
 
+.hf-search-box input::placeholder {
+  color: #6b7280;
+}
+
 .hf-mic-btn {
-  background: var(--teal-900);
-  color: var(--white);
+  background: #7c3aed;
+  color: #ffffff;
   border: none;
   width: 38px;
   height: 38px;
@@ -1374,7 +1397,7 @@ textarea:focus-visible {
 .hf-section-title, .hf-section-header h3 {
   font-family: 'Fraunces', serif;
   font-size: 16px;
-  color: var(--teal-900);
+  color: #ffffff;
   margin-bottom: 12px;
 }
 
@@ -1383,7 +1406,7 @@ textarea:focus-visible {
   gap: 10px;
   overflow-x: auto;
   padding-bottom: 4px;
-  scrollbar-width: none; /* Hide scrollbar for clean look */
+  scrollbar-width: none;
 }
 
 .hf-specialty-scroll::-webkit-scrollbar {
@@ -1394,23 +1417,23 @@ textarea:focus-visible {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--white);
-  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 10px 16px;
   border-radius: 14px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--ink);
+  color: #e5e7eb;
   white-space: nowrap;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .hf-spec-pill:hover, .hf-spec-pill.active {
-  background: var(--teal-900);
-  color: var(--white);
-  border-color: var(--teal-900);
+  background: #7c3aed;
+  color: #ffffff;
+  border-color: #7c3aed;
 }
 
 /* Hospitals Section */
@@ -1424,18 +1447,18 @@ textarea:focus-visible {
 .hf-badge-count {
   font-size: 11.5px;
   font-weight: 700;
-  background: var(--sand-200);
-  color: var(--teal-900);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
   padding: 4px 10px;
   border-radius: 100px;
 }
 
 .hf-card {
-  background: var(--white);
-  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 20px;
   padding: 20px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -1450,7 +1473,7 @@ textarea:focus-visible {
 .hf-card-icon-box {
   width: 48px;
   height: 48px;
-  background: var(--sand-100);
+  background: rgba(255, 255, 255, 0.05);
   border-radius: 14px;
   display: flex;
   align-items: center;
@@ -1463,31 +1486,31 @@ textarea:focus-visible {
   font-size: 10.5px;
   font-weight: 700;
   text-transform: uppercase;
-  color: var(--teal-700);
+  color: #a78bfa;
   letter-spacing: 0.5px;
 }
 
 .hf-card h4 {
   font-family: 'Fraunces', serif;
   font-size: 18px;
-  color: var(--teal-900);
+  color: #ffffff;
   margin: 2px 0 4px;
 }
 
 .hf-card-address {
   font-size: 12.5px;
-  color: var(--ink-soft);
+  color: #9ca3af;
   margin: 0;
 }
 
 .hf-distance {
-  color: var(--teal-900);
+  color: #ffffff;
   font-weight: 600;
 }
 
 .hf-card-divider {
   height: 1px;
-  background: var(--line);
+  background: rgba(255, 255, 255, 0.1);
   width: 100%;
 }
 
@@ -1496,6 +1519,7 @@ textarea:focus-visible {
   justify-content: space-between;
   align-items: center;
   font-size: 12px;
+  color: #e5e7eb;
 }
 
 .hf-status-badge {
@@ -1503,7 +1527,7 @@ textarea:focus-visible {
   align-items: center;
   gap: 6px;
   font-weight: 600;
-  color: #15803d;
+  color: #34d399;
 }
 
 .dot-live {
@@ -1516,7 +1540,7 @@ textarea:focus-visible {
 
 .hf-doc-availability {
   font-weight: 600;
-  color: var(--teal-900);
+  color: #ffffff;
 }
 
 .hf-card-actions {
@@ -1527,9 +1551,9 @@ textarea:focus-visible {
 
 .hf-btn-directions {
   flex: 1;
-  background: var(--sand-100);
-  color: var(--teal-900);
-  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 12px;
   border-radius: 12px;
   font-weight: 700;
@@ -1539,23 +1563,23 @@ textarea:focus-visible {
 }
 
 .hf-btn-directions:hover {
-  background: var(--sand-200);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .hf-btn-book {
   flex: 2;
-  background: var(--teal-900);
-  color: var(--white);
+  background: #7c3aed;
+  color: #ffffff;
   border: none;
   padding: 12px;
   border-radius: 12px;
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(11, 74, 63, 0.15);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
   transition: opacity 0.2s;
 }
 
 .hf-btn-book:hover {
-  opacity: 0.95;
+  opacity: 0.9;
 }
