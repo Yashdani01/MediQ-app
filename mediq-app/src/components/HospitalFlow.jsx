@@ -1121,8 +1121,8 @@ export default function HospitalFlow({
                                   </span>
                                 )}
                               </div>
-                              {/* DIRECT CONTACT BUTTONS WITH POPUP */}
-                              <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', position: 'relative' }}>
+                              {/* UNIFIED BUTTONS WITH PRECISE CLICK AREAS */}
+                              <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', position: 'relative' }}>
                                 {/* Directions Button */}
                                 <a
                                   href={directionsUrl}
@@ -1132,16 +1132,21 @@ export default function HospitalFlow({
                                   style={{ 
                                     background: '#e1f5ee', 
                                     color: '#113f32', 
-                                    padding: '8px 12px', 
-                                    borderRadius: '10px', 
+                                    padding: '8px 14px', 
+                                    borderRadius: '12px', 
                                     fontWeight: '600', 
                                     fontSize: '12px', 
                                     display: 'inline-flex', 
                                     alignItems: 'center', 
                                     gap: '6px', 
                                     textDecoration: 'none',
-                                    cursor: 'pointer'
+                                    boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+                                    cursor: 'pointer',
+                                    transition: 'transform 0.15s ease, background 0.15s ease'
                                   }}
+                                  onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.95)'}
+                                  onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                                 >
                                   <span>📍</span> Directions
                                 </a>
@@ -1155,24 +1160,27 @@ export default function HospitalFlow({
                                   style={{ 
                                     background: '#f3f4f6', 
                                     color: '#1f2937', 
-                                    padding: '8px 12px', 
-                                    borderRadius: '10px', 
+                                    padding: '8px 14px', 
+                                    borderRadius: '12px', 
                                     fontWeight: '600', 
                                     fontSize: '12px', 
                                     display: 'inline-flex', 
                                     alignItems: 'center', 
                                     gap: '6px', 
                                     border: 'none',
+                                    boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
                                     cursor: 'pointer',
-                                    transition: 'background 0.2s ease'
+                                    transition: 'transform 0.15s ease, background 0.15s ease'
                                   }}
+                                  onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.95)'}
+                                  onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                                   onMouseEnter={(e) => e.currentTarget.style.background = '#e5e7eb'}
-                                  onMouseLeave={(e) => e.currentTarget.style.background = '#f3f4f6'}
                                 >
-                                  <span>📞</span> Direct Contact ▾
+                                  <span>📞</span> Direct Contact <span style={{ fontSize: '10px' }}>▾</span>
                                 </button>
 
-                                {/* Popup Drawer / Menu */}
+                                {/* Smooth Animated Popup Drawer / Menu */}
                                 {activeContactClinic === hosp.id && (
                                   <div 
                                     style={{ 
@@ -1180,20 +1188,33 @@ export default function HospitalFlow({
                                       top: '100%', 
                                       left: 0, 
                                       marginTop: '8px', 
-                                      width: '200px', 
+                                      width: '210px', 
                                       background: '#fff', 
-                                      borderRadius: '14px', 
-                                      boxShadow: '0 10px 25px rgba(0,0,0,0.15)', 
+                                      borderRadius: '16px', 
+                                      boxShadow: '0 20px 40px rgba(0,0,0,0.15)', 
                                       border: '1px solid #f3f4f6', 
-                                      padding: '8px', 
-                                      zIndex: 20, 
+                                      padding: '10px', 
+                                      zIndex: 30, 
                                       display: 'flex', 
                                       flexDirection: 'column', 
-                                      gap: '6px'
+                                      gap: '4px',
+                                      animation: 'mediqContactPopIn 0.2s ease'
                                     }}
                                     onClick={(e) => e.stopPropagation()}
                                   >
-                                    <div style={{ fontSize: '10px', fontWeight: '600', color: '#9ca3af', padding: '2px 8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                    <style>{`
+                                      @keyframes mediqContactPopIn {
+                                        from {
+                                          opacity: 0;
+                                          transform: translateY(-8px);
+                                        }
+                                        to {
+                                          opacity: 1;
+                                          transform: translateY(0);
+                                        }
+                                      }
+                                    `}</style>
+                                    <div style={{ fontSize: '10px', fontWeight: '700', color: '#9ca3af', padding: '4px 10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                       Connect With Clinic
                                     </div>
                                     
@@ -1203,23 +1224,26 @@ export default function HospitalFlow({
                                         style={{ 
                                           display: 'flex', 
                                           alignItems: 'center', 
-                                          gap: '8px', 
-                                          padding: '6px 10px', 
-                                          borderRadius: '10px', 
+                                          gap: '10px', 
+                                          padding: '8px 10px', 
+                                          borderRadius: '12px', 
                                           fontSize: '12px', 
                                           color: '#374151', 
                                           textDecoration: 'none', 
                                           fontWeight: '500',
-                                          transition: 'background 0.15s ease'
+                                          transition: 'background 0.15s ease, transform 0.15s ease'
                                         }}
                                         onMouseEnter={(e) => e.currentTarget.style.background = '#f9fafb'}
                                         onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                                        onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
+                                        onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
                                       >
-                                        <span>📞</span> Call Clinic
+                                        <span style={{ width: '24px', height: '24px', borderRadius: '8px', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px' }}>📞</span>
+                                        <span>Call Clinic</span>
                                       </a>
                                     ) : (
-                                      <span style={{ padding: '6px 10px', fontSize: '12px', color: '#d1d5db' }}>
-                                        📞 No Phone Available
+                                      <span style={{ padding: '8px 10px', fontSize: '12px', color: '#d1d5db', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'not-allowed' }}>
+                                        <span style={{ width: '24px', height: '24px', borderRadius: '8px', background: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px' }}>📞</span> No Phone Available
                                       </span>
                                     )}
 
@@ -1231,23 +1255,26 @@ export default function HospitalFlow({
                                         style={{ 
                                           display: 'flex', 
                                           alignItems: 'center', 
-                                          gap: '8px', 
-                                          padding: '6px 10px', 
-                                          borderRadius: '10px', 
+                                          gap: '10px', 
+                                          padding: '8px 10px', 
+                                          borderRadius: '12px', 
                                           fontSize: '12px', 
                                           color: '#047857', 
                                           textDecoration: 'none', 
                                           fontWeight: '500',
-                                          transition: 'background 0.15s ease'
+                                          transition: 'background 0.15s ease, transform 0.15s ease'
                                         }}
                                         onMouseEnter={(e) => e.currentTarget.style.background = '#ecfdf5'}
                                         onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                                        onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
+                                        onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
                                       >
-                                        <span>💬</span> WhatsApp Chat
+                                        <span style={{ width: '24px', height: '24px', borderRadius: '8px', background: '#d1fae5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px' }}>💬</span>
+                                        <span>WhatsApp Chat</span>
                                       </a>
                                     ) : (
-                                      <span style={{ padding: '6px 10px', fontSize: '12px', color: '#d1d5db' }}>
-                                        💬 No WhatsApp Available
+                                      <span style={{ padding: '8px 10px', fontSize: '12px', color: '#d1d5db', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'not-allowed' }}>
+                                        <span style={{ width: '24px', height: '24px', borderRadius: '8px', background: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px' }}>💬</span> No WhatsApp Available
                                       </span>
                                     )}
 
@@ -1257,23 +1284,26 @@ export default function HospitalFlow({
                                         style={{ 
                                           display: 'flex', 
                                           alignItems: 'center', 
-                                          gap: '8px', 
-                                          padding: '6px 10px', 
-                                          borderRadius: '10px', 
+                                          gap: '10px', 
+                                          padding: '8px 10px', 
+                                          borderRadius: '12px', 
                                           fontSize: '12px', 
                                           color: '#1d4ed8', 
                                           textDecoration: 'none', 
                                           fontWeight: '500',
-                                          transition: 'background 0.15s ease'
+                                          transition: 'background 0.15s ease, transform 0.15s ease'
                                         }}
                                         onMouseEnter={(e) => e.currentTarget.style.background = '#eff6ff'}
                                         onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                                        onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
+                                        onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
                                       >
-                                        <span>✉️</span> Send Email
+                                        <span style={{ width: '24px', height: '24px', borderRadius: '8px', background: '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px' }}>✉️</span>
+                                        <span>Send Email</span>
                                       </a>
                                     ) : (
-                                      <span style={{ padding: '6px 10px', fontSize: '12px', color: '#d1d5db' }}>
-                                        ✉️ No Email Available
+                                      <span style={{ padding: '8px 10px', fontSize: '12px', color: '#d1d5db', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'not-allowed' }}>
+                                        <span style={{ width: '24px', height: '24px', borderRadius: '8px', background: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px' }}>✉️</span> No Email Available
                                       </span>
                                     )}
                                   </div>
