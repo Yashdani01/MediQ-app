@@ -1119,49 +1119,114 @@ export default function HospitalFlow({
                                   </span>
                                 )}
                               </div>
-                              <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                              {/* UNIFIED 2x2 CONTACT GRID */}
+                              <div style={{ marginTop: '12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                {/* Directions Button */}
                                 <a
                                   href={directionsUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   onClick={(e) => e.stopPropagation()}
-                                  className="directions-btn"
-                                  style={{ background: '#e6f4ea', color: '#0b332c', padding: '8px 14px', borderRadius: '10px', fontWeight: '700', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
+                                  style={{ 
+                                    background: '#e1f5ee', 
+                                    color: '#113f32', 
+                                    padding: '8px 12px', 
+                                    borderRadius: '12px', 
+                                    fontWeight: '600', 
+                                    fontSize: '12px', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center', 
+                                    gap: '6px', 
+                                    textDecoration: 'none',
+                                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                                  }}
                                 >
                                   <span>📍</span> Directions
                                 </a>
 
-                                {hosp.phone_number && (
-                                  <a
-                                    href={`tel:${hosp.phone_number}`}
-                                    onClick={(e) => e.stopPropagation()}
-                                    style={{ background: '#f1f5f9', color: '#334155', padding: '8px 14px', borderRadius: '10px', fontWeight: '700', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none', cursor: 'pointer' }}
-                                  >
-                                    <span>📞</span> Call
-                                  </a>
-                                )}
+                                {/* Call Button */}
+                                <a
+                                  href={hosp.phone_number ? `tel:${hosp.phone_number}` : '#'}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (!hosp.phone_number) e.preventDefault();
+                                  }}
+                                  style={{ 
+                                    padding: '8px 12px', 
+                                    borderRadius: '12px', 
+                                    fontWeight: '600', 
+                                    fontSize: '12px', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center', 
+                                    gap: '6px', 
+                                    textDecoration: 'none',
+                                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                                    background: hosp.phone_number ? '#f3f4f6' : '#f9fafb',
+                                    color: hosp.phone_number ? '#1f2937' : '#d1d5db',
+                                    cursor: hosp.phone_number ? 'pointer' : 'not-allowed',
+                                    transition: 'background 0.2s ease'
+                                  }}
+                                >
+                                  <span>📞</span> Call
+                                </a>
 
-                                {hosp.whatsapp_link && (
-                                  <a
-                                    href={`https://wa.me/${hosp.whatsapp_link}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    onClick={(e) => e.stopPropagation()}
-                                    style={{ background: '#f0fdf4', color: '#15803d', padding: '8px 14px', borderRadius: '10px', fontWeight: '700', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none', cursor: 'pointer' }}
-                                  >
-                                    <span>💬</span> WhatsApp
-                                  </a>
-                                )}
+                                {/* WhatsApp Button */}
+                                <a
+                                  href={hosp.whatsapp_link ? `https://wa.me/${hosp.whatsapp_link}` : '#'}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (!hosp.whatsapp_link) e.preventDefault();
+                                  }}
+                                  style={{ 
+                                    padding: '8px 12px', 
+                                    borderRadius: '12px', 
+                                    fontWeight: '600', 
+                                    fontSize: '12px', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center', 
+                                    gap: '6px', 
+                                    textDecoration: 'none',
+                                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                                    background: hosp.whatsapp_link ? '#ecfdf5' : '#f9fafb',
+                                    color: hosp.whatsapp_link ? '#047857' : '#d1d5db',
+                                    cursor: hosp.whatsapp_link ? 'pointer' : 'not-allowed',
+                                    transition: 'background 0.2s ease'
+                                  }}
+                                >
+                                  <span>💬</span> WhatsApp
+                                </a>
 
-                                {hosp.support_email && (
-                                  <a
-                                    href={`mailto:${hosp.support_email}`}
-                                    onClick={(e) => e.stopPropagation()}
-                                    style={{ background: '#eff6ff', color: '#1d4ed8', padding: '8px 14px', borderRadius: '10px', fontWeight: '700', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none', cursor: 'pointer' }}
-                                  >
-                                    <span>✉️</span> Email
-                                  </a>
-                                )}
+                                {/* Email Button */}
+                                <a
+                                  href={hosp.support_email ? `mailto:${hosp.support_email}` : '#'}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (!hosp.support_email) e.preventDefault();
+                                  }}
+                                  style={{ 
+                                    padding: '8px 12px', 
+                                    borderRadius: '12px', 
+                                    fontWeight: '600', 
+                                    fontSize: '12px', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center', 
+                                    gap: '6px', 
+                                    textDecoration: 'none',
+                                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                                    background: hosp.support_email ? '#eff6ff' : '#f9fafb',
+                                    color: hosp.support_email ? '#1d4ed8' : '#d1d5db',
+                                    cursor: hosp.support_email ? 'pointer' : 'not-allowed',
+                                    transition: 'background 0.2s ease'
+                                  }}
+                                >
+                                  <span>✉️</span> Email
+                                </a>
                               </div>
                             </div>
                           </div>
