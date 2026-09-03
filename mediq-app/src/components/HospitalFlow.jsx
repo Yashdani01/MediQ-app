@@ -927,23 +927,12 @@ export default function HospitalFlow({
               >
                 <button
                   onClick={() => setActiveSpecialty('')}
+                  className="specialty-chip"
                   style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    whiteSpace: 'nowrap',
-                    cursor: 'pointer',
-                    padding: '10px 16px',
-                    borderRadius: '16px',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    fontFamily: 'inherit',
-                    border: 'none',
                     background: !activeSpecialty ? '#113f32' : '#ffffff',
                     color: !activeSpecialty ? '#ffffff' : '#113f32',
                     boxShadow: !activeSpecialty ? '0 4px 12px rgba(17,63,50,0.2)' : '0 1px 3px rgba(0,0,0,0.05)',
-                    boxSizing: 'border-box'
+                    border: !activeSpecialty ? 'none' : '1px solid #e2e8f0'
                   }}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
@@ -958,22 +947,12 @@ export default function HospitalFlow({
                     <button
                       key={s}
                       onClick={() => setActiveSpecialty(isActive ? '' : s)}
+                      className="specialty-chip"
                       style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        whiteSpace: 'nowrap',
-                        cursor: 'pointer',
-                        padding: '10px 16px',
-                        borderRadius: '16px',
-                        fontSize: '13px',
-                        fontWeight: '600',
-                        fontFamily: 'inherit',
-                        border: isActive ? 'none' : '1px solid #e2e8f0',
                         background: isActive ? '#113f32' : '#ffffff',
                         color: isActive ? '#ffffff' : '#334155',
                         boxShadow: isActive ? '0 4px 12px rgba(17,63,50,0.2)' : '0 1px 3px rgba(0,0,0,0.05)',
-                        boxSizing: 'border-box'
+                        border: isActive ? 'none' : '1px solid #e2e8f0'
                       }}
                     >
                       {s}
@@ -1159,7 +1138,7 @@ export default function HospitalFlow({
                               </div>
 
                               {/* SYMMETRIC EQUAL-WIDTH ACTION BUTTONS */}
-                              <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+                              <div className="action-buttons-row">
                                 
                                 {/* Directions Button */}
                                 <a
@@ -1167,106 +1146,87 @@ export default function HospitalFlow({
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   onClick={(e) => e.stopPropagation()}
-                                  style={{ 
-                                    flex: 1,
-                                    background: '#ffffff', 
-                                    color: '#1f2937', 
-                                    padding: '10px 14px', 
-                                    borderRadius: '16px', 
-                                    fontWeight: '600', 
-                                    fontSize: '13px', 
-                                    fontFamily: 'inherit',
-                                    display: 'inline-flex', 
-                                    alignItems: 'center', 
-                                    justifyContent: 'center',
-                                    gap: '8px', 
-                                    textDecoration: 'none',
-                                    border: '1px solid #e2e8f0',
-                                    boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
-                                    cursor: 'pointer',
-                                    boxSizing: 'border-box',
-                                    whiteSpace: 'nowrap'
-                                  }}
+                                  className="action-btn"
+                                  style={{ textDecoration: 'none' }}
                                 >
-                                  <span style={{ color: '#047857' }}>📍</span> Directions
+                                  <span style={{ color: '#047857', marginRight: '6px' }}>📍</span> Directions
                                 </a>
 
                                 {/* Direct Contact Button */}
-                                <div style={{ flex: 1, position: 'relative', display: 'flex', boxSizing: 'border-box' }} onClick={(e) => e.stopPropagation()}>
+                                <div 
+                                  style={{ 
+                                    flex: 1, 
+                                    position: 'relative', 
+                                    display: 'flex', 
+                                    boxSizing: 'border-box',
+                                    width: '100%'
+                                  }} 
+                                  onClick={(e) => e.stopPropagation()}
+                                >
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       setActiveContactClinic(activeContactClinic === hosp.id ? null : hosp.id);
                                     }}
-                                    style={{ 
-                                      width: '100%',
-                                      background: '#ffffff', 
-                                      color: '#1f2937', 
-                                      padding: '10px 14px', 
-                                      borderRadius: '16px', 
-                                      fontWeight: '600', 
-                                      fontSize: '13px', 
-                                      fontFamily: 'inherit',
-                                      display: 'inline-flex', 
-                                      alignItems: 'center', 
-                                      justifyContent: 'center',
-                                      gap: '8px', 
-                                      border: '1px solid #e2e8f0',
-                                      boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
-                                      cursor: 'pointer',
-                                      boxSizing: 'border-box',
-                                      whiteSpace: 'nowrap'
-                                    }}
+                                    className="action-btn"
+                                    style={{ width: '100%' }}
                                   >
-                                    <span style={{ color: '#047857' }}>📞</span> Direct Contact <span style={{ fontSize: '10px', opacity: 0.6, marginLeft: '2px' }}>▾</span>
+                                    <span style={{ color: '#047857', marginRight: '6px' }}>📞</span> 
+                                    Direct Contact 
+                                    <span style={{ fontSize: '10px', opacity: 0.6, marginLeft: '4px' }}>▾</span>
                                   </button>
 
                                   {activeContactClinic === hosp.id && (
                                     <div 
-                                      style={{ 
-                                        position: 'absolute', 
-                                        top: '100%', 
-                                        left: 0, 
-                                        marginTop: '8px', 
-                                        width: '210px', 
-                                        background: '#fff', 
-                                        borderRadius: '16px', 
-                                        boxShadow: '0 20px 40px rgba(0,0,0,0.18)', 
-                                        border: '1px solid #f3f4f6', 
-                                        padding: '10px', 
-                                        zIndex: 999, 
-                                        display: 'flex', 
-                                        flexDirection: 'column', 
-                                        gap: '4px'
-                                      }}
+                                      className="contact-dropdown"
                                       onClick={(e) => e.stopPropagation()}
                                     >
-                                      <div style={{ fontSize: '10px', fontWeight: '700', color: '#9ca3af', padding: '4px 10px', textTransform: 'uppercase' }}>
+                                      <div className="contact-dropdown-header">
                                         Connect With Clinic
                                       </div>
                                       
                                       {hosp.phone_number ? (
-                                        <a href={`tel:${hosp.phone_number}`} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', borderRadius: '12px', fontSize: '12px', color: '#374151', textDecoration: 'none', fontWeight: '500' }}>
+                                        <a 
+                                          href={`tel:${hosp.phone_number}`} 
+                                          className="contact-dropdown-item"
+                                          style={{ color: '#374151' }}
+                                        >
                                           <span>📞</span> Call Clinic
                                         </a>
                                       ) : (
-                                        <span style={{ padding: '8px 10px', fontSize: '12px', color: '#d1d5db' }}>📞 No Phone Available</span>
+                                        <span className="contact-dropdown-item disabled">
+                                          <span>📞</span> No Phone Available
+                                        </span>
                                       )}
 
                                       {hosp.whatsapp_link ? (
-                                        <a href={`https://wa.me/${hosp.whatsapp_link}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', borderRadius: '12px', fontSize: '12px', color: '#047857', textDecoration: 'none', fontWeight: '500' }}>
+                                        <a 
+                                          href={`https://wa.me/${hosp.whatsapp_link}`} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer" 
+                                          className="contact-dropdown-item"
+                                          style={{ color: '#047857' }}
+                                        >
                                           <span>💬</span> WhatsApp Chat
                                         </a>
                                       ) : (
-                                        <span style={{ padding: '8px 10px', fontSize: '12px', color: '#d1d5db' }}>💬 No WhatsApp Available</span>
+                                        <span className="contact-dropdown-item disabled">
+                                          <span>💬</span> No WhatsApp Available
+                                        </span>
                                       )}
 
                                       {hosp.support_email ? (
-                                        <a href={`mailto:${hosp.support_email}`} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', borderRadius: '12px', fontSize: '12px', color: '#1d4ed8', textDecoration: 'none', fontWeight: '500' }}>
+                                        <a 
+                                          href={`mailto:${hosp.support_email}`} 
+                                          className="contact-dropdown-item"
+                                          style={{ color: '#1d4ed8' }}
+                                        >
                                           <span>✉️</span> Send Email
                                         </a>
                                       ) : (
-                                        <span style={{ padding: '8px 10px', fontSize: '12px', color: '#d1d5db' }}>✉️ No Email Available</span>
+                                        <span className="contact-dropdown-item disabled">
+                                          <span>✉️</span> No Email Available
+                                        </span>
                                       )}
                                     </div>
                                   )}
