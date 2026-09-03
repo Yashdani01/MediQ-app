@@ -814,35 +814,35 @@ export default function HospitalFlow({
       >
         {/* HERO BANNER */}
         <div style={{
-          background: 'linear-gradient(135deg, #e6f4ea 0%, #daf2e1 100%)',
-          border: '1px solid rgba(16, 185, 129, 0.2)',
+          background: 'linear-gradient(135deg, #0b332c 0%, #113f32 100%)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
           borderRadius: '20px',
-          padding: '20px 22px',
+          padding: '22px 24px',
           marginBottom: '16px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          boxShadow: '0 4px 15px rgba(16, 185, 129, 0.06)'
+          boxShadow: '0 10px 25px rgba(11, 51, 44, 0.2)'
         }}>
           <div style={{ flex: 1, paddingRight: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
               <span style={{ fontSize: '18px' }}>☀️</span>
-              <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '16.5px', color: '#0b332c', margin: 0 }}>
+              <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '17px', color: '#ffffff', margin: 0 }}>
                 {getDynamicGreeting()}
               </h3>
             </div>
-            <p style={{ fontSize: '12px', fontWeight: '600', color: '#134e44', margin: '0 0 4px' }}>
+            <p style={{ fontSize: '12px', fontWeight: '600', color: '#10b981', margin: '0 0 4px' }}>
               Your health, our priority
             </p>
-            <p style={{ fontSize: '11px', color: '#475569', margin: 0, lineHeight: '1.4' }}>
+            <p style={{ fontSize: '11.5px', color: '#cbd5e1', margin: 0, lineHeight: '1.4' }}>
               Find trusted doctors & quality care near you
             </p>
           </div>
 
           <div style={{
-            width: '95px', height: '65px', background: 'rgba(255,255,255,0.7)',
+            width: '95px', height: '65px', background: 'rgba(255,255,255,0.12)',
             borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.04)', flexShrink: 0, border: '1px solid rgba(16,185,129,0.15)'
+            boxShadow: '0 2px 8px rgba(0,0,0,0.15)', flexShrink: 0, border: '1px solid rgba(255,255,255,0.15)'
           }}>
             <span style={{ fontSize: '28px' }}>🩺🛡️</span>
           </div>
@@ -928,23 +928,51 @@ export default function HospitalFlow({
                 <button
                   className={`specialty-chip ${!activeSpecialty ? 'active' : ''}`}
                   onClick={() => setActiveSpecialty('')}
-                  style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', cursor: 'pointer' }}
+                  style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '6px', 
+                    whiteSpace: 'nowrap', 
+                    cursor: 'pointer',
+                    background: !activeSpecialty ? '#113f32' : '#ffffff',
+                    color: !activeSpecialty ? '#ffffff' : '#334155',
+                    border: !activeSpecialty ? 'none' : '1px solid #e2e8f0',
+                    padding: '9px 16px',
+                    borderRadius: '12px',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    transition: 'all 0.2s ease',
+                    boxShadow: !activeSpecialty ? '0 4px 12px rgba(17, 63, 50, 0.2)' : '0 2px 4px rgba(0, 0, 0, 0.02)'
+                  }}
                 >
                   <span>🔲</span> All Specialties
                 </button>
 
-                {specialties.map((s) => (
-                  <button
-                    key={s}
-                    className={`specialty-chip ${
-                      activeSpecialty === s ? 'active' : ''
-                    }`}
-                    onClick={() => setActiveSpecialty(activeSpecialty === s ? '' : s)}
-                    style={{ whiteSpace: 'nowrap', cursor: 'pointer' }}
-                  >
-                    {s}
-                  </button>
-                ))}
+                {specialties.map((s) => {
+                  const isActive = activeSpecialty === s;
+                  return (
+                    <button
+                      key={s}
+                      className={`specialty-chip ${isActive ? 'active' : ''}`}
+                      onClick={() => setActiveSpecialty(isActive ? '' : s)}
+                      style={{ 
+                        whiteSpace: 'nowrap', 
+                        cursor: 'pointer',
+                        background: isActive ? '#113f32' : '#ffffff',
+                        color: isActive ? '#ffffff' : '#334155',
+                        border: isActive ? 'none' : '1px solid #e2e8f0',
+                        padding: '9px 16px',
+                        borderRadius: '12px',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        transition: 'all 0.2s ease',
+                        boxShadow: isActive ? '0 4px 12px rgba(17, 63, 50, 0.2)' : '0 2px 4px rgba(0, 0, 0, 0.02)'
+                      }}
+                    >
+                      {s}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -1123,7 +1151,7 @@ export default function HospitalFlow({
                                 )}
                               </div>
 
-                              {/* UNIFIED CONTACT PILLS — touch-friendly CSS :active feedback */}
+                              {/* UNIFIED CONTACT PILLS — white background with thin border */}
                               <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
 
                                 <a
@@ -1132,16 +1160,45 @@ export default function HospitalFlow({
                                   rel="noopener noreferrer"
                                   onClick={(e) => e.stopPropagation()}
                                   className="contact-pill directions"
+                                  style={{ 
+                                    background: '#ffffff', 
+                                    color: '#1f2937', 
+                                    padding: '9px 16px', 
+                                    borderRadius: '14px', 
+                                    fontWeight: '600', 
+                                    fontSize: '12.5px', 
+                                    display: 'inline-flex', 
+                                    alignItems: 'center', 
+                                    gap: '6px', 
+                                    border: '1px solid #e2e8f0',
+                                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                                    cursor: 'pointer',
+                                    textDecoration: 'none'
+                                  }}
                                 >
                                   <span>📍</span> Directions
                                 </a>
 
-                               <div className="contact-pill-wrap" onClick={(e) => e.stopPropagation()}>
+                                <div className="contact-pill-wrap" onClick={(e) => e.stopPropagation()}>
                                   <button
                                     onClick={() => {
                                       setActiveContactClinic(activeContactClinic === hosp.id ? null : hosp.id);
                                     }}
                                     className="contact-pill contact-toggle"
+                                    style={{ 
+                                      background: '#ffffff', 
+                                      color: '#1f2937', 
+                                      padding: '9px 16px', 
+                                      borderRadius: '14px', 
+                                      fontWeight: '600', 
+                                      fontSize: '12.5px', 
+                                      display: 'inline-flex', 
+                                      alignItems: 'center', 
+                                      gap: '6px', 
+                                      border: '1px solid #e2e8f0',
+                                      boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                                      cursor: 'pointer'
+                                    }}
                                   >
                                     <span>📞</span> Direct Contact <span style={{ fontSize: '10px' }}>▾</span>
                                   </button>
