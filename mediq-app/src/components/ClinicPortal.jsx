@@ -20,6 +20,7 @@ import {
 } from '../hospitalData';
 
 import { supabase } from '../supabaseClient';
+import ClinicAuth from './ClinicAuth';
 
 const STATUS_OPTIONS = [
   { value: 'available', label: 'Available', color: '#10b981', soft: '#dcfce7' },
@@ -92,6 +93,9 @@ export default function ClinicPortal() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [currentClinicId, setCurrentClinicId] = useState(null);
+  const [maxDoctors, setMaxDoctors] = useState(0);
+  const [subPlan, setSubPlan] = useState('none');
+  const [subExpiresAt, setSubExpiresAt] = useState(null);
 
   // Left Drawer State
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -313,6 +317,10 @@ export default function ClinicPortal() {
       alert('Please enter doctor name.');
       return;
     }
+    if (doctors.length >= maxDoctors) {
+      alert(`Your ${subPlan} plan allows up to ${maxDoctors} doctors. Please upgrade your plan to add more.`);
+      return;
+    }
     setSavingDoctor(true);
     setError('');
     const activeDays = Object.keys(daySchedules).filter((day) => daySchedules[day].active);
@@ -484,29 +492,17 @@ export default function ClinicPortal() {
 
   if (!unlocked) {
     return (
-      <div style={{ minHeight: '100vh', background: 'radial-gradient(circle at 20% 20%, #12463d 0%, #0b332c 45%, #062b25 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
-        <div style={{ background: '#fff', width: '100%', maxWidth: '400px', borderRadius: '24px', padding: '36px 28px', boxShadow: '0 25px 60px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.1)', textAlign: 'center' }}>
-          <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: '#e6f4ea', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px', fontSize: '28px', fontWeight: 'bold', boxShadow: 'inset 0 0 0 1px rgba(16,185,129,0.15)' }}>✚</div>
-          <h1 style={{ fontFamily: 'Fraunces, serif', fontSize: '23px', color: '#0b332c', margin: '0 0 6px', letterSpacing: '-0.01em' }}>{clinicName}</h1>
-          <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 26px', lineHeight: 1.5 }}>Secure Staff Access Portal. Enter 4-digit PIN.</p>
-          <form onSubmit={handleUnlock} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <input
-              type="password"
-              inputMode="numeric"
-              placeholder="••••"
-              maxLength={6}
-              value={pin}
-              onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-              required
-              style={{ width: '100%', padding: '14px', borderRadius: '14px', border: '1.5px solid #e7e1d3', textAlign: 'center', fontSize: '26px', fontWeight: 'bold', letterSpacing: '10px', boxSizing: 'border-box', color: '#0b332c', transition: 'border-color 0.15s ease' }}
-            />
-            <button type="submit" disabled={loading || !pin} style={{ width: '100%', background: '#10b981', color: '#fff', border: 'none', padding: '14px', borderRadius: '14px', fontSize: '14px', fontWeight: '700', cursor: loading || !pin ? 'not-allowed' : 'pointer', opacity: loading || !pin ? 0.55 : 1, boxShadow: '0 8px 20px rgba(16,185,129,0.28)', transition: 'opacity 0.15s ease' }}>
-              {loading ? 'Verifying...' : 'Access Portal →'}
-            </button>
-          </form>
-          {error && <p style={{ color: '#ef4444', fontSize: '12px', marginTop: '14px', background: '#fef2f2', padding: '10px', borderRadius: '10px', fontWeight: '600' }}>{error}</p>}
-        </div>
-      </div>
+      <ClinicAuth
+        onLoggedIn={(session) => {
+          setUnlockedPin(session.accessPin);
+          setCurrentClinicId(session.hospitalId);
+          setClinicName(session.hospitalName || clinicName);
+          setMaxDoctors(session.maxDoctors || 0);
+          setSubPlan(session.plan || 'none');
+          setSubExpiresAt(session.expiresAt || null);
+          setUnlocked(true);
+        }}
+      />
     );
   }
 
