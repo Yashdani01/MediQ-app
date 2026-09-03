@@ -1137,12 +1137,16 @@ export default function HospitalFlow({
                             `${hosp.name}, ${hosp.location || ''}, ${hosp.city || ''}`
                           )}`;
 
+                      const isServing =
+                        hosp.subscription_status === 'active' &&
+                        (!hosp.subscription_expires_at || new Date(hosp.subscription_expires_at) > new Date());
+
                       return (
                         <div
                           key={hosp.id}
                           className="hospital-card"
-                          onClick={() => setSelectedHospital(hosp)}
-                          style={{ cursor: 'pointer', position: 'relative' }}
+                          onClick={() => { if (isServing) setSelectedHospital(hosp); }}
+                          style={{ cursor: isServing ? 'pointer' : 'default', position: 'relative', opacity: isServing ? 1 : 0.7 }}
                         >
                           <div className="hospital-card-main">
                             <div className="hospital-icon">
@@ -1178,7 +1182,11 @@ export default function HospitalFlow({
                                 </div>
                               </div>
                               <div className="hospital-meta-row">
-                                {availableCounts[hosp.id] > 0 ? (
+                                {!isServing ? (
+                                  <span className="no-doctor-badge" style={{ background: '#fee2e2', color: '#991b1b' }}>
+                                    Currently Not Serving
+                                  </span>
+                                ) : availableCounts[hosp.id] > 0 ? (
                                   <span className="doctor-available-badge">
                                     <span className="availability-dot" />
                                     {availableCounts[hosp.id]} Doctor

@@ -4,7 +4,7 @@ import { translations, languages } from '../i18n';
 import { getAllCities } from '../hospitalData';
 import './Login.css';
 
-export default function Login({ onGuestContinue }) {
+export default function Login({ onGuestContinue, onClinicSignIn }) {
   const [mode, setMode] = useState('entry');
   const [lang, setLang] = useState('en');
 
@@ -622,6 +622,16 @@ export default function Login({ onGuestContinue }) {
 
         <span>
           Secure healthcare access
+        </span>
+
+        <span>
+          <button
+            type="button"
+            onClick={onClinicSignIn}
+            style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer', font: 'inherit', padding: 0 }}
+          >
+            Clinic / Hospital sign in
+          </button>
         </span>
 
         <span>

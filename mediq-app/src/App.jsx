@@ -174,14 +174,12 @@ function AppIcon({ type, size = 18 }) {
 export default function App() {
   const urlParams = new URLSearchParams(window.location.search);
 
-  if (urlParams.get('portal') === 'clinic') {
-    return <ClinicPortal />;
-  }
-
   const [session, setSession] = useState(null);
   const [activeBooking, setActiveBooking] = useState(null);
   const [isGuest, setIsGuest] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isClinicOwner, setIsClinicOwner] = useState(null); // null = not checked yet
+  const [wantsClinicLogin, setWantsClinicLogin] = useState(urlParams.get('portal') === 'clinic');
 
   const [activeTab, setActiveTab] = useState('home');
 
@@ -312,34 +310,6 @@ export default function App() {
   const t = translations[lang] || translations.en;
   const currentSymptoms = commonSymptoms[lang] || commonSymptoms.en;
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-
-      if (session?.user) {
-        loadPatientProfile(session.user);
-      } else {
-        setProfileLoaded(true);
-      }
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setLoading(false);
-
-      if (session?.user) {
-        loadPatientProfile(session.user);
-      } else {
-        setProfileLoaded(true);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
   const loadPatientProfile = async (user) => {
     const params = new URLSearchParams(window.location.search);
     const pendingName = params.get('name');
@@ -389,7 +359,43 @@ export default function App() {
     setProfileLoaded(true);
   };
 
-  if (loading || (session?.user && !profileLoaded)) {
+  const handleAuthedSession = async (session) => {
+    setSession(session);
+    setLoading(false);
+
+    if (!session?.user) {
+      setIsClinicOwner(false);
+      setProfileLoaded(true);
+      return;
+    }
+
+    const { data } = await supabase.rpc('get_my_clinic');
+    const ownsClinic = Boolean(data && data.length > 0);
+    setIsClinicOwner(ownsClinic);
+
+    if (ownsClinic) {
+      setProfileLoaded(true); // clinic accounts skip the patient profile entirely
+    } else {
+      loadPatientProfile(session.user);
+    }
+  };
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      handleAuthedSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      handleAuthedSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (loading || (session?.user && !profileLoaded && isClinicOwner === false)) {
     return (
       <div className="app-loading-screen">
         <div className="app-loading-logo">Medi<span>Q</span>.</div>
@@ -399,8 +405,21 @@ export default function App() {
     );
   }
 
+  if (session && isClinicOwner) {
+    return <ClinicPortal />;
+  }
+
+  if (!session && wantsClinicLogin) {
+    return <ClinicPortal />;
+  }
+
   if (!session && !isGuest) {
-    return <Login onGuestContinue={() => setIsGuest(true)} />;
+    return (
+      <Login
+        onGuestContinue={() => setIsGuest(true)}
+        onClinicSignIn={() => setWantsClinicLogin(true)}
+      />
+    );
   }
 
   const handleLogout = async () => {
@@ -862,4 +881,4 @@ export default function App() {
 />
      </div>
   );
-} 
+}
