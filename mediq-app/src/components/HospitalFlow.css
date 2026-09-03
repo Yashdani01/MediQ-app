@@ -735,9 +735,7 @@
 ========================================================= */
 
 .back-to-hospitals-btn,
-button.back-btn,
-.flow-page button:has(> svg), 
-.flow-content button:first-of-type {
+button.back-btn {
   background: #ffffff !important;
   color: #0b332c !important;
   border: 1px solid #cbd5e1 !important;
@@ -785,6 +783,7 @@ button.back-btn:hover {
 
 .specialty-chips {
   display: flex;
+  align-items: stretch;
   gap: 10px;
   overflow-x: auto;
   padding: 4px 2px 12px 2px;
@@ -799,7 +798,10 @@ button.back-btn:hover {
   background: #ffffff;
   color: #334155;
   border: 1px solid #e2e8f0;
-  padding: 9px 16px;
+  padding: 0 16px;
+  height: 40px;
+  line-height: 1;
+  box-sizing: border-box;
   border-radius: 12px;
   font-size: 13px;
   font-weight: 600;
@@ -809,6 +811,7 @@ button.back-btn:hover {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
   display: inline-flex;
   align-items: center;
+  flex-shrink: 0;
   gap: 6px;
 }
 
@@ -1226,19 +1229,26 @@ button.back-btn:hover {
 
 .hospital-card .action-buttons-row {
   display: flex !important;
-  align-items: center !important;
+  align-items: stretch !important;
   gap: 12px !important;
   width: 100% !important;
   box-sizing: border-box !important;
   margin-top: 14px !important;
 }
 
+.hospital-card .action-buttons-row > * {
+  min-width: 0 !important;
+}
+
 .hospital-card .action-btn {
   flex: 1 !important;
+  height: 100% !important;
+  min-height: 44px !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   padding: 10px 14px !important;
+  line-height: 1.2 !important;
   border-radius: 16px !important;
   font-size: 13px !important;
   font-weight: 600 !important;
@@ -1269,7 +1279,10 @@ button.back-btn:hover {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  padding: 10px 16px !important;
+  flex-shrink: 0 !important;
+  padding: 0 16px !important;
+  height: 40px !important;
+  line-height: 1 !important;
   border-radius: 16px !important;
   font-size: 13px !important;
   font-weight: 600 !important;

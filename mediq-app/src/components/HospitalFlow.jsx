@@ -1212,8 +1212,10 @@ export default function HospitalFlow({
                                     flex: 1, 
                                     position: 'relative', 
                                     display: 'flex', 
+                                    alignItems: 'stretch',
                                     boxSizing: 'border-box',
-                                    width: '100%'
+                                    width: '100%',
+                                    height: '100%'
                                   }} 
                                   onClick={(e) => e.stopPropagation()}
                                 >
