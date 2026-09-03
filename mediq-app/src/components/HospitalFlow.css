@@ -1090,8 +1090,10 @@ button.back-btn:hover {
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
-  border: 1px solid transparent;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #0b332c;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.15s ease;
   touch-action: manipulation;
 }
@@ -1101,19 +1103,9 @@ button.back-btn:hover {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
-.contact-pill.directions {
-  background: #e1f5ee;
-  color: #113f32;
-}
-
-.contact-pill.contact-toggle {
-  background: #f3f4f6;
-  color: #1f2937;
-  border: none;
-}
-
-.contact-pill.contact-toggle:hover {
-  background: #e5e7eb;
+.contact-pill:hover {
+  background: #eef2f6;
+  border-color: #cbd5e1;
 }
 
 .contact-menu {
