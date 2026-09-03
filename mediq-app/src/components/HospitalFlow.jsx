@@ -814,6 +814,7 @@ export default function HospitalFlow({
       >
         {/* HERO BANNER */}
         <div style={{
+          position: 'relative',
           background: 'linear-gradient(135deg, #0b332c 0%, #113f32 100%)',
           border: '1px solid rgba(255, 255, 255, 0.1)',
           borderRadius: '20px',
@@ -822,16 +823,42 @@ export default function HospitalFlow({
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          boxShadow: '0 10px 25px rgba(11, 51, 44, 0.2)'
+          boxShadow: '0 10px 25px rgba(11, 51, 44, 0.2)',
+          overflow: 'hidden'
         }}>
-          <div style={{ flex: 1, paddingRight: '12px' }}>
+          {/* Decorative leaf-branch watermark */}
+          <svg
+            width="180" height="180" viewBox="0 0 180 180"
+            style={{ position: 'absolute', right: '-10px', bottom: '-30px', opacity: 0.08, pointerEvents: 'none' }}
+          >
+            <path d="M90 170 C 85 130, 95 90, 130 40" fill="none" stroke="#ffffff" strokeWidth="2" />
+            <path d="M105 120 C 118 112, 128 110, 140 100" fill="none" stroke="#ffffff" strokeWidth="1.6" />
+            <path d="M97 95 C 110 88, 120 86, 132 78" fill="none" stroke="#ffffff" strokeWidth="1.6" />
+            <path d="M112 70 C 122 62, 128 58, 138 48" fill="none" stroke="#ffffff" strokeWidth="1.6" />
+            <path d="M100 130 C 88 124, 80 122, 68 116" fill="none" stroke="#ffffff" strokeWidth="1.6" />
+            <path d="M95 100 C 84 96, 76 95, 65 91" fill="none" stroke="#ffffff" strokeWidth="1.6" />
+          </svg>
+
+          <div style={{ flex: 1, paddingRight: '12px', position: 'relative', zIndex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-              <span style={{ fontSize: '18px' }}>☀️</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                <circle cx="12" cy="12" r="5" fill="#d9ac5c" />
+                <g stroke="#d9ac5c" strokeWidth="2" strokeLinecap="round">
+                  <line x1="12" y1="1.5" x2="12" y2="4.5" />
+                  <line x1="12" y1="19.5" x2="12" y2="22.5" />
+                  <line x1="1.5" y1="12" x2="4.5" y2="12" />
+                  <line x1="19.5" y1="12" x2="22.5" y2="12" />
+                  <line x1="4.4" y1="4.4" x2="6.5" y2="6.5" />
+                  <line x1="17.5" y1="17.5" x2="19.6" y2="19.6" />
+                  <line x1="4.4" y1="19.6" x2="6.5" y2="17.5" />
+                  <line x1="17.5" y1="6.5" x2="19.6" y2="4.4" />
+                </g>
+              </svg>
               <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '17px', color: '#ffffff', margin: 0 }}>
                 {getDynamicGreeting()}
               </h3>
             </div>
-            <p style={{ fontSize: '12px', fontWeight: '600', color: '#10b981', margin: '0 0 4px' }}>
+            <p style={{ fontSize: '12px', fontWeight: '600', color: '#d9ac5c', margin: '0 0 4px' }}>
               Your health, our priority
             </p>
             <p style={{ fontSize: '11.5px', color: '#cbd5e1', margin: 0, lineHeight: '1.4' }}>
@@ -840,11 +867,25 @@ export default function HospitalFlow({
           </div>
 
           <div style={{
-            width: '95px', height: '65px', background: 'rgba(255,255,255,0.12)',
-            borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.15)', flexShrink: 0, border: '1px solid rgba(255,255,255,0.15)'
+            width: '100px', height: '92px', background: 'rgba(255,255,255,0.10)',
+            borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.15)', flexShrink: 0, border: '1px solid rgba(255,255,255,0.15)',
+            position: 'relative', zIndex: 1
           }}>
-            <span style={{ fontSize: '28px' }}>🩺🛡️</span>
+            <svg width="66" height="58" viewBox="0 0 66 58" fill="none">
+              {/* Stethoscope */}
+              <path d="M14 6 V20 C14 27 19 31 25 31 C31 31 36 27 36 20 V6"
+                fill="none" stroke="#e7e2d6" strokeWidth="2.6" strokeLinecap="round" />
+              <line x1="14" y1="6" x2="14" y2="2" stroke="#e7e2d6" strokeWidth="2.6" strokeLinecap="round" />
+              <line x1="36" y1="6" x2="36" y2="2" stroke="#e7e2d6" strokeWidth="2.6" strokeLinecap="round" />
+              <path d="M25 31 V38" fill="none" stroke="#3f9e8f" strokeWidth="2.6" strokeLinecap="round" />
+              <path d="M25 38 C 25 46, 33 46, 33 40" fill="none" stroke="#3f9e8f" strokeWidth="2.6" strokeLinecap="round" />
+              <circle cx="34" cy="42" r="6" fill="#0d3d33" stroke="#d9ac5c" strokeWidth="2" />
+              <circle cx="34" cy="42" r="2" fill="#d9ac5c" />
+              {/* Shield */}
+              <path d="M53 8 L44 12 V26 C44 35 48 40 53 43 C58 40 62 35 62 26 V12 Z"
+                fill="#0d3d33" stroke="#d9ac5c" strokeWidth="2" strokeLinejoin="round" />
+            </svg>
           </div>
         </div>
 
@@ -929,14 +970,25 @@ export default function HospitalFlow({
                   onClick={() => setActiveSpecialty('')}
                   className="specialty-chip"
                   style={{
-                    background: !activeSpecialty ? '#113f32' : '#ffffff',
+                    fontFamily: 'Fraunces, serif',
+                    fontWeight: 600,
+                    background: !activeSpecialty ? '#0d3d33' : '#ffffff',
                     color: !activeSpecialty ? '#ffffff' : '#113f32',
                     boxShadow: !activeSpecialty ? '0 4px 12px rgba(17,63,50,0.2)' : '0 1px 3px rgba(0,0,0,0.05)',
                     border: !activeSpecialty ? 'none' : '1px solid #e2e8f0'
                   }}
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                    <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill={!activeSpecialty ? '#d9ac5c' : 'none'} stroke={!activeSpecialty ? '#d9ac5c' : 'currentColor'} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                    {!activeSpecialty ? (
+                      <>
+                        <circle cx="6.5" cy="6.5" r="2.5" /><circle cx="17.5" cy="6.5" r="2.5" />
+                        <circle cx="6.5" cy="17.5" r="2.5" /><circle cx="17.5" cy="17.5" r="2.5" />
+                      </>
+                    ) : (
+                      <>
+                        <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>
+                      </>
+                    )}
                   </svg>
                   <span>All Specialties</span>
                 </button>
@@ -949,8 +1001,10 @@ export default function HospitalFlow({
                       onClick={() => setActiveSpecialty(isActive ? '' : s)}
                       className="specialty-chip"
                       style={{
-                        background: isActive ? '#113f32' : '#ffffff',
-                        color: isActive ? '#ffffff' : '#334155',
+                        fontFamily: 'Fraunces, serif',
+                        fontWeight: 600,
+                        background: isActive ? '#0d3d33' : '#ffffff',
+                        color: isActive ? '#ffffff' : '#113f32',
                         boxShadow: isActive ? '0 4px 12px rgba(17,63,50,0.2)' : '0 1px 3px rgba(0,0,0,0.05)',
                         border: isActive ? 'none' : '1px solid #e2e8f0'
                       }}
