@@ -928,8 +928,9 @@ export default function HospitalFlow({
                 <button
                   onClick={() => setActiveSpecialty('')}
                   style={{
-                    display: 'flex',
+                    display: 'inline-flex',
                     alignItems: 'center',
+                    justifyContent: 'center',
                     gap: '8px',
                     whiteSpace: 'nowrap',
                     cursor: 'pointer',
@@ -937,16 +938,18 @@ export default function HospitalFlow({
                     borderRadius: '16px',
                     fontSize: '13px',
                     fontWeight: '600',
+                    fontFamily: 'inherit',
                     border: 'none',
                     background: !activeSpecialty ? '#113f32' : '#ffffff',
                     color: !activeSpecialty ? '#ffffff' : '#113f32',
-                    boxShadow: !activeSpecialty ? '0 4px 12px rgba(17,63,50,0.2)' : '0 1px 3px rgba(0,0,0,0.05)'
+                    boxShadow: !activeSpecialty ? '0 4px 12px rgba(17,63,50,0.2)' : '0 1px 3px rgba(0,0,0,0.05)',
+                    boxSizing: 'border-box'
                   }}
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                     <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>
                   </svg>
-                  All Specialties
+                  <span>All Specialties</span>
                 </button>
 
                 {specialties.map((s) => {
@@ -954,20 +957,23 @@ export default function HospitalFlow({
                   return (
                     <button
                       key={s}
-                      className={`specialty-chip ${isActive ? 'active' : ''}`}
                       onClick={() => setActiveSpecialty(isActive ? '' : s)}
-                      style={{ 
-                        whiteSpace: 'nowrap', 
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        whiteSpace: 'nowrap',
                         cursor: 'pointer',
-                        background: isActive ? '#113f32' : '#ffffff',
-                        color: isActive ? '#ffffff' : '#334155',
-                        border: isActive ? 'none' : '1px solid #e2e8f0',
-                        padding: '9px 16px',
-                        borderRadius: '12px',
+                        padding: '10px 16px',
+                        borderRadius: '16px',
                         fontSize: '13px',
                         fontWeight: '600',
-                        transition: 'all 0.2s ease',
-                        boxShadow: isActive ? '0 4px 12px rgba(17, 63, 50, 0.2)' : '0 2px 4px rgba(0, 0, 0, 0.02)'
+                        fontFamily: 'inherit',
+                        border: isActive ? 'none' : '1px solid #e2e8f0',
+                        background: isActive ? '#113f32' : '#ffffff',
+                        color: isActive ? '#ffffff' : '#334155',
+                        boxShadow: isActive ? '0 4px 12px rgba(17,63,50,0.2)' : '0 1px 3px rgba(0,0,0,0.05)',
+                        boxSizing: 'border-box'
                       }}
                     >
                       {s}
@@ -1169,6 +1175,7 @@ export default function HospitalFlow({
                                     borderRadius: '16px', 
                                     fontWeight: '600', 
                                     fontSize: '13px', 
+                                    fontFamily: 'inherit',
                                     display: 'inline-flex', 
                                     alignItems: 'center', 
                                     justifyContent: 'center',
@@ -1199,6 +1206,7 @@ export default function HospitalFlow({
                                       borderRadius: '16px', 
                                       fontWeight: '600', 
                                       fontSize: '13px', 
+                                      fontFamily: 'inherit',
                                       display: 'inline-flex', 
                                       alignItems: 'center', 
                                       justifyContent: 'center',
