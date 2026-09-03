@@ -1152,8 +1152,8 @@ export default function HospitalFlow({
                                 )}
                               </div>
 
-                              {/* SYMMETRIC EQUAL-WIDTH ACTION BUTTONS — NO WRAP */}
-                              <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
+                              {/* SYMMETRIC EQUAL-WIDTH ACTION BUTTONS */}
+                              <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
                                 
                                 {/* Directions Button */}
                                 <a
@@ -1165,23 +1165,23 @@ export default function HospitalFlow({
                                     flex: 1,
                                     background: '#ffffff', 
                                     color: '#1f2937', 
-                                    padding: '9px 8px', 
-                                    borderRadius: '14px', 
+                                    padding: '10px 14px', 
+                                    borderRadius: '16px', 
                                     fontWeight: '600', 
-                                    fontSize: '12px', 
+                                    fontSize: '13px', 
                                     display: 'inline-flex', 
                                     alignItems: 'center', 
                                     justifyContent: 'center',
-                                    gap: '4px', 
+                                    gap: '8px', 
                                     textDecoration: 'none',
                                     border: '1px solid #e2e8f0',
-                                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                                    boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
                                     cursor: 'pointer',
                                     boxSizing: 'border-box',
                                     whiteSpace: 'nowrap'
                                   }}
                                 >
-                                  <span>📍</span> Directions
+                                  <span style={{ color: '#047857' }}>📍</span> Directions
                                 </a>
 
                                 {/* Direct Contact Button */}
@@ -1195,22 +1195,22 @@ export default function HospitalFlow({
                                       width: '100%',
                                       background: '#ffffff', 
                                       color: '#1f2937', 
-                                      padding: '9px 8px', 
-                                      borderRadius: '14px', 
+                                      padding: '10px 14px', 
+                                      borderRadius: '16px', 
                                       fontWeight: '600', 
-                                      fontSize: '12px', 
+                                      fontSize: '13px', 
                                       display: 'inline-flex', 
                                       alignItems: 'center', 
                                       justifyContent: 'center',
-                                      gap: '4px', 
+                                      gap: '8px', 
                                       border: '1px solid #e2e8f0',
-                                      boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                                      boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
                                       cursor: 'pointer',
                                       boxSizing: 'border-box',
                                       whiteSpace: 'nowrap'
                                     }}
                                   >
-                                    <span>📞</span> Direct Contact <span style={{ fontSize: '9px', opacity: 0.7 }}>▾</span>
+                                    <span style={{ color: '#047857' }}>📞</span> Direct Contact <span style={{ fontSize: '10px', opacity: 0.6, marginLeft: '2px' }}>▾</span>
                                   </button>
 
                                   {activeContactClinic === hosp.id && (
