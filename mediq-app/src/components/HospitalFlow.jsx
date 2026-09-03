@@ -1152,98 +1152,111 @@ export default function HospitalFlow({
                                 )}
                               </div>
 
-                              {/* UNIFIED CONTACT PILLS — white background with thin border */}
-                              <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-
+                              {/* SYMMETRIC EQUAL-WIDTH ACTION BUTTONS */}
+                              <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', gap: '10px', width: '100%' }}>
+                                
+                                {/* Directions Button */}
                                 <a
                                   href={directionsUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   onClick={(e) => e.stopPropagation()}
-                                  className="contact-pill directions"
                                   style={{ 
+                                    flex: 1,
                                     background: '#ffffff', 
                                     color: '#1f2937', 
-                                    padding: '9px 16px', 
+                                    padding: '9px 12px', 
                                     borderRadius: '14px', 
                                     fontWeight: '600', 
                                     fontSize: '12.5px', 
                                     display: 'inline-flex', 
                                     alignItems: 'center', 
+                                    justifyContent: 'center',
                                     gap: '6px', 
+                                    textDecoration: 'none',
                                     border: '1px solid #e2e8f0',
                                     boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
                                     cursor: 'pointer',
-                                    textDecoration: 'none'
+                                    boxSizing: 'border-box'
                                   }}
                                 >
                                   <span>📍</span> Directions
                                 </a>
 
-                                <div className="contact-pill-wrap" onClick={(e) => e.stopPropagation()}>
+                                {/* Direct Contact Button */}
+                                <div style={{ flex: 1, position: 'relative', display: 'flex' }} onClick={(e) => e.stopPropagation()}>
                                   <button
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                      e.stopPropagation();
                                       setActiveContactClinic(activeContactClinic === hosp.id ? null : hosp.id);
                                     }}
-                                    className="contact-pill contact-toggle"
                                     style={{ 
+                                      width: '100%',
                                       background: '#ffffff', 
                                       color: '#1f2937', 
-                                      padding: '9px 16px', 
+                                      padding: '9px 12px', 
                                       borderRadius: '14px', 
                                       fontWeight: '600', 
                                       fontSize: '12.5px', 
                                       display: 'inline-flex', 
                                       alignItems: 'center', 
+                                      justifyContent: 'center',
                                       gap: '6px', 
                                       border: '1px solid #e2e8f0',
                                       boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-                                      cursor: 'pointer'
+                                      cursor: 'pointer',
+                                      boxSizing: 'border-box'
                                     }}
                                   >
-                                    <span>📞</span> Direct Contact <span style={{ fontSize: '10px' }}>▾</span>
+                                    <span>📞</span> Direct Contact <span style={{ fontSize: '10px', opacity: 0.7 }}>▾</span>
                                   </button>
 
                                   {activeContactClinic === hosp.id && (
-                                    <div className="contact-menu" onClick={(e) => e.stopPropagation()}>
-                                      <div className="contact-menu-label">Connect With Clinic</div>
-
+                                    <div 
+                                      style={{ 
+                                        position: 'absolute', 
+                                        top: '100%', 
+                                        left: 0, 
+                                        marginTop: '8px', 
+                                        width: '210px', 
+                                        background: '#fff', 
+                                        borderRadius: '16px', 
+                                        boxShadow: '0 20px 40px rgba(0,0,0,0.18)', 
+                                        border: '1px solid #f3f4f6', 
+                                        padding: '10px', 
+                                        zIndex: 999, 
+                                        display: 'flex', 
+                                        flexDirection: 'column', 
+                                        gap: '4px'
+                                      }}
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <div style={{ fontSize: '10px', fontWeight: '700', color: '#9ca3af', padding: '4px 10px', textTransform: 'uppercase' }}>
+                                        Connect With Clinic
+                                      </div>
+                                      
                                       {hosp.phone_number ? (
-                                        <a href={`tel:${hosp.phone_number}`} className="contact-menu-item call">
-                                          <span className="contact-menu-icon" style={{ background: '#f3f4f6' }}>📞</span>
-                                          <span>Call Clinic</span>
+                                        <a href={`tel:${hosp.phone_number}`} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', borderRadius: '12px', fontSize: '12px', color: '#374151', textDecoration: 'none', fontWeight: '500' }}>
+                                          <span>📞</span> Call Clinic
                                         </a>
                                       ) : (
-                                        <span className="contact-menu-item-disabled">
-                                          <span className="contact-menu-icon" style={{ background: '#f9fafb' }}>📞</span> No Phone Available
-                                        </span>
+                                        <span style={{ padding: '8px 10px', fontSize: '12px', color: '#d1d5db' }}>📞 No Phone Available</span>
                                       )}
 
                                       {hosp.whatsapp_link ? (
-                                        <a
-                                          href={`https://wa.me/${hosp.whatsapp_link}`}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="contact-menu-item whatsapp"
-                                        >
-                                          <span className="contact-menu-icon" style={{ background: '#d1fae5' }}>💬</span>
-                                          <span>WhatsApp Chat</span>
+                                        <a href={`https://wa.me/${hosp.whatsapp_link}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', borderRadius: '12px', fontSize: '12px', color: '#047857', textDecoration: 'none', fontWeight: '500' }}>
+                                          <span>💬</span> WhatsApp Chat
                                         </a>
                                       ) : (
-                                        <span className="contact-menu-item-disabled">
-                                          <span className="contact-menu-icon" style={{ background: '#f9fafb' }}>💬</span> No WhatsApp Available
-                                        </span>
+                                        <span style={{ padding: '8px 10px', fontSize: '12px', color: '#d1d5db' }}>💬 No WhatsApp Available</span>
                                       )}
 
                                       {hosp.support_email ? (
-                                        <a href={`mailto:${hosp.support_email}`} className="contact-menu-item email">
-                                          <span className="contact-menu-icon" style={{ background: '#dbeafe' }}>✉️</span>
-                                          <span>Send Email</span>
+                                        <a href={`mailto:${hosp.support_email}`} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', borderRadius: '12px', fontSize: '12px', color: '#1d4ed8', textDecoration: 'none', fontWeight: '500' }}>
+                                          <span>✉️</span> Send Email
                                         </a>
                                       ) : (
-                                        <span className="contact-menu-item-disabled">
-                                          <span className="contact-menu-icon" style={{ background: '#f9fafb' }}>✉️</span> No Email Available
-                                        </span>
+                                        <span style={{ padding: '8px 10px', fontSize: '12px', color: '#d1d5db' }}>✉️ No Email Available</span>
                                       )}
                                     </div>
                                   )}
