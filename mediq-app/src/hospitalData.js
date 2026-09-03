@@ -8,6 +8,7 @@ export async function getHospitals(city = '') {
   let query = supabase
     .from('hospitals')
     .select('id, name, location, city, phone_number, whatsapp_link, support_email')
+    .eq('approval_status', 'approved')
     .order('name', { ascending: true });
 
   if (city && city.trim() !== '') {
