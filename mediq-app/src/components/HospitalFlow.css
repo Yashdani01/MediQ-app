@@ -1083,7 +1083,11 @@ button.back-btn:hover {
   -webkit-tap-highlight-color: transparent;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
+  flex: 1 1 0;
+  min-width: 0;
+  width: 100%;
   padding: 8px 14px;
   border-radius: 12px;
   font-size: 12px;
@@ -1096,6 +1100,7 @@ button.back-btn:hover {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.15s ease;
   touch-action: manipulation;
+  white-space: nowrap;
 }
 
 .contact-pill:active {
@@ -1106,6 +1111,13 @@ button.back-btn:hover {
 .contact-pill:hover {
   background: #eef2f6;
   border-color: #cbd5e1;
+}
+
+.contact-pill-wrap {
+  position: relative;
+  display: inline-flex;
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .contact-menu {

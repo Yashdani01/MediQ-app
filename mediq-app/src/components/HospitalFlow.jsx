@@ -1136,7 +1136,7 @@ export default function HospitalFlow({
                                   <span>📍</span> Directions
                                 </a>
 
-                                <div style={{ position: 'relative', display: 'inline-block' }} onClick={(e) => e.stopPropagation()}>
+                               <div className="contact-pill-wrap" onClick={(e) => e.stopPropagation()}>
                                   <button
                                     onClick={() => {
                                       setActiveContactClinic(activeContactClinic === hosp.id ? null : hosp.id);
