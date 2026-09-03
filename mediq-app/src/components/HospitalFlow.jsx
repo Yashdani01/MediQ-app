@@ -1203,7 +1203,7 @@ export default function HospitalFlow({
                                   className="action-btn"
                                   style={{ textDecoration: 'none' }}
                                 >
-                                  <span style={{ color: '#047857', marginRight: '6px' }}>📍</span> Directions
+                                  Directions
                                 </a>
 
                                 {/* Direct Contact Button */}
@@ -1227,7 +1227,6 @@ export default function HospitalFlow({
                                     className="action-btn"
                                     style={{ width: '100%' }}
                                   >
-                                    <span style={{ color: '#047857', marginRight: '6px' }}>📞</span> 
                                     Direct Contact 
                                     <span style={{ fontSize: '10px', opacity: 0.6, marginLeft: '4px' }}>▾</span>
                                   </button>
