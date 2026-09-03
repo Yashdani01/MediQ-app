@@ -926,26 +926,27 @@ export default function HospitalFlow({
                 }}
               >
                 <button
-                  className={`specialty-chip ${!activeSpecialty ? 'active' : ''}`}
                   onClick={() => setActiveSpecialty('')}
-                  style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '6px', 
-                    whiteSpace: 'nowrap', 
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    whiteSpace: 'nowrap',
                     cursor: 'pointer',
-                    background: !activeSpecialty ? '#113f32' : '#ffffff',
-                    color: !activeSpecialty ? '#ffffff' : '#334155',
-                    border: !activeSpecialty ? 'none' : '1px solid #e2e8f0',
-                    padding: '9px 16px',
-                    borderRadius: '12px',
+                    padding: '10px 16px',
+                    borderRadius: '16px',
                     fontSize: '13px',
                     fontWeight: '600',
-                    transition: 'all 0.2s ease',
-                    boxShadow: !activeSpecialty ? '0 4px 12px rgba(17, 63, 50, 0.2)' : '0 2px 4px rgba(0, 0, 0, 0.02)'
+                    border: 'none',
+                    background: !activeSpecialty ? '#113f32' : '#ffffff',
+                    color: !activeSpecialty ? '#ffffff' : '#113f32',
+                    boxShadow: !activeSpecialty ? '0 4px 12px rgba(17,63,50,0.2)' : '0 1px 3px rgba(0,0,0,0.05)'
                   }}
                 >
-                  <span>🔲</span> All Specialties
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>
+                  </svg>
+                  All Specialties
                 </button>
 
                 {specialties.map((s) => {
