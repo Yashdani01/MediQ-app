@@ -34,40 +34,63 @@
   position: relative;
   border: none !important;
   cursor: pointer;
-  background: linear-gradient(135deg, #0b332c 0%, #134e44 100%) !important;
+  background: linear-gradient(135deg, #f3d38a 0%, #d9ac5c 55%, #c8973f 100%) !important;
   width: 58px;
   height: 58px;
-  border-radius: 18px !important; /* Modern rounded-square look */
+  border-radius: 50% !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 10px 25px rgba(11, 51, 44, 0.35), 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+  gap: 8px;
+  box-shadow: 0 10px 22px rgba(201, 152, 61, 0.4), 0 2px 6px rgba(0, 0, 0, 0.12) !important;
   padding: 0 !important;
   outline: none !important;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  overflow: visible;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, width 0.3s ease, border-radius 0.3s ease, padding 0.3s ease;
 }
 
 .mq-trigger:hover {
   transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 14px 30px rgba(11, 51, 44, 0.45), 0 4px 10px rgba(0, 0, 0, 0.2) !important;
+  box-shadow: 0 14px 28px rgba(201, 152, 61, 0.5), 0 4px 10px rgba(0, 0, 0, 0.16) !important;
 }
 
 .mq-trigger:active {
-  transform: scale(0.97);
+  transform: scale(0.96);
+}
+
+@media (hover: hover) {
+  .mq-trigger:hover {
+    width: auto;
+    padding: 0 20px 0 16px !important;
+    border-radius: 29px !important;
+  }
+
+  .mq-trigger:hover .mq-trigger-label {
+    display: inline-block !important;
+    max-width: 140px;
+    opacity: 1;
+    margin-left: 2px;
+  }
 }
 
 .mq-trigger-halo {
-  display: none !important;
+  display: block !important;
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(217, 172, 92, 0.55);
+  animation: mqHaloPulse 2.4s ease-out infinite;
+  pointer-events: none;
 }
 
 .mq-trigger-core {
   width: 100%;
   height: 100%;
-  border-radius: 18px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fef08a; /* Luxury gold icon color */
+  color: #0b332c;
   background: transparent !important;
   font-size: 24px;
   border: none !important;
@@ -76,6 +99,30 @@
 
 .mq-trigger-label {
   display: none !important;
+  opacity: 0;
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  color: #0b332c;
+  font-weight: 700;
+  font-size: 14px;
+  font-family: 'Fraunces', serif;
+  transition: opacity 0.25s ease, max-width 0.3s ease;
+}
+
+@keyframes mqHaloPulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  70% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
 }
 
 /* =========================================================

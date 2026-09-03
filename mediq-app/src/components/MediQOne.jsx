@@ -550,7 +550,7 @@ export default function MediQOne({
   );
 
   return (
-    <div className={`mq-one ${open ? 'is-open' : ''}`} style={{ overflow: 'hidden' }}>
+    <div className={`mq-one ${open ? 'is-open' : ''}`} style={{ overflow: 'visible' }}>
       {!open && (
         <button
           className="mq-trigger"
