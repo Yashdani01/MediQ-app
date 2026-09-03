@@ -1081,6 +1081,7 @@ button.back-btn:hover {
 
 .contact-pill {
   -webkit-tap-highlight-color: transparent;
+  outline: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
