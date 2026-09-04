@@ -12,7 +12,6 @@ import SymptomTriage from './components/SymptomTriage';
 import ClinicPortal from './components/ClinicPortal';
 import PhysioGuideModal from './components/PhysioGuideModal';
 import { getMyCurrentBooking } from './hospitalData';
-import './App.css';
 
 import './index.css';
 
