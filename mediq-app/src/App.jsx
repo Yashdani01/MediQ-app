@@ -12,6 +12,7 @@ import SymptomTriage from './components/SymptomTriage';
 import ClinicPortal from './components/ClinicPortal';
 import PhysioGuideModal from './components/PhysioGuideModal';
 import { getMyCurrentBooking } from './hospitalData';
+import './App.css';
 
 import './index.css';
 
@@ -465,7 +466,7 @@ export default function App() {
   };
 
   return (
-    <div className="mediq-app">
+    <div className="min-h-screen bg-[#fcfaf6] text-[#17201d] p-4 lg:p-8">
       <header className="mobile-app-header">
         <button className="mobile-menu-btn" onClick={() => setSidebarOpen(true)} aria-label="Open menu">
           <AppIcon type="menu" />
@@ -879,6 +880,6 @@ export default function App() {
     }
   }}
 />
-     </div>
+    </div>
   );
 }
