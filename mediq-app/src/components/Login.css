@@ -1086,3 +1086,12 @@
     padding: 5px 8px;
   }
 }
+@import "tailwindcss";
+
+/* Fallback base structure ensuring Tailwind utilities render cleanly */
+.auth-page {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+}
