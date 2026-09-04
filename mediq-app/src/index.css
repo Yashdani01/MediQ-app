@@ -10,4 +10,22 @@
   --teal-500: #2d7a69;
   --gold: #c49a3a;
   --gold-soft: #f5eddc;
+  --sand-50: #fcfaf6;
+  --sand-100: #f7f3eb;
+  --sand-200: #eee8dc;
+  --sand-300: #e3dacb;
+  --ink: #17201d;
+  --ink-soft: #64f06b;
+  --ink-muted: #929b96;
+  --line: #e7e1d7;
+  --line-dark: #d8d0c3;
+  --success: #168a61;
+  --success-soft: #e5f5ee;
+}
+
+body {
+  margin: 0;
+  font-family: 'Fraunces', system-ui, -apple-system, sans-serif;
+  background-color: var(--sand-50, #fcfaf6);
+  color: var(--ink, #17201d);
 }
