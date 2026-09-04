@@ -2,10 +2,26 @@ import { useState } from 'react';
 import { supabase } from '../supabaseClient';
 
 const PLANS = [
-  { id: 'silver', label: 'Silver', price: 149, maxDoctors: 5 },
-  { id: 'gold', label: 'Gold', price: 299, maxDoctors: 10 },
-  { id: 'platinum', label: 'Platinum', price: 499, maxDoctors: 15 },
-  { id: 'diamond', label: 'Diamond', price: 999, maxDoctors: 20 },
+  {
+    id: 'silver', label: 'Silver', tagline: 'Starter', price: 149, maxDoctors: 5,
+    accent: '#0f6e56', badgeBg: '#e1f5ee', badgeFg: '#0f6e56',
+    features: ['Clinic profile & branding', 'Manage appointments', 'Live queue tracker', 'WhatsApp & email support'],
+  },
+  {
+    id: 'gold', label: 'Gold', tagline: 'Growth', price: 299, maxDoctors: 10, popular: true,
+    accent: '#b7791f', badgeBg: '#fdf3dd', badgeFg: '#8a5a10',
+    features: ['Everything in Silver', 'Priority listing for patients', 'Broadcast announcements', 'Priority support'],
+  },
+  {
+    id: 'platinum', label: 'Platinum', tagline: 'Professional', price: 499, maxDoctors: 15,
+    accent: '#0b332c', badgeBg: '#0b332c', badgeFg: '#ffffff',
+    features: ['Everything in Gold', 'Multiple doctor schedules', 'Booking insights', 'Dedicated support line'],
+  },
+  {
+    id: 'diamond', label: 'Diamond', tagline: 'Enterprise', price: 999, maxDoctors: 20,
+    accent: '#06231d', badgeBg: '#06231d', badgeFg: '#ffffff',
+    features: ['Everything in Platinum', 'Unlimited doctor slots', '24×7 priority support', 'Early access to new features'],
+  },
 ];
 
 function loadRazorpayScript() {
@@ -185,24 +201,89 @@ export default function ClinicAuth({ onLoggedIn }) {
   if (mode === 'plans') {
     return (
       <div style={shellStyle}>
-        <div style={{ ...cardStyle, maxWidth: '440px' }}>
-          <h1 style={{ fontFamily: 'Fraunces, serif', fontSize: '21px', color: '#0b332c', margin: '0 0 6px' }}>Choose Your Plan</h1>
-          <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 20px' }}>Pick a plan to activate your clinic portal and start listing doctors.</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ ...cardStyle, maxWidth: '460px', textAlign: 'left' }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: '#e6f4ea', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px', fontSize: '28px', fontWeight: 'bold' }}>✚</div>
+            <h1 style={{ fontFamily: 'Fraunces, serif', fontSize: '22px', color: '#0b332c', margin: '0 0 6px' }}>Choose Your Plan</h1>
+            <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 20px' }}>You're approved! Pick a plan to activate your clinic portal and grow your practice.</p>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {PLANS.map((plan) => (
-              <button key={plan.id} onClick={() => handlePay(plan)} disabled={loading} style={{ textAlign: 'left', border: '1.5px solid #e7e1d3', borderRadius: '14px', padding: '14px 16px', background: '#f8f6f0', cursor: loading ? 'not-allowed' : 'pointer' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <strong style={{ color: '#0b332c', fontSize: '14px' }}>{plan.label}</strong>
-                  <span style={{ color: '#10b981', fontWeight: '800' }}>₹{plan.price}/mo</span>
+              <div
+                key={plan.id}
+                style={{
+                  position: 'relative',
+                  display: 'flex',
+                  borderRadius: '16px',
+                  overflow: 'hidden',
+                  border: plan.popular ? `2px solid ${plan.accent}` : '1px solid #e7e1d3',
+                }}
+              >
+                {plan.popular && (
+                  <div style={{ position: 'absolute', top: 0, left: 0, background: plan.accent, color: '#fff', fontSize: '9px', fontWeight: '800', letterSpacing: '0.4px', padding: '4px 10px', borderBottomRightRadius: '10px' }}>
+                    MOST POPULAR
+                  </div>
+                )}
+
+                <div style={{ width: '78px', flexShrink: 0, background: plan.badgeBg, color: plan.badgeFg, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '16px 6px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '11px', fontWeight: '800', letterSpacing: '0.3px' }}>{plan.label}</div>
+                  <div style={{ fontSize: '8px', opacity: 0.8, marginTop: '3px' }}>{plan.tagline.toUpperCase()}</div>
                 </div>
-                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
-                  Up to {plan.maxDoctors === 20 ? '20+' : plan.maxDoctors} doctors
+
+                <div style={{ flex: 1, background: '#fff', padding: plan.popular ? '18px 12px 12px' : '12px', display: 'flex', flexDirection: 'column', gap: '7px' }}>
+                  <div style={{ fontSize: '12.5px', fontWeight: '700', color: '#0b332c' }}>
+                    Up to {plan.maxDoctors === 20 ? '20+' : plan.maxDoctors} doctors
+                  </div>
+
+                  <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                    {plan.features.map((f) => (
+                      <li key={f} style={{ fontSize: '10px', color: '#64748b', display: 'flex', gap: '5px', alignItems: 'flex-start' }}>
+                        <span style={{ color: plan.accent, fontWeight: '700' }}>✓</span>{f}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <div style={{ fontSize: '19px', fontWeight: '800', color: plan.accent }}>
+                      ₹{plan.price}<span style={{ fontSize: '10px', fontWeight: '500', color: '#94a3b8' }}>/mo</span>
+                    </div>
+                    <button
+                      onClick={() => handlePay(plan)}
+                      disabled={loading}
+                      style={{ background: plan.accent, color: '#fff', border: 'none', borderRadius: '999px', padding: '8px 14px', fontSize: '10.5px', fontWeight: '700', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1 }}
+                    >
+                      Choose Plan →
+                    </button>
+                  </div>
                 </div>
-              </button>
+              </div>
             ))}
           </div>
+
           {error && <p style={{ color: '#ef4444', fontSize: '12px', marginTop: '14px', background: '#fef2f2', padding: '10px', borderRadius: '10px', fontWeight: '600' }}>{error}</p>}
-          {loading && <p style={{ fontSize: '12px', color: '#64748b', marginTop: '14px' }}>Opening payment window...</p>}
+          {loading && <p style={{ fontSize: '12px', color: '#64748b', marginTop: '14px', textAlign: 'center' }}>Opening payment window...</p>}
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '18px', paddingTop: '16px', borderTop: '1px solid #eee' }}>
+            {[
+              ['🛡️', 'No hidden charges', 'Cancel anytime'],
+              ['🔒', '100% secure payments', 'Encrypted & safe'],
+              ['🎧', 'Need help?', 'Contact support'],
+              ['🧾', 'GST invoice', 'On all plans'],
+            ].map(([icon, title, sub]) => (
+              <div key={title} style={{ display: 'flex', gap: '6px', alignItems: 'flex-start' }}>
+                <span style={{ fontSize: '13px' }}>{icon}</span>
+                <div>
+                  <div style={{ fontSize: '9.5px', fontWeight: '700', color: '#0b332c' }}>{title}</div>
+                  <div style={{ fontSize: '9px', color: '#94a3b8' }}>{sub}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button onClick={() => { setMode('login'); setError(''); }} style={{ marginTop: '16px', background: 'none', border: 'none', color: '#0b332c', fontSize: '12px', fontWeight: '700', textDecoration: 'underline', cursor: 'pointer', display: 'block', marginLeft: 'auto', marginRight: 'auto' }}>
+            Sign out
+          </button>
         </div>
       </div>
     );

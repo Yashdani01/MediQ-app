@@ -300,6 +300,14 @@
   line-height: 1.75;
 }
 
+.intro-illustration {
+  width: 100%;
+  height: auto;
+  max-height: 110px;
+
+  margin: 20px 0 4px;
+}
+
 /* =========================================================
    FEATURES
    ========================================================= */
@@ -874,6 +882,40 @@
   line-height: 1.5;
 
   text-align: center;
+}
+
+/* =========================================================
+   TRUST STRIP
+   ========================================================= */
+
+.auth-trust-strip {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 10px;
+
+  margin-top: 18px;
+  padding: 14px 16px;
+
+  border-radius: 12px;
+
+  background: var(--mediq-teal-soft);
+}
+
+.auth-trust-strip .trust-icon {
+  font-size: 15px;
+}
+
+.auth-trust-strip strong {
+  display: block;
+
+  font-size: 12.5px;
+  color: var(--mediq-ink);
+}
+
+.auth-trust-strip span {
+  font-size: 11.5px;
+  color: var(--mediq-muted);
 }
 
 /* =========================================================

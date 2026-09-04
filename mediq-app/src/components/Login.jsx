@@ -211,6 +211,57 @@ export default function Login({ onGuestContinue, onClinicSignIn }) {
             platform.
           </p>
 
+          <svg
+            className="intro-illustration"
+            viewBox="0 0 320 120"
+            aria-hidden="true"
+          >
+            <rect x="18" y="30" width="90" height="80" rx="6" fill="#e1f5ee" />
+            <rect x="118" y="10" width="110" height="100" rx="6" fill="#087f73" />
+            <rect x="238" y="46" width="64" height="64" rx="6" fill="#e1f5ee" />
+            {Array.from({ length: 3 }).map((_, row) =>
+              Array.from({ length: 3 }).map((_, col) => (
+                <rect
+                  key={`a-${row}-${col}`}
+                  x={30 + col * 24}
+                  y={44 + row * 20}
+                  width="14"
+                  height="12"
+                  rx="2"
+                  fill="#ffffff"
+                />
+              ))
+            )}
+            {Array.from({ length: 4 }).map((_, row) =>
+              Array.from({ length: 3 }).map((_, col) => (
+                <rect
+                  key={`b-${row}-${col}`}
+                  x={132 + col * 30}
+                  y={24 + row * 20}
+                  width="18"
+                  height="12"
+                  rx="2"
+                  fill="rgba(255,255,255,0.85)"
+                />
+              ))
+            )}
+            <rect x="164" y="0" width="10" height="26" fill="#087f73" />
+            <rect x="152" y="6" width="34" height="10" fill="#087f73" />
+            {Array.from({ length: 2 }).map((_, row) =>
+              Array.from({ length: 2 }).map((_, col) => (
+                <rect
+                  key={`c-${row}-${col}`}
+                  x={250 + col * 28}
+                  y={60 + row * 22}
+                  width="16"
+                  height="14"
+                  rx="2"
+                  fill="#ffffff"
+                />
+              ))
+            )}
+          </svg>
+
           <div className="intro-features">
 
             <div className="feature-item">
