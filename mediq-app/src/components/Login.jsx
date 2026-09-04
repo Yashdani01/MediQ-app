@@ -1,694 +1,168 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
-import { translations, languages } from '../i18n';
-import { getAllCities } from '../hospitalData';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Login.css';
 
-export default function Login({ onGuestContinue, onClinicSignIn }) {
-  const [mode, setMode] = useState('entry');
-  const [lang, setLang] = useState('en');
+export default function Login() {
+  const [selectedPortal, setSelectedPortal] = useState('patient');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
-  const [name, setName] = useState(
-    () => sessionStorage.getItem('mediq_name') || ''
-  );
-
-  const [city, setCity] = useState(
-    () => sessionStorage.getItem('mediq_city') || ''
-  );
-
-  const [cities, setCities] = useState([]);
-
-  const [email, setEmail] = useState(
-    () => sessionStorage.getItem('mediq_email') || ''
-  );
-
-  const [sent, setSent] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const [otp, setOtp] = useState('');
-  const [verifying, setVerifying] = useState(false);
-
-  const t = translations[lang];
-
-  useEffect(() => {
-    getAllCities().then((list) => {
-      setCities(list);
-
-      setCity((current) => {
-        if (current) return current;
-        if (list.includes('Balgona')) return 'Balgona';
-        return list[0] || '';
-      });
-    });
-  }, []);
-
-  useEffect(() => {
-    sessionStorage.setItem('mediq_name', name);
-  }, [name]);
-
-  useEffect(() => {
-    sessionStorage.setItem('mediq_city', city);
-  }, [city]);
-
-  useEffect(() => {
-    sessionStorage.setItem('mediq_email', email);
-  }, [email]);
-
-  const chooseMode = (newMode) => {
-    setMode(newMode);
-    setError('');
-    setSent(false);
-    setOtp('');
-  };
-
-  const goBack = () => {
-    setMode('entry');
-    setSent(false);
-    setOtp('');
-    setError('');
-  };
-
-  const sendMagicLink = async (e) => {
+  const handleLogin = (e) => {
     e.preventDefault();
-
-    setLoading(true);
-    setError('');
-
-    const isRegister = mode === 'register';
-
-    const redirectUrl = isRegister
-      ? `${window.location.origin}?name=${encodeURIComponent(
-          name
-        )}&city=${encodeURIComponent(city)}`
-      : `${window.location.origin}`;
-
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        shouldCreateUser: isRegister,
-        emailRedirectTo: redirectUrl,
-      },
-    });
-
-    setLoading(false);
-
-    if (error) {
-      if (!isRegister) {
-        setError(
-          'No account found with this email. Please use Create an account.'
-        );
-      } else {
-        setError(error.message);
-      }
+    if (selectedPortal === 'patient') {
+      navigate('/patient-dashboard');
     } else {
-      setSent(true);
+      navigate('/clinic-portal');
     }
   };
-
-  const verifyCode = async (e) => {
-    e.preventDefault();
-
-    setVerifying(true);
-    setError('');
-
-    const { error } = await supabase.auth.verifyOtp({
-      email,
-      token: otp,
-      type: 'email',
-    });
-
-    setVerifying(false);
-
-    if (error) {
-      setError(error.message);
-      return;
-    }
-
-    sessionStorage.removeItem('mediq_name');
-    sessionStorage.removeItem('mediq_city');
-    sessionStorage.removeItem('mediq_email');
-
-    if (mode === 'register') {
-      const url = new URL(window.location.href);
-
-      url.searchParams.set('name', name);
-      url.searchParams.set('city', city);
-
-      window.location.href = url.toString();
-    } else {
-      window.location.href = window.location.origin;
-    }
-  };
-
-  const renderLanguageToggle = () => (
-    <div className="language-switch">
-      {languages.map((l) => (
-        <button
-          key={l.code}
-          type="button"
-          className={`language-button ${
-            lang === l.code ? 'active' : ''
-          }`}
-          onClick={() => setLang(l.code)}
-          aria-label={`Switch language to ${l.label}`}
-        >
-          {l.label}
-        </button>
-      ))}
-    </div>
-  );
 
   return (
-    <div className="auth-page">
-      {/* HEADER */}
-      <header className="auth-header">
-        <div className="auth-brand">
-          <div className="brand-mark" aria-hidden="true">
-            <span>+</span>
-          </div>
-
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 lg:p-12">
+      <div className="max-w-6xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 border border-slate-100">
+        
+        {/* Left Column: Branding & Portal Selection */}
+        <div className="lg:col-span-5 p-8 lg:p-12 bg-gradient-to-b from-slate-50/50 to-emerald-50/30 flex flex-col justify-between border-r border-slate-100">
           <div>
-            <p className="brand-name">MediQ</p>
-            <p className="brand-tagline">
-              Healthcare, without the waiting.
+            {/* Logo */}
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-emerald-600/20">
+                N+
+              </div>
+              <div>
+                <span className="text-2xl font-extrabold tracking-tight text-slate-900">MediQ</span>
+                <p className="text-xs text-slate-500 font-medium">Smarter Healthcare, Together</p>
+              </div>
+            </div>
+
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-3">
+              Welcome to <span className="text-emerald-600">MediQ</span>
+            </h1>
+            <p className="text-slate-600 text-sm mb-8 leading-relaxed">
+              Smarter healthcare for everyone, everywhere. Choose your portal to proceed.
             </p>
-          </div>
-        </div>
 
-        <div className="auth-header-actions">
-          <span className="secure-label">
-            <span className="secure-dot" aria-hidden="true" />
-            Secure access
-          </span>
-
-          {renderLanguageToggle()}
-        </div>
-      </header>
-
-      {/* MAIN */}
-      <main className="auth-main">
-
-        {/* LEFT SIDE */}
-        <section
-          className="auth-intro"
-          aria-label="MediQ overview"
-        >
-          <div className="intro-eyebrow">
-            <span className="eyebrow-line" />
-            SMARTER HEALTHCARE
-          </div>
-
-          <h1>
-            Spend less time
-            <br />
-            <em>waiting.</em>
-          </h1>
-
-          <p className="intro-copy">
-            Find hospitals, discover services, and keep track of
-            your place in the queue — all from one simple healthcare
-            platform.
-          </p>
-
-          <svg
-            className="intro-illustration"
-            viewBox="0 0 320 120"
-            aria-hidden="true"
-          >
-            <rect x="18" y="30" width="90" height="80" rx="6" fill="#e1f5ee" />
-            <rect x="118" y="10" width="110" height="100" rx="6" fill="#087f73" />
-            <rect x="238" y="46" width="64" height="64" rx="6" fill="#e1f5ee" />
-            {Array.from({ length: 3 }).map((_, row) =>
-              Array.from({ length: 3 }).map((_, col) => (
-                <rect
-                  key={`a-${row}-${col}`}
-                  x={30 + col * 24}
-                  y={44 + row * 20}
-                  width="14"
-                  height="12"
-                  rx="2"
-                  fill="#ffffff"
-                />
-              ))
-            )}
-            {Array.from({ length: 4 }).map((_, row) =>
-              Array.from({ length: 3 }).map((_, col) => (
-                <rect
-                  key={`b-${row}-${col}`}
-                  x={132 + col * 30}
-                  y={24 + row * 20}
-                  width="18"
-                  height="12"
-                  rx="2"
-                  fill="rgba(255,255,255,0.85)"
-                />
-              ))
-            )}
-            <rect x="164" y="0" width="10" height="26" fill="#087f73" />
-            <rect x="152" y="6" width="34" height="10" fill="#087f73" />
-            {Array.from({ length: 2 }).map((_, row) =>
-              Array.from({ length: 2 }).map((_, col) => (
-                <rect
-                  key={`c-${row}-${col}`}
-                  x={250 + col * 28}
-                  y={60 + row * 22}
-                  width="16"
-                  height="14"
-                  rx="2"
-                  fill="#ffffff"
-                />
-              ))
-            )}
-          </svg>
-
-          <div className="intro-features">
-
-            <div className="feature-item">
-              <span className="feature-icon" aria-hidden="true">
-                +
-              </span>
-
-              <div>
-                <strong>Live queue visibility</strong>
-                <span>
-                  Know your position before you arrive.
-                </span>
-              </div>
-            </div>
-
-            <div className="feature-item">
-              <span className="feature-icon" aria-hidden="true">
-                +
-              </span>
-
-              <div>
-                <strong>Find the right care</strong>
-                <span>
-                  Explore hospitals and available services.
-                </span>
-              </div>
-            </div>
-
-            <div className="feature-item">
-              <span className="feature-icon" aria-hidden="true">
-                ✓
-              </span>
-
-              <div>
-                <strong>Private by design</strong>
-                <span>
-                  Your account stays tied to your verified email.
-                </span>
-              </div>
-            </div>
-
-          </div>
-        </section>
-
-        {/* RIGHT AUTH PANEL */}
-        <section
-          className="auth-panel"
-          aria-label="MediQ authentication"
-        >
-          <div className="auth-panel-inner">
-
-            {/* INITIAL CHOICE SCREEN */}
-            {!sent && mode === 'entry' && (
-              <>
-                <div className="panel-heading">
-                  <span className="panel-kicker">
-                    WELCOME TO MEDIQ
-                  </span>
-
-                  <h2>
-                    How would you like to continue?
-                  </h2>
-
-                  <p>
-                    Choose an option below to get started.
-                  </p>
-                </div>
-
-                <div className="auth-choice-list">
-
-                  <button
-                    type="button"
-                    className="auth-choice primary"
-                    onClick={() => chooseMode('register')}
-                  >
-                    <span
-                      className="choice-icon"
-                      aria-hidden="true"
-                    >
-                      +
-                    </span>
-
-                    <span className="choice-copy">
-                      <strong>Create an account</strong>
-                      <small>
-                        New to MediQ? Register with your email.
-                      </small>
-                    </span>
-
-                    <span
-                      className="choice-arrow"
-                      aria-hidden="true"
-                    >
-                      →
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className="auth-choice"
-                    onClick={() => chooseMode('login')}
-                  >
-                    <span
-                      className="choice-icon"
-                      aria-hidden="true"
-                    >
-                      ↗
-                    </span>
-
-                    <span className="choice-copy">
-                      <strong>Sign in</strong>
-                      <small>
-                        Already registered? Continue securely.
-                      </small>
-                    </span>
-
-                    <span
-                      className="choice-arrow"
-                      aria-hidden="true"
-                    >
-                      →
-                    </span>
-                  </button>
-
-                </div>
-
-                <div className="guest-divider">
-                  <span>or</span>
-                </div>
-
-                <button
-                  type="button"
-                  className="guest-action"
-                  onClick={onGuestContinue}
-                >
-                  Continue as guest
-                  <span aria-hidden="true">→</span>
-                </button>
-              </>
-            )}
-
-            {/* REGISTER / LOGIN FORM */}
-            {!sent &&
-              (mode === 'register' || mode === 'login') && (
-                <>
-                  <button
-                    type="button"
-                    className="back-action"
-                    onClick={goBack}
-                  >
-                    <span aria-hidden="true">←</span>
-                    {' '}Back
-                  </button>
-
-                  <div className="panel-heading compact">
-                    <span className="panel-kicker">
-                      {mode === 'register'
-                        ? 'NEW ACCOUNT'
-                        : 'WELCOME BACK'}
-                    </span>
-
-                    <h2>
-                      {mode === 'register'
-                        ? 'Create your account'
-                        : 'Sign in to MediQ'}
-                    </h2>
-
-                    <p>
-                      {mode === 'register'
-                        ? 'A few details, then we will verify your email.'
-                        : 'Enter your email and we will send you a secure code.'}
-                    </p>
-                  </div>
-
-                  <form
-                    onSubmit={sendMagicLink}
-                    className="auth-form"
-                  >
-
-                    {mode === 'register' && (
-                      <>
-                        <div className="field-group">
-                          <label htmlFor="name">
-                            Full name
-                          </label>
-
-                          <input
-                            id="name"
-                            type="text"
-                            value={name}
-                            onChange={(e) =>
-                              setName(e.target.value)
-                            }
-                            autoComplete="name"
-                            required
-                          />
-                        </div>
-
-                        <div className="field-group">
-                          <label htmlFor="city">
-                            Your city
-                          </label>
-
-                          <select
-                            id="city"
-                            value={city}
-                            onChange={(e) =>
-                              setCity(e.target.value)
-                            }
-                            required
-                          >
-                            <option
-                              value=""
-                              disabled
-                            >
-                              Select your city
-                            </option>
-
-                            {cities.map((c) => (
-                              <option
-                                key={c}
-                                value={c}
-                              >
-                                {c}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </>
-                    )}
-
-                    <div className="field-group">
-                      <label htmlFor="email">
-                        Email address
-                      </label>
-
-                      <input
-                        id="email"
-                        type="email"
-                        value={email}
-                        onChange={(e) =>
-                          setEmail(e.target.value)
-                        }
-                        autoComplete="email"
-                        required
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      className="submit-action"
-                      disabled={
-                        loading ||
-                        !email ||
-                        (mode === 'register' &&
-                          (!name || !city))
-                      }
-                    >
-                      {loading ? (
-                        <span className="spinner" />
-                      ) : (
-                        <>
-                          {mode === 'register'
-                            ? 'Continue with email'
-                            : 'Send login code'}
-
-                          <span aria-hidden="true">
-                            →
-                          </span>
-                        </>
-                      )}
-                    </button>
-
-                  </form>
-
-                  <p className="form-switch">
-                    {mode === 'register'
-                      ? 'Already have an account?'
-                      : 'New to MediQ?'}
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        chooseMode(
-                          mode === 'register'
-                            ? 'login'
-                            : 'register'
-                        )
-                      }
-                    >
-                      {mode === 'register'
-                        ? 'Sign in'
-                        : 'Create an account'}
-                    </button>
-                  </p>
-                </>
-              )}
-
-            {/* OTP SCREEN */}
-            {sent && (
-              <>
-                <button
-                  type="button"
-                  className="back-action"
-                  onClick={() => {
-                    setSent(false);
-                    setOtp('');
-                    setError('');
-                  }}
-                >
-                  <span aria-hidden="true">←</span>
-                  {' '}Change email
-                </button>
-
-                <div className="panel-heading compact">
-                  <span className="panel-kicker">
-                    VERIFY EMAIL
-                  </span>
-
-                  <h2>
-                    Check your inbox
-                  </h2>
-
-                  <p>
-                    {t.checkEmail
-                      ? t.checkEmail(email)
-                      : `We sent a 6-digit code to ${email}.`}
-                  </p>
-                </div>
-
-                <form
-                  onSubmit={verifyCode}
-                  className="auth-form"
-                >
-                  <div className="field-group">
-                    <label htmlFor="otp">
-                      6-digit verification code
-                    </label>
-
-                    <input
-                      id="otp"
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                      maxLength={6}
-                      className="otp-field"
-                      value={otp}
-                      onChange={(e) =>
-                        setOtp(
-                          e.target.value.replace(/\D/g, '')
-                        )
-                      }
-                      required
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="submit-action"
-                    disabled={
-                      verifying || otp.length !== 6
-                    }
-                  >
-                    {verifying ? (
-                      <span className="spinner" />
-                    ) : (
-                      <>
-                        Verify & continue
-                        <span aria-hidden="true">
-                          →
-                        </span>
-                      </>
-                    )}
-                  </button>
-                </form>
-
-                <button
-                  type="button"
-                  className="form-switch secondary"
-                  onClick={() => {
-                    setSent(false);
-                    setOtp('');
-                    setError('');
-                  }}
-                >
-                  Use a different email
-                </button>
-              </>
-            )}
-
-            {error && (
-              <p
-                className="auth-error"
-                role="alert"
+            {/* Portal Switcher Cards */}
+            <div className="space-y-4">
+              {/* Highlighted Patient Portal */}
+              <div 
+                onClick={() => setSelectedPortal('patient')}
+                className={`cursor-pointer p-5 rounded-2xl transition-all border-2 ${
+                  selectedPortal === 'patient' 
+                    ? 'border-emerald-600 bg-emerald-50/40 shadow-md shadow-emerald-600/5' 
+                    : 'border-slate-200 bg-white hover:border-slate-300'
+                }`}
               >
-                {error}
-              </p>
-            )}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-lg ${
+                      selectedPortal === 'patient' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'
+                    }`}>
+                      👤
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-slate-900 text-base">Patient Portal</h3>
+                      <p className="text-xs text-slate-500 mt-0.5">Access records, appointments & more.</p>
+                    </div>
+                  </div>
+                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                    selectedPortal === 'patient' ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-slate-300'
+                  }`}>
+                    {selectedPortal === 'patient' && <span className="text-xs">✓</span>}
+                  </div>
+                </div>
+              </div>
 
+              {/* Subdued Clinic Portal */}
+              <div 
+                onClick={() => setSelectedPortal('clinic')}
+                className={`cursor-pointer p-4 rounded-xl transition-all border ${
+                  selectedPortal === 'clinic' 
+                    ? 'border-slate-800 bg-slate-50 shadow-sm' 
+                    : 'border-slate-200 bg-white/60 hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center text-sm">
+                      🏥
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-slate-800 text-sm">Clinic Portal</h4>
+                      <p className="text-[11px] text-slate-400">Manage practice & patients.</p>
+                    </div>
+                  </div>
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                    selectedPortal === 'clinic' ? 'border-slate-800 bg-slate-800 text-white' : 'border-slate-300'
+                  }`}>
+                    {selectedPortal === 'clinic' && <span className="text-[10px]">✓</span>}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </section>
-      </main>
 
-      {/* FOOTER */}
-      <footer className="auth-footer">
-        <span>
-          © {new Date().getFullYear()} MediQ
-        </span>
+          <div className="mt-8 pt-6 border-t border-slate-200/60 flex items-center justify-between text-xs text-slate-500">
+            <span>🔒 Secure & Private</span>
+            <span>🛡️ HIPAA Compliant</span>
+          </div>
+        </div>
 
-        <span>
-          Secure healthcare access
-        </span>
+        {/* Right Column: Form Inputs */}
+        <div className="lg:col-span-7 p-8 lg:p-14 flex flex-col justify-center bg-white">
+          <div className="max-w-md w-full mx-auto">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold text-slate-900">
+                {selectedPortal === 'patient' ? 'Patient Sign In' : 'Clinic Secure Login'}
+              </h2>
+              <p className="text-sm text-slate-500 mt-1">
+                Please enter your credentials to access your workspace
+              </p>
+            </div>
 
-        <span>
-          <button
-            type="button"
-            onClick={onClinicSignIn}
-            style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer', font: 'inherit', padding: 0 }}
-          >
-            Clinic / Hospital sign in
-          </button>
-        </span>
+            <form onSubmit={handleLogin} className="space-y-5">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">Email Address</label>
+                <input 
+                  type="email" 
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@example.com" 
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 text-sm transition-all"
+                />
+              </div>
 
-        <span>
-          Terms · Privacy
-        </span>
-      </footer>
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600">Password</label>
+                  <a href="#forgot" className="text-xs font-medium text-emerald-600 hover:underline">Forgot?</a>
+                </div>
+                <input 
+                  type="password" 
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••" 
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 text-sm transition-all"
+                />
+              </div>
+
+              <button 
+                type="submit" 
+                className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow-lg shadow-emerald-600/20 transition-all transform active:scale-[0.99]"
+              >
+                Sign In to {selectedPortal === 'patient' ? 'Patient Portal' : 'Clinic Portal'} →
+              </button>
+            </form>
+
+            <div className="mt-8 text-center text-sm text-slate-500">
+              Don't have an account? <a href="#signup" className="font-semibold text-emerald-600 hover:underline">Sign up</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }
